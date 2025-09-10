@@ -1,0 +1,69 @@
+:root {
+  --accent: #45d07a; /* warna hijau untuk "kost" */
+  --muted: #6c757d;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #ffffff;
+}
+
+/* navbar link aktif jadi bold + warna lebih gelap */
+    .navbar-nav .nav-link.active {
+      font-weight: 700;
+      color: #000 !important;
+    }
+
+/* Navbar */
+.brand-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* Hero Section */
+.hero {
+  min-height: 72vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3.5rem 1rem;
+}
+
+.hero h1 {
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #111;
+  margin-bottom: 0.6rem;
+}
+
+.hero h1 .accent {
+  color: var(--accent);
+}
+
+.hero p.lead {
+  color: var(--muted);
+  max-width: 760px;
+  margin: 0 auto 1.6rem;
+}
+
+/* Search box */
+.search-box {
+  max-width: 740px;
+  margin: 0 auto;
+}
+
+/* Filter pills */
+.filter-pills .btn {
+  background: #f4f6f8;
+  border: none;
+  font-weight: 500;
+}
+.filter-pills .btn:hover {
+  background: #e0e3e6;
+}
