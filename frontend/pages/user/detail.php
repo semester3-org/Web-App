@@ -17,7 +17,7 @@
   </style>
 </head>
 <body>
-  <?php include 'navbar.html'; ?>
+  <?php include '../dashboard/navbar.html'; ?>
 
   <div class="container py-5" style="margin-top:80px;">
     <div class="row">

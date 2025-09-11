@@ -11,7 +11,7 @@
 <body>
 
   <!-- Navbar -->
-  <?php include 'navbar.html'; ?>
+  <?php include '../dashboard/navbar.html'; ?>
 
   <div class="container my-5 pt-5">
     <h2 class="fw-bold mb-4">List your boarding house</h2>
@@ -91,7 +91,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/facilities.js"></script>
+  <script src="../../assets/js/facilities.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

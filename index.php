@@ -18,19 +18,19 @@
 <body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="80" tabindex="0">
 
   <!-- Navbar -->
-  <?php include 'navbar.html'; ?>
+  <?php include 'frontend/pages/dashboard/navbar.html'; ?>
 
   <!-- Hero -->
-  <?php include 'hero.html'; ?>
+  <?php include 'frontend/pages/dashboard/hero.html'; ?>
 
   <!-- Explore -->
-  <?php include 'explore.html'; ?>
+  <?php include 'frontend/pages/dashboard/explore.html'; ?>
 
   <!-- Favorite -->
-  <?php include 'favorite.html'; ?>
+  <?php include 'frontend/pages/dashboard/favorite.html'; ?>
 
   <!-- List Your Kost -->
-  <?php include 'listkost.html'; ?>
+  <?php include 'frontend/pages/dashboard/listkost.html'; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
