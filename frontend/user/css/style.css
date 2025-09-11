@@ -67,3 +67,28 @@ body {
 .filter-pills .btn:hover {
   background: #e0e3e6;
 }
+
+/* Warna default pagination link */
+.pagination .page-link {
+  color: #28a745;               /* teks hijau */
+  border: 1px solid #dee2e6;    /* border abu default */
+}
+
+/* Hover efek */
+.pagination .page-link:hover {
+  color: #fff;
+  background-color: #28a745;    /* hijau saat hover */
+  border-color: #28a745;
+}
+
+/* Active page */
+.pagination .page-item.active .page-link {
+  color: #fff;
+  background-color: #28a745;    /* hijau utama */
+  border-color: #28a745;
+}
+
+/* Focus (klik) */
+.pagination .page-link:focus {
+  box-shadow: 0 0 0 0.25rem rgba(40,167,69,.25); /* shadow hijau */
+}
