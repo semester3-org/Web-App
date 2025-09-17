@@ -12,6 +12,90 @@ body {
     background-color: #f8f9fa;
 }
 
+/* ==========================
+   Forgot Password Page
+   ========================== */
+.forgot-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(to right, #e6f7ef, #ffffff);
+    padding: 2rem;
+}
+
+.forgot-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    overflow: hidden;
+    max-width: 900px;
+    width: 100%;
+}
+
+.forgot-form {
+    flex: 1;
+    padding: 3rem;
+}
+
+.forgot-form h2 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+.forgot-form p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.forgot-form .form-control {
+    margin-bottom: 1.5rem;
+}
+
+.forgot-form .btn {
+    background: #28a745;
+    border: none;
+    color: #fff;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    transition: background 0.3s ease;
+}
+
+.forgot-form .btn:hover {
+    background: #218838;
+}
+
+.forgot-illustration {
+    flex: 1;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.forgot-illustration img {
+    max-width: 80%;
+    height: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .forgot-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .forgot-illustration {
+        padding: 1.5rem;
+    }
+}
+
+
 .container {
     max-width: 1200px;
     margin: 0 auto;

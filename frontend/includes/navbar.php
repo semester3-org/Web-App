@@ -20,8 +20,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <?php endif; ?>
             <a href="../../backend/auth/logout.php" class="btn btn-outline">Logout</a>
         <?php else: ?>
-            <a href="login.php" class="btn btn-outline">Login</a>
-            <a href="register.php" class="btn btn-primary">Daftar</a>
+            <a href="../auth/login.php" class="btn btn-outline">Login</a>
+            <a href="../auth/register.php" class="btn btn-primary">Daftar</a>
         <?php endif; ?>
     </div>
 </nav>
