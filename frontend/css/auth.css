@@ -3,6 +3,32 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+/* Left form & right illustration proporsional */
+.form-section {
+  flex: 0.55;           /* 55% */
+  max-width: 520px;     /* batasi agar tidak terlalu panjang */
+  background: #fff;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.illustration-section {
+  flex: 0.45;           /* 45% */
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.illustration-section img {
+  max-width: 95%;
+  height: auto;
+}
+
+
 .auth-wrapper {
   display: flex;
   justify-content: center;
