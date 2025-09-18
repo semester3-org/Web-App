@@ -1,18 +1,19 @@
 <?php
-$host = 'localhost';
-$db   = 'kosthubnew';  // sesuaikan nama database Anda
-$user = 'root';
-$pass = '';
-$charset = 'utf8mb4';
+// backend/config/db.php
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-];
+$host = "localhost";
+$user = "root";       // default laragon
+$pass = "";           // default kosong
+$db   = "db_koshub";  // nama database kamu
 
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-} catch (\PDOException $e) {
-    die('Database connection failed: ' . $e->getMessage());
+// Buat koneksi
+$conn = new mysqli($host, $user, $pass, $db);
+
+// Cek koneksi
+if ($conn->connect_error) {
+    die("Koneksi database gagal: " . $conn->connect_error);
 }
+
+// (Opsional) Set charset biar aman untuk UTF-8
+$conn->set_charset("utf8");
+?>
