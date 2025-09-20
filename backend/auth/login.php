@@ -1,29 +1,45 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once("../config/db.php"); // koneksi database
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL);
-    $password = $_POST['password'];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    if (!$email || !$password) {
-        echo json_encode(['error' => 'Email dan password diperlukan']);
+    if (empty($username) || empty($password)) {
+        header("Location: ../../frontend/auth/login.php?error=Username dan password wajib diisi");
         exit;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+    // Query cek user berdasarkan username
+    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type FROM users WHERE username = ? LIMIT 1");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($user && password_verify($password, $user['password_hash'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['name'] = $user['name'];
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
 
-        echo json_encode(['success' => true]);
+        // Verifikasi password (gunakan password_hash di saat register)
+        if (password_verify($password, $user['password'])) {
+            // Simpan ke session
+            $_SESSION['user_id']    = $user['id'];
+            $_SESSION['username']   = $user['username'];
+            $_SESSION['full_name']  = $user['full_name'];
+            $_SESSION['user_type']  = $user['user_type'];
+
+            // Redirect ke halaman home/dashboard
+            header("Location: ../../frontend/pages/home.php");
+            exit;
+        } else {
+            header("Location: ../../frontend/auth/login.php?error=Password salah");
+            exit;
+        }
     } else {
-        echo json_encode(['error' => 'Email atau password salah']);
+        header("Location: ../../frontend/auth/login.php?error=Username tidak ditemukan");
+        exit;
     }
 } else {
-    echo json_encode(['error' => 'Invalid request method']);
+    header("Location: ../../frontend/auth/login.php");
+    exit;
 }
