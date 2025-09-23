@@ -12,6 +12,29 @@ body {
     background-color: #f8f9fa;
 }
 
+.facility-tabs .nav-link {
+  border-radius: 0; /* biar rata */
+  padding: 8px 16px;
+  margin-right: 0;
+  color: #000;
+  background: #e9ecef; /* abu default */
+  border: 1px solid #dee2e6;
+}
+
+.facility-tabs .nav-link.active {
+  background: #28a745;   /* hijau */
+  color: #fff;
+  border-color: #28a745; /* sama dengan background */
+}
+
+.facility-tabs {
+  border-bottom: none; /* hilangkan garis default bootstrap */
+}
+
+
+
+
+
 /* ==========================
    Forgot Password Page
    ========================== */

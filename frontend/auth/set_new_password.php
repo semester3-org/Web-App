@@ -8,7 +8,7 @@ session_start();
   <title>Buat Password Baru - KostHub</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/auth.css?v=<?php echo time(); ?>">
+  <link rel="stylesheet" href="css/auth.css?v=<?php echo time(); ?>">
 </head>
 <body>
 <div class="auth-wrapper d-flex justify-content-center align-items-center min-vh-100">

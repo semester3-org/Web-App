@@ -3,6 +3,17 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+.navbar-brand {
+  font-size: 1.2rem;
+}
+.card {
+  border-radius: 10px;
+}
+
+.btn-success {
+  border-radius: .375rem; /* samakan dengan btn-secondary */
+}
+
 /* Left form & right illustration proporsional */
 .form-section {
   flex: 0.55;           /* 55% */
@@ -129,7 +140,7 @@ body {
 .btn-success {
   background-color: #28a745;
   border: none;
-  border-radius: 25px;
+  border-radius: 5px;
   font-size: 1.1rem;
 }
 
