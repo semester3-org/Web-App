@@ -1,0 +1,161 @@
+body {
+  background: #f5f7fa;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar-brand {
+  font-size: 1.2rem;
+}
+.card {
+  border-radius: 10px;
+}
+
+.btn-success {
+  border-radius: .375rem; /* samakan dengan btn-secondary */
+}
+
+/* Left form & right illustration proporsional */
+.form-section {
+  flex: 0.55;           /* 55% */
+  max-width: 520px;     /* batasi agar tidak terlalu panjang */
+  background: #fff;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.illustration-section {
+  flex: 0.45;           /* 45% */
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.illustration-section img {
+  max-width: 95%;
+  height: auto;
+}
+
+
+.auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* Box utama */
+.login-box {
+  background: #fff;
+  border-radius: 15px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1000px;   /* landscape */
+  min-height: 500px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.login-header {
+  border-bottom: none;         /* hilangkan garis */
+  box-shadow: none;
+  background: #fff;
+}
+
+.login-header .logo {
+  width: 60px;
+  height: auto;
+}
+
+.login-header h2 {
+  font-size: 1.8rem;
+  color: #333;
+}
+
+/* Body (form + illustration) */
+.login-body {
+  display: flex;
+  flex: 1;
+  min-height: 500px;
+}
+
+/* Left Form */
+.form-section {
+  flex: 1;                
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+}
+
+/* Right Illustration */
+.illustration-section {
+  flex: 1;                
+  background: #fff;     /* lembut */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.illustration-section img {
+  max-width: 90%;
+  height: auto;
+}
+
+/* Label input */
+.form-label {
+  margin-bottom: 0.2rem;   /* lebih dekat ke input */
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #444;
+}
+
+/* Input */
+.input-group-text {
+  background: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-right: 1px solid #ddd;
+}
+
+.form-control {
+  border-left: none;
+  font-size: 1rem;
+  padding: 0.8rem 1rem;
+}
+
+.form-control:focus {
+  border-color: #28a745;
+  box-shadow: none;
+}
+
+/* Button hijau utama */
+.btn-success {
+  background-color: #28a745;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+  .login-box {
+    flex-direction: column;
+    max-width: 100%;
+    min-height: auto;
+  }
+  .illustration-section {
+    display: none; /* hilang di layar kecil */
+  }
+}
