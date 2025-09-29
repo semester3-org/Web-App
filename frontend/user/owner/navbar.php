@@ -1,5 +1,5 @@
-<!-- navbar.php -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
+<!-- navbar.php untuk Owner -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 fixed-top" style="height:65px;">
   <a class="navbar-brand fw-bold d-flex align-items-center" href="dashboard.php">
     <img src="../../assets/logo_kos.png" alt="logo" style="height:30px;" class="me-2">
     KostHub

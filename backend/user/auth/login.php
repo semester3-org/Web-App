@@ -12,7 +12,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Query cek user berdasarkan username
-    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type FROM users WHERE username = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type 
+                            FROM users WHERE username = ? LIMIT 1");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -20,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
 
-        // Verifikasi password (gunakan password_hash di saat register)
+        // Verifikasi password
         if (password_verify($password, $user['password'])) {
             // Simpan ke session
             $_SESSION['user_id']    = $user['id'];
@@ -28,8 +29,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['full_name']  = $user['full_name'];
             $_SESSION['user_type']  = $user['user_type'];
 
-            // Redirect ke halaman home/dashboard
-            header("Location: ../../frontend/pages/home.php");
+            // Redirect sesuai role
+            if ($user['user_type'] === 'admin') {
+                header("Location: ../../frontend/pages/admin/dashboard.php");
+            } else {
+                header("Location: ../../frontend/pages/home.php");
+            }
             exit;
         } else {
             header("Location: ../../frontend/auth/login.php?error=Password salah");

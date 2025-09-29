@@ -31,6 +31,15 @@ body {
   border-bottom: none; /* hilangkan garis default bootstrap */
 }
 
+.card-square {
+  aspect-ratio: 1 / 1;   /* tetap persegi */
+  width: 220px;          /* kecilkan ukuran */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 
 
 
