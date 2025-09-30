@@ -30,10 +30,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['user_type']  = $user['user_type'];
 
             // Redirect sesuai role
-            if ($user['user_type'] === 'admin') {
-                header("Location: ../../frontend/pages/admin/dashboard.php");
-            } else {
-                header("Location: ../../frontend/pages/home.php");
+            switch ($user['user_type']) {
+                case 'admin':
+                    header("Location: ../../frontend/admin/pages/dashboard.php");
+                    break;
+                case 'owner':
+                    header("Location: ../../frontend/user/owner/dashboard.php");
+                    break;
+                case 'customer':
+                default:
+                    header("Location: ../../frontend/user/customer/home.php");
+                    break;
             }
             exit;
         } else {

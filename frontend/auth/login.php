@@ -1,12 +1,19 @@
 <?php
 session_start();
-$login_type = $_GET['type'] ?? 'user'; // default user
+$login_type = $_GET['type'] ?? 'user';
 
 if (isset($_SESSION['user_id'])) {
-    if ($_SESSION['role'] === 'admin') {
-        header("Location: ../admin/pages/dashboard.php");
-    } else {
-        header("Location: ../pages/home.php");
+    switch ($_SESSION['user_type']) {
+        case 'admin':
+            header("Location: ../admin/pages/dashboard.php");
+            break;
+        case 'owner':
+            header("Location: ../user/owner/dashboard.php");
+            break;
+        case 'customer':
+        default:
+            header("Location: ../user/customer/home.php");
+            break;
     }
     exit;
 }

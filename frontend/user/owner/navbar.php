@@ -34,7 +34,7 @@
     <ul class="dropdown-menu dropdown-menu-end shadow">
       <li><a class="dropdown-item" href="settings.php">⚙️ Settings</a></li>
       <li><hr class="dropdown-divider"></li>
-      <li><a class="dropdown-item text-danger" href="#">🚪 Sign Out</a></li>
+      <li><a class="dropdown-item text-danger" href="../../../logout.php">🚪 Log Out</a></li>
     </ul>
   </div>
 </nav>

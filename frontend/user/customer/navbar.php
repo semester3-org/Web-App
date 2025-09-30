@@ -29,10 +29,27 @@
   </form>
 
   <!-- Notification & Profile -->
-  <div class="d-flex align-items-center">
-    <a href="#" class="text-dark me-3">
-      <i class="bi bi-bell fs-5"></i>
+<div class="d-flex align-items-center">
+  <!-- Notification -->
+  <a href="#" class="text-dark me-3">
+    <i class="bi bi-bell fs-5"></i>
+  </a>
+
+  <!-- Profile Dropdown -->
+  <div class="dropdown">
+    <a href="#" class="d-flex align-items-center text-dark text-decoration-none"
+       id="profileDropdown"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+      <img src="../assets/profile.jpg" alt="profile" 
+           class="rounded-circle" style="height:35px; width:35px;">
     </a>
-    <img src="../assets/profile.jpg" alt="profile" class="rounded-circle" style="height:35px; width:35px;">
+    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
+      <li><a class="dropdown-item" href="settings.php">⚙️ Profile</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item text-danger" href="../../../logout.php">🚪 Log Out</a></li>
+    </ul>
   </div>
+</div>
+
 </nav>

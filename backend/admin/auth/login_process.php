@@ -2,17 +2,20 @@
 session_start();
 require_once("../../config/db.php"); // koneksi database
 
+$login_type = $_GET['type'] ?? 'user'; 
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
     if (empty($username) || empty($password)) {
-        header("Location: ../../../frontend/admin/auth/login.php?error=Username dan password wajib diisi&username=" . urlencode($username));
+        header("Location: ../../../frontend/auth/login.php?error=Username dan password wajib diisi&type=$login_type");
         exit;
     }
 
-    // Query cek user berdasarkan username
-    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type FROM users WHERE username = ? LIMIT 1");
+    // Cek user di database
+    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type 
+                            FROM users WHERE username = ? LIMIT 1");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -22,32 +25,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Verifikasi password
         if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id']   = $user['id'];
+            $_SESSION['username']  = $user['username'];
+            $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['user_type'] = $user['user_type'];
 
-            // Hanya izinkan admin login ke area admin
-            if ($user['user_type'] !== 'admin') {
-                header("Location: ../../../frontend/admin/auth/login.php?error=Hanya admin yang bisa login&username=" . urlencode($username));
-                exit;
-            }
-
-            // Simpan ke session
-            $_SESSION['user_id']    = $user['id'];
-            $_SESSION['username']   = $user['username'];
-            $_SESSION['full_name']  = $user['full_name'];
-            $_SESSION['user_type']  = $user['user_type'];
-
-            // Redirect ke dashboard admin
-            header("Location: ../../../frontend/admin/pages/dashboard.php");
-            exit;
+            // Redirect sesuai role
+            // Redirect sesuai role
+switch ($user['user_type']) {
+    case 'admin':
+        header("Location: ../../../frontend/admin/pages/dashboard.php");
+        break;
+    case 'owner':
+        header("Location: ../../../frontend/user/owner/dashboard.php");
+        break;
+    case 'customer':
+    default:
+        header("Location: ../../../frontend/user/customer/home.php");
+        break;
+}
+exit;
 
         } else {
-            header("Location: ../../../frontend/admin/auth/login.php?error=Password salah&username=" . urlencode($username));
+            header("Location: ../../../frontend/auth/login.php?error=Password salah&type=$login_type");
             exit;
         }
     } else {
-        header("Location: ../../../frontend/admin/auth/login.php?error=Username tidak ditemukan&username=" . urlencode($username));
+        header("Location: ../../../frontend/auth/login.php?error=Username tidak ditemukan&type=$login_type");
         exit;
     }
 } else {
-    header("Location: ../../../frontend/admin/auth/login.php");
+    header("Location: ../../../frontend/auth/login.php?type=$login_type");
     exit;
 }

@@ -56,7 +56,7 @@
       <span class="username-text"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
     </div>
     <div class="dropdown" id="dropdownMenu">
-      <a href="../auth/logout.php">
+      <a href="../../../logout.php">
         <i class="fas fa-sign-out-alt"></i>
         <span class="dropdown-text">Logout</span>
       </a>

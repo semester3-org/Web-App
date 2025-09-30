@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once("../config/db.php"); // sesuaikan path ke config db kamu
+require_once("../../config/db.php"); // sesuaikan path ke config db.php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $full_name = trim($_POST['nama']);
@@ -13,13 +13,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validasi field kosong
     if (empty($full_name) || empty($username) || empty($email) || empty($phone) || empty($password) || empty($confirm)) {
-        header("Location: ../../frontend/auth/register_owner.php?error=Semua field wajib diisi");
+        header("Location: ../../../frontend/auth/register_owner.php?error=Semua field wajib diisi");
         exit;
     }
 
     // Validasi konfirmasi password
     if ($password !== $confirm) {
-        header("Location: ../../frontend/auth/register_owner.php?error=Password tidak cocok");
+        header("Location: ../../../frontend/auth/register_owner.php?error=Password tidak cocok");
         exit;
     }
 
@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt->num_rows > 0) {
         $stmt->close();
-        header("Location: ../../frontend/auth/register_owner.php?error=Username atau email sudah digunakan");
+        header("Location: ../../../frontend/auth/register_owner.php?error=Username atau email sudah digunakan");
         exit;
     }
     $stmt->close();
@@ -46,14 +46,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt->execute()) {
         $stmt->close();
-        header("Location: ../../frontend/auth/login.php");
+        header("Location: ../../../frontend/auth/login.php?success=Registrasi owner berhasil, silakan login");
         exit;
     } else {
         $stmt->close();
-        header("Location: ../../frontend/auth/register_owner.php?error=Gagal mendaftarkan owner");
+        header("Location: ../../../frontend/auth/register_owner.php?error=Gagal mendaftarkan owner");
         exit;
     }
 } else {
-    header("Location: ../../frontend/auth/register_owner.php");
+    header("Location: ../../../frontend/auth/register_owner.php");
     exit;
 }

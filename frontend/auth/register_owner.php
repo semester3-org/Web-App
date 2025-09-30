@@ -32,7 +32,7 @@ session_start();
           <div class="alert alert-danger py-2"><?= htmlspecialchars($_GET['error']); ?></div>
         <?php endif; ?>
 
-        <form action="../../backend/auth/register_owner.php" method="POST" class="row g-3">
+        <form action="../../backend/user/auth/register_owner.php" method="POST" class="row g-3">
           <!-- Nama Lengkap -->
           <div class="col-md-6">
             <label for="nama" class="form-label fw-semibold mb-1">Nama Lengkap</label>
