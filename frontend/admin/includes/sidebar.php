@@ -48,21 +48,15 @@ if (isset($_SESSION['user_id'])) {
           </a>
         </li>
         <li>
-          <a href="#" data-tooltip="Add Kos">
-            <i class="fas fa-plus-circle"></i>
-            <span class="nav-text">Add Kos</span>
-          </a>
-        </li>
-        <li>
           <a href="#" data-tooltip="Your Property">
             <i class="fas fa-building"></i>
-            <span class="nav-text">Your Property</span>
+            <span class="nav-text">All Property</span>
           </a>
         </li>
         <li>
-          <a href="booking.php" class="<?= basename($_SERVER['PHP_SELF']) === 'booking.php' ? 'active' : '' ?>" data-tooltip="Booking List">
-            <i class="fas fa-list"></i>
-            <span class="nav-text">Booking List</span>
+          <a href="facilities.php" class="<?= basename($_SERVER['PHP_SELF']) === 'facilities.php' ? 'active' : '' ?>" data-tooltip="Facilities List">
+            <i class="fas fa-tools"></i>
+            <span class="nav-text">Fasilitas</span>
           </a>
         </li>
         <li>
