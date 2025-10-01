@@ -6,7 +6,7 @@ require_once "../../../backend/config/db.php";
 // Ambil data user dari DB
 // Ambil data user dari DB
 $user = null;
-$profilePicPath = ''; // Variable yang digunakan di HTML
+$profilePicPath = ''; 
 
 if (isset($_SESSION['user_id'])) {
   $stmt = $conn->prepare("SELECT id, username, email, full_name, phone, user_type, profile_picture FROM users WHERE id = ?");

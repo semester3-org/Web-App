@@ -61,7 +61,7 @@ session_start();
         <p class="text-muted mb-4 text-center">Choose a role that suits your goals</p>
 
         <!-- Pilihan role -->
-        <a href="register_user.php" class="role-btn">
+        <a href="register_customer.php" class="role-btn">
           <img src="../assets/pencari.png" alt="Pencari Kos">
           Pencari Kos
         </a>
