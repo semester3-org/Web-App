@@ -6,81 +6,95 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    body {
-      background: #f5f6f8;
-    }
-    /* Kos Status */
-    .kos-status {
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      justify-content: space-between;
-      align-items: stretch;
-      background: #f8f9fa;
-    }
-    .kos-status .left {
-      background: #f8f9fa;
-      color: black;
-      padding: 20px;
-      flex: 1;
-    }
-    .kos-status .right {
-      background: #ffe5e5;
-      width: 150px;
-    }
+  body {
+    background: #f5f6f8;
+  }
+  /* Kos Status */
+  .kos-status {
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    background: #f8f9fa;
+  }
+  .kos-status .left {
+    background: #f8f9fa;
+    color: black;
+    padding: 20px;
+    flex: 1;
+  }
+  .kos-status .right {
+    background: #ffe5e5;
+    width: 150px;
+  }
 
-    /* Selection box */
-    .selection-box {
-      background: white;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      text-align: center;
-      padding: 20px 10px;
-      min-width: 100px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .selection-box.active {
-      border-color: #28a745;
-      background: #28a745;
-      color: white;
-      font-weight: bold;
-    }
+  /* Selection box */
+  .selection-box {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    text-align: center;
+    padding: 20px 10px;
+    min-width: 100px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .selection-box.active {
+    border-color: #28a745;
+    background: #28a745;
+    color: white;
+    font-weight: bold;
+  }
 
-    /* Location tags */
-    .location-tag {
-      background: #f1f3f5;
-      border-radius: 20px;
-      padding: 8px 16px;
-      margin: 5px;
-      display: inline-block;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .location-tag.active {
-      background: #28a745;
-      color: white;
-    }
+  /* Location tags */
+  .location-tag {
+    background: #f1f3f5;
+    border-radius: 20px;
+    padding: 8px 16px;
+    margin: 5px;
+    display: inline-block;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .location-tag.active {
+    background: #28a745;
+    color: white;
+  }
 
-    /* Recommendation */
-    .recommend-box {
-      border-radius: 12px;
-      padding: 20px;
-      min-height: 150px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      color: white;
-      font-weight: bold;
-      font-size: 1.1rem;
+  /* Recommendation Cards */
+  .recommend-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transform: translateY(20px);
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+  }
+
+  .recommend-card img {
+    transition: transform 0.4s ease;
+  }
+
+  .recommend-card:hover img {
+    transform: scale(1.08);
+  }
+
+  .recommend-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
     }
-    .recommend-fav {
-      background: linear-gradient(to top, #dc3545 20%, #28a745 80%);
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
-    .recommend-promo {
-      background: #6c757d;
-    }
-  </style>
+  }
+</style>
+
 </head>
 <body>
 
@@ -128,7 +142,7 @@
 <h5 class="fw-bold mb-3">Recommendation</h5>
 <div class="row g-3">
   <div class="col-md-6">
-    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+    <div class="card recommend-card shadow-sm border-0 rounded-3 overflow-hidden">
       <!-- Gambar -->
       <img src="../assets/favorite.jpg" class="card-img-top" alt="Favorite" style="height:180px; object-fit:cover;">
       <!-- Isi teks -->
@@ -139,7 +153,7 @@
   </div>
 
   <div class="col-md-6">
-    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+    <div class="card recommend-card shadow-sm border-0 rounded-3 overflow-hidden">
       <!-- Gambar -->
       <img src="../../assets/logo_login.svg" class="card-img-top" alt="Promo" style="height:180px; object-fit:contain; background:#f8f9fa;">
       <!-- Isi teks -->
@@ -149,6 +163,7 @@
     </div>
   </div>
 </div>
+
 
 
 
