@@ -32,7 +32,7 @@ session_start();
           <div class="alert alert-danger py-2"><?= htmlspecialchars($_GET['error']); ?></div>
         <?php endif; ?>
 
-        <form action="../../backend/user/auth/register_customer.php" method="POST" class="row g-3">
+        <form id="registerForm" action="../../backend/user/auth/register_customer.php" method="POST" class="row g-3" novalidate>
           <!-- Nama Lengkap -->
           <div class="col-md-6">
             <label for="nama" class="form-label fw-semibold mb-1">Nama Lengkap</label>
@@ -87,11 +87,21 @@ session_start();
             </div>
           </div>
 
-          <!-- Button -->
+          <!-- Button Daftar -->
           <div class="col-12">
             <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Daftar</button>
           </div>
         </form>
+
+        <!-- OR Divider -->
+        <div class="text-center my-3 text-muted">— atau —</div>
+
+        <!-- Google Register -->
+        <a href="../../backend/user/auth/google_register.php"
+           class="btn btn-outline-danger w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 mb-3">
+          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="height:20px;">
+          <span>Masuk dengan Google</span>
+        </a>
 
         <p class="mt-4 text-center">
           Sudah punya akun? <a href="login.php" class="text-success fw-bold">Masuk</a>
@@ -106,6 +116,20 @@ session_start();
     </div>
   </div>
 </div>
+
+<script>
+  // validasi konfirmasi password sederhana
+  document.getElementById('registerForm').addEventListener('submit', function(e){
+    const pw = document.getElementById('password').value;
+    const cpw = document.getElementById('confirm_password').value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert('Password dan konfirmasi tidak cocok.');
+      document.getElementById('confirm_password').focus();
+    }
+  });
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

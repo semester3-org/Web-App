@@ -1,3 +1,11 @@
+<?php if (isset($_GET['success'])): ?>
+    <div class="alert alert-success py-2"><?= htmlspecialchars($_GET['success']); ?></div>
+<?php elseif (isset($_GET['message'])): ?>
+    <div class="alert alert-info py-2"><?= htmlspecialchars($_GET['message']); ?></div>
+<?php elseif (isset($_GET['error'])): ?>
+    <div class="alert alert-danger py-2"><?= htmlspecialchars($_GET['error']); ?></div>
+<?php endif; ?>
+
 <?php
 session_start();
 $login_type = $_GET['type'] ?? 'user';
@@ -74,9 +82,24 @@ if (isset($_SESSION['user_id'])) {
     <a href="forgot_password.php" class="text-success small">Lupa Password?</a>
   </div>
 
-  <!-- Button -->
-  <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Login</button>
-</form>
+
+<!-- Button Login -->
+<button type="submit" class="btn btn-success w-100 py-2 fw-bold">Login</button>
+
+<!-- OR Divider -->
+<div class="text-center my-3 text-muted">— atau —</div>
+
+<a href="../../backend/user/auth/google_login.php"
+   class="btn btn-outline-danger w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 mb-3">
+   <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="height:20px;">
+   <span>Masuk dengan Google</span>
+</a>
+
+
+
+
+
+
 
 <p class="mt-4 text-center">
   Belum Punya Akun? <a href="register.php" class="text-success fw-bold">Buat Akun</a>

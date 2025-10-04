@@ -12,13 +12,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // 1. Validasi input kosong
     if (empty($nama) || empty($username) || empty($email) || empty($no_hp) || empty($password) || empty($confirm)) {
-        header("Location: ../../frontend/auth/register_user.php?error=Semua field wajib diisi");
+        header("Location: ../../../frontend/auth/register_user.php?error=Semua field wajib diisi");
         exit;
     }
 
     // 2. Validasi password dan konfirmasi
     if ($password !== $confirm) {
-        header("Location: ../../frontend/auth/register_user.php?error=Password dan konfirmasi tidak sama");
+        header("Location: ../../../frontend/auth/register_user.php?error=Password dan konfirmasi tidak sama");
         exit;
     }
 
@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        header("Location: ../../frontend/auth/register_user.php?error=Username atau email sudah digunakan");
+        header("Location: ../../../frontend/auth/register_user.php?error=Username atau email sudah digunakan");
         exit;
     }
 
@@ -42,13 +42,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($stmt->execute()) {
         // Redirect ke login kalau berhasil
-        header("Location: ../../frontend/auth/login.php");
+        header("Location: ../../../frontend/auth/login.php");
         exit;
     } else {
-        header(header: "Location: ../../frontend/auth/register_user.php?error=Gagal mendaftarkan user");
+        header(header: "Location: ../../../frontend/auth/register_user.php?error=Gagal mendaftarkan user");
         exit;
     }
 } else {
-    header("Location: ../../frontend/auth/register_user.php");
+    header("Location: ../../../frontend/auth/register_user.php");
     exit;
 }

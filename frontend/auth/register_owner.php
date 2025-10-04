@@ -93,6 +93,16 @@ session_start();
           </div>
         </form>
 
+        <!-- OR Divider -->
+        <div class="text-center my-3 text-muted">— atau —</div>
+
+        <!-- Google Register -->
+        <a href="../../backend/user/auth/google_register_owner.php"
+           class="btn btn-outline-danger w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 mb-3">
+          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="height:20px;">
+          <span>Masuk dengan Google</span>
+        </a>
+
         <p class="mt-4 text-center">
           Sudah punya akun? <a href="login.php" class="text-success fw-bold">Masuk</a>
         </p>
