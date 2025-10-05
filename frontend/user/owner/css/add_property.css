@@ -1,0 +1,115 @@
+/**
+ * Add Property - Stylesheet
+ * Custom styles for property creation form
+ */
+
+/* ==================== General Styles ==================== */
+body {
+  background-color: #f4f9f6;
+}
+
+/* ==================== Card Form ==================== */
+.card-form {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+}
+
+/* ==================== Upload Box ==================== */
+.upload-box {
+  border: 2px dashed #28a745;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  background: #f8fdf9;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-box:hover {
+  background: #f1fbf3;
+}
+
+/* ==================== Buttons ==================== */
+.btn-success {
+  border-radius: 20px;
+  padding: 8px 24px;
+}
+
+.btn-secondary {
+  border-radius: 20px;
+  padding: 8px 24px;
+}
+
+/* ==================== Accordion Styles ==================== */
+.accordion-button:not(.collapsed) {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: #28a745;
+}
+
+.accordion-item {
+  border: 1px solid #e0e0e0;
+  margin-bottom: 0.5rem;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.category-icon {
+  width: 20px;
+  text-align: center;
+}
+
+/* ==================== Facility Tags Area ==================== */
+#facility-tags {
+  min-height: 60px;
+  background-color: #ffffff !important;
+  border: none !important;
+}
+
+#facility-tags .badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ==================== Badge/Tag Styles ==================== */
+.badge {
+  cursor: default;
+}
+
+.badge i.bi-x-circle {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.badge i.bi-x-circle:hover {
+  transform: scale(1.2);
+}
+
+/* ==================== Form Labels ==================== */
+.form-label.fw-semibold {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+  .card-form {
+    padding: 1.5rem;
+  }
+  
+  .accordion-button {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+  
+  #facility-tags,
+  #aturan-tags {
+    font-size: 0.85rem;
+  }
+}

@@ -16,7 +16,7 @@ if (isset($_SESSION['user_id'])) {
             header("Location: ../admin/pages/dashboard.php");
             break;
         case 'owner':
-            header("Location: ../user/owner/dashboard.php");
+            header("Location: ../user/owner/pages/dashboard.php");
             break;
         case 'customer':
         default:
@@ -58,7 +58,7 @@ if (isset($_SESSION['user_id'])) {
           <div class="alert alert-danger py-2"><?= htmlspecialchars($_GET['error']); ?></div>
         <?php endif; ?>
 
-        <form action="../../backend/admin/auth/login_process.php?type=<?= $login_type ?>" method="POST">
+        <form action="../../backend/user/auth/login.php?type=<?= $login_type ?>" method="POST">
   <!-- Username -->
  <div class="mb-3">
   <label for="username" class="form-label fw-semibold">Username</label>
