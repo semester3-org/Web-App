@@ -8,6 +8,21 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <!-- Custom CSS -->
   <link href="../css/add_property.css" rel="stylesheet">
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+      border-radius: 8px;
+      border: 2px solid #dee2e6;
+    }
+    .map-info {
+      background-color: #e7f3ff;
+      border-left: 4px solid #0d6efd;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
@@ -23,45 +38,71 @@
     <p class="text-muted">Selamat Datang ke Halaman Pembuatan Property<br>Isi form di bawah ini dengan lengkap</p>
 
     <div class="card-form mt-4">
-      <form class="row g-3">
+      <form id="propertyForm" class="row g-3">
         <!-- Nama & Kode Pos -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Nama Property</label>
-          <input type="text" class="form-control" placeholder="cth. Kos The Raid">
+          <input type="text" name="name" class="form-control" placeholder="cth. Kos The Raid" required>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">Kode Pos</label>
-          <input type="text" class="form-control" placeholder="cth. 68121">
+          <input type="text" name="postal_code" class="form-control" placeholder="cth. 68121">
         </div>
 
         <!-- Alamat -->
         <div class="col-12">
           <label class="form-label fw-semibold">Alamat</label>
-          <input type="text" class="form-control" placeholder="cth. Perum Mastrip Blok 0/18">
+          <input type="text" id="address" name="address" class="form-control" placeholder="cth. Perum Mastrip Blok 0/18" required>
+          <small class="text-muted">Ketik alamat dan pilih dari saran untuk update peta otomatis</small>
         </div>
 
         <!-- Provinsi & Kota -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Provinsi</label>
-          <input type="text" class="form-control" placeholder="cth. Jawa Timur">
+          <input type="text" name="province" class="form-control" placeholder="cth. Jawa Timur" required>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">Kota</label>
-          <input type="text" class="form-control" placeholder="cth. Jember">
+          <input type="text" name="city" class="form-control" placeholder="cth. Jember" required>
+        </div>
+
+        <!-- Google Maps Section -->
+        <div class="col-12">
+          <label class="form-label fw-semibold">
+            <i class="bi bi-geo-alt-fill text-danger"></i> Lokasi di Peta
+          </label>
+          <div class="map-info">
+            <small>
+              <i class="bi bi-info-circle"></i> 
+              <strong>Cara menggunakan:</strong> Drag marker merah atau klik di peta untuk menentukan lokasi yang tepat. 
+              Koordinat akan tersimpan otomatis.
+            </small>
+          </div>
+          <div id="map" class="mt-2"></div>
+          
+          <!-- Hidden inputs untuk latitude dan longitude -->
+          <input type="hidden" id="latitude" name="latitude" value="">
+          <input type="hidden" id="longitude" name="longitude" value="">
+          
+          <!-- Info koordinat -->
+          <div class="mt-2 text-muted small">
+            <i class="bi bi-pin-map"></i> 
+            Koordinat: <span id="coord-display">Belum dipilih</span>
+          </div>
         </div>
 
         <!-- Total Kamar & Jenis Kos -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Total Kamar</label>
-          <input type="number" class="form-control" placeholder="cth. 10">
+          <input type="number" name="total_rooms" class="form-control" placeholder="cth. 10" required>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">Jenis Kos</label>
-          <select class="form-select">
-            <option>Pilih Jenis Kos</option>
-            <option>Campur</option>
-            <option>Putra</option>
-            <option>Putri</option>
+          <select name="kos_type" class="form-select" required>
+            <option value="">Pilih Jenis Kos</option>
+            <option value="campur">Campur</option>
+            <option value="putra">Putra</option>
+            <option value="putri">Putri</option>
           </select>
         </div>
 
@@ -177,17 +218,17 @@
         <!-- Harga -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Harga Perbulan</label>
-          <input type="text" class="form-control" placeholder="Rp. 800.000">
+          <input type="number" name="price_monthly" class="form-control" placeholder="800000" required>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">Harga Perhari (Opsional)</label>
-          <input type="text" class="form-control" placeholder="Rp. 80.000">
+          <input type="number" name="price_daily" class="form-control" placeholder="80000">
         </div>
 
         <!-- Deskripsi -->
         <div class="col-12">
           <label class="form-label fw-semibold">Deskripsi</label>
-          <textarea class="form-control" rows="3" placeholder="cth. Kos Nyaman Dekat Kampus"></textarea>
+          <textarea name="description" class="form-control" rows="3" placeholder="cth. Kos Nyaman Dekat Kampus"></textarea>
         </div>
 
         <!-- Upload -->
@@ -197,7 +238,7 @@
             <i class="bi bi-image fs-1 text-success"></i>
             <p class="mb-1"><strong>Upload a file</strong> or Drag and Drop</p>
             <p class="text-muted small">PNG, JPG, GIF up to 10MB</p>
-            <input type="file" class="form-control mt-2" accept="image/*">
+            <input type="file" name="images" class="form-control mt-2" accept="image/*" multiple>
           </div>
         </div>
 
@@ -211,7 +252,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- JavaScript terpisah -->
+  
+  <!-- Google Maps API - GANTI YOUR_API_KEY dengan API Key Anda -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
+  
+  <!-- JavaScript untuk Maps -->
+  <script src="../js/google_maps.js"></script>
+  
+  <!-- JavaScript untuk form lainnya (fasilitas, aturan, dll) -->
   <script src="../js/add_property.js"></script>
 </body>
 

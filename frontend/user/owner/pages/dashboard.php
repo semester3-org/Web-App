@@ -13,7 +13,7 @@
 
 <div class="container mt-4">
   <h3 class="fw-bold mb-3">Dashboard Admin</h3>
-  <p>Selamat datang di halaman <b>Admin</b>! (Frontend demo mode, tidak perlu login)</p>
+
 
 <div class="card card-square shadow-sm p-4">
   <h5 class="fw-bold mb-3">Add Your Property</h5>
