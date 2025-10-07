@@ -37,7 +37,7 @@ switch ($user['user_type']) {
         header("Location: ../../../frontend/admin/pages/dashboard.php");
         break;
     case 'owner':
-        header("Location: ../../../frontend/user/owner/dashboard.php");
+        header("Location: ../../../frontend/user/owner/pages/dashboard.php");
         break;
     case 'customer':
     default:

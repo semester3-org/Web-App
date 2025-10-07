@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once("../config/db.php"); // koneksi database
+require_once("../../config/db.php"); // koneksi database
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST['username']);
@@ -32,14 +32,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // Redirect sesuai role
             switch ($user['user_type']) {
                 case 'admin':
-                    header("Location: ../../frontend/admin/pages/dashboard.php");
+                    header("Location: /Web-App/frontend/admin/pages/dashboard.php");
                     break;
                 case 'owner':
-                    header("Location: ../../frontend/user/owner/dashboard.php");
+                    header("Location: /Web-App/frontend/user/owner/pages/dashboard.php");
                     break;
                 case 'customer':
                 default:
-                    header("Location: ../../frontend/user/customer/home.php");
+                    header("Location: /Web-App/frontend/user/customer/home.php");
                     break;
             }
             exit;

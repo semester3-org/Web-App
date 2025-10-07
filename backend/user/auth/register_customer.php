@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once("../config/db.php"); // koneksi database
+require_once("../../config/db.php"); // koneksi database
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nama       = trim($_POST['nama']);

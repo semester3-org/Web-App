@@ -5,7 +5,7 @@
   <title>Dashboard Admin - KostHub</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=<?php echo time(); ?>">
+  <link rel="stylesheet" href="../../css/style.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -13,7 +13,7 @@
 
 <div class="container mt-4">
   <h3 class="fw-bold mb-3">Dashboard Admin</h3>
-  <p>Selamat datang di halaman <b>Admin</b>! (Frontend demo mode, tidak perlu login)</p>
+
 
 <div class="card card-square shadow-sm p-4">
   <h5 class="fw-bold mb-3">Add Your Property</h5>
