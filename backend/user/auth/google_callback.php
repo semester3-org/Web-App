@@ -46,7 +46,7 @@ try {
         // Redirect otomatis sesuai role
         switch($user['user_type']){
             case 'owner':
-                header("Location: ../../../frontend/user/owner/dashboard.php");
+                header("Location: ../../../frontend/user/owner/pages/dashboard.php");
                 break;
             case 'customer':
                 header("Location: ../../../frontend/user/customer/home.php");

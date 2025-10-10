@@ -1,6 +1,7 @@
 <?php
+// ...existing code...
 session_start();
-require_once __DIR__ . "/../auth/auth_admin.php";
+require_once __DIR__ . "/../auth/auth_customer.php";
 require_once "../../../backend/config/db.php";
 
 // Ambil data user dari DB
@@ -37,7 +38,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 
 <head>
   <meta charset="UTF-8">
-  <title>Profile - Dashboard Admin</title>
+  <title>Profile - Dashboard Customer</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -379,7 +380,6 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 </head>
 
 <body>
-  <?php include __DIR__ . "/../includes/sidebar.php"; ?>
 
   <main class="content">
 
@@ -557,7 +557,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
       uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
       uploadBtn.disabled = true;
 
-      fetch('../../../backend/admin/classes/upload_profile-pictures.php', {
+      fetch('../../../backend/user/customer/classes/upload_profile-pictures.php', {
           method: 'POST',
           body: formData
         })
@@ -769,7 +769,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
       clearTimeout(checkTimeout);
 
       checkTimeout = setTimeout(() => {
-        fetch('../../../backend/admin/classes/check_duplicate.php', {
+        fetch('../../../backend/user/customer/classes/check_duplicate.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -823,7 +823,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
-      fetch("../../../backend/admin/classes/profile_process.php", {
+      fetch("../../../backend/user/customer/classes/profile_process.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -913,3 +913,4 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 </body>
 
 </html>
+// ...existing code...

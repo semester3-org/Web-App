@@ -1,6 +1,7 @@
 <?php
+// ...existing code...
 session_start();
-
+require_once __DIR__ . '/../../auth/auth_owner.php';
 require_once "../../../../backend/config/db.php";
 
 // Ambil data user dari DB
@@ -37,8 +38,8 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 
 <head>
   <meta charset="UTF-8">
-  <title>Profile - Dashboard Admin</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <title>Profile - Dashboard Owner</title>
+  <link rel="stylesheet" href="../../css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
@@ -379,19 +380,26 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 </head>
 
 <body>
-  
 
   <main class="content">
-    <h1>Profile</h1>
 
-    <div class="profile-container">
-      <div id="msgBox" class="message"></div>
+    <div class="profile-container" style="position: relative;">
+  <!-- Judul Profile -->
+  <h1 style="text-align: center; margin-bottom: 30px;">Profile</h1>
 
-      <div class="profile-header">
-        <button class="edit-btn" id="editToggle" title="Edit Profile">
-          <i class="fas fa-pencil-alt"></i>
-        </button>
+  <!-- Tombol Edit di pojok kanan atas -->
+  <button class="edit-btn" id="editToggle" title="Edit Profile"
+          style="position: absolute; top: 10px; right: 10px;">
+    <i class="fas fa-pencil-alt"></i>
+  </button>
+  
+  <!-- Pesan -->
+  <div id="msgBox" class="message"></div>
+  
+  <!-- Header Profil -->
+  <div class="profile-header">
 
+    <!-- isi konten lain di sini -->
         <div class="profile-avatar-container">
           <div class="profile-avatar" id="avatarContainer">
             <?php if (!empty($profilePicPath)): ?>
@@ -549,7 +557,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
       uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
       uploadBtn.disabled = true;
 
-      fetch('../../../backend/admin/classes/upload_profile-pictures.php', {
+      fetch('../../../../backend/user/owner/classes/upload_profile-pictures.php', {
           method: 'POST',
           body: formData
         })
@@ -761,7 +769,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
       clearTimeout(checkTimeout);
 
       checkTimeout = setTimeout(() => {
-        fetch('../../../backend/admin/classes/check_duplicate.php', {
+        fetch('../../../../backend/user/owner/classes/check_duplicate.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -815,7 +823,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
-      fetch("../../../backend/admin/classes/profile_process.php", {
+      fetch("../../../../backend/user/owner/classes/profile_process.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -905,3 +913,4 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 </body>
 
 </html>
+// ...existing code...

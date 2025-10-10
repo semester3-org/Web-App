@@ -97,7 +97,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </li>
             <li><hr class="dropdown-divider"></li>
             <li>
-              <a class="dropdown-item text-danger" href="/Web-App/frontend/auth/logout.php">
+              <a class="dropdown-item text-danger" href="/Web-App/logout.php">
                 <i class="bi bi-box-arrow-right me-2"></i> Log Out
               </a>
             </li>

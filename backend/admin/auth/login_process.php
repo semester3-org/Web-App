@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Cek user di database
-    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type 
+    $stmt = $conn->prepare("SELECT id, username, password, full_name, user_type, profile_picture 
                             FROM users WHERE username = ? LIMIT 1");
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -25,26 +25,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Verifikasi password
         if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id']   = $user['id'];
-            $_SESSION['username']  = $user['username'];
-            $_SESSION['full_name'] = $user['full_name'];
-            $_SESSION['user_type'] = $user['user_type'];
+            // Simpan data user ke session
+            $_SESSION['user_id']         = $user['id'];
+            $_SESSION['username']        = $user['username'];
+            $_SESSION['full_name']       = $user['full_name'];
+            $_SESSION['user_type']       = $user['user_type'];
+
+            // Simpan foto profil (gunakan default jika belum ada)
+            if (!empty($user['profile_picture'])) {
+                $_SESSION['profile_picture'] = '/Web-App/uploads/profiles/' . $user['profile_picture'];
+            } else {
+                $_SESSION['profile_picture'] = '/Web-App/frontend/assets/default-avatar.png';
+            }
 
             // Redirect sesuai role
-            // Redirect sesuai role
-switch ($user['user_type']) {
-    case 'admin':
-        header("Location: ../../../frontend/admin/pages/dashboard.php");
-        break;
-    case 'owner':
-        header("Location: ../../../frontend/user/owner/pages/dashboard.php");
-        break;
-    case 'customer':
-    default:
-        header("Location: ../../../frontend/user/customer/home.php");
-        break;
-}
-exit;
+            switch ($user['user_type']) {
+                case 'admin':
+                    header("Location: ../../../frontend/admin/pages/dashboard.php");
+                    break;
+
+                case 'owner':
+                    header("Location: ../../../frontend/user/owner/pages/dashboard.php");
+                    break;
+
+                case 'customer':
+                default:
+                    header("Location: ../../../frontend/user/customer/home.php");
+                    break;
+            }
+            exit;
 
         } else {
             header("Location: ../../../frontend/auth/login.php?error=Password salah&type=$login_type");
@@ -58,3 +67,4 @@ exit;
     header("Location: ../../../frontend/auth/login.php?type=$login_type");
     exit;
 }
+    

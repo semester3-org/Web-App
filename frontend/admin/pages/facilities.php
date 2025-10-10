@@ -30,6 +30,8 @@ $categories = [
   <link rel="stylesheet" href="../css/facilities.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <title>Daftar Fasilitas</title>
+
+  
 </head>
 <body>
    <?php include __DIR__ . "/../includes/sidebar.php"; ?>

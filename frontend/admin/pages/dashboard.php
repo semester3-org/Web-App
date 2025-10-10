@@ -49,6 +49,7 @@ $data_property = json_encode(array_values($bulan_labels));
   <meta charset="UTF-8">
   <title>Dashboard Admin</title>
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -57,6 +58,7 @@ $data_property = json_encode(array_values($bulan_labels));
 
   <!-- Content -->
   <main class="content">
+  <div class="dashboard-wrapper">
     <h1>Dashboard</h1>
 
     <!-- Cards -->
@@ -80,7 +82,9 @@ $data_property = json_encode(array_values($bulan_labels));
       <h2>Property Bulan ke Bulan</h2>
       <canvas id="propertyChart"></canvas>
     </div>
-  </main>
+  </div>
+</main>
+
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
