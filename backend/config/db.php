@@ -1,19 +1,33 @@
 <?php
-// backend/config/db.php
+/**
+ * ============================================
+ * DATABASE CONFIGURATION
+ * File: backend/config/db.php
+ * ============================================
+ * Konfigurasi koneksi database MySQL
+ */
 
-$host = "localhost";
-$user = "root";       // default laragon
-$pass = "";           // default kosong
-$db   = "db_koshub";  // nama database kamu
+// Database credentials
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');           // Sesuaikan dengan username MySQL Anda
+define('DB_PASS', '');               // Sesuaikan dengan password MySQL Anda
+define('DB_NAME', 'db_koshub');        // Sesuaikan dengan nama database Anda
 
-// Buat koneksi
-$conn = new mysqli($host, $user, $pass, $db);
+// Create connection
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
-// Cek koneksi
+// Check connection
 if ($conn->connect_error) {
-    die("Koneksi database gagal: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// (Opsional) Set charset biar aman untuk UTF-8
-$conn->set_charset("utf8");
+// Set charset to UTF-8
+$conn->set_charset("utf8mb4");
+
+// Disable autocommit untuk transaction
+$conn->autocommit(FALSE);
+
+// Optional: Set timezone
+date_default_timezone_set('Asia/Jakarta');
+
 ?>

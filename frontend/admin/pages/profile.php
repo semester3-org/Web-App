@@ -735,7 +735,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
         clearError(inputEl, errorEl);
       }
       return true;
-    }
+    } 
 
     function validateFullName(value) {
       const errorEl = document.getElementById('full_name_error');
