@@ -60,6 +60,12 @@ if (isset($_SESSION['user_id'])) {
           </a>
         </li>
         <li>
+          <a href="approved.php" class="<?= basename($_SERVER['PHP_SELF']) === 'approved.php' ? 'active' : '' ?>" data-tooltip="Approved List">
+            <i class="fas fa-check"></i>
+            <span class="nav-text">Approval</span>
+          </a>
+        </li>
+        <li>
           <a href="profile.php" class="<?= basename($_SERVER['PHP_SELF']) === 'profile.php' ? 'active' : '' ?>" data-tooltip="Profile">
             <i class="fas fa-user"></i>
             <span class="nav-text">Profile</span>
