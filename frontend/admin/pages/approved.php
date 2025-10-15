@@ -183,7 +183,7 @@ try {
                             <?php if (!empty($property['images'])): ?>
                                 <div class="image-slider">
                                     <?php foreach ($property['images'] as $index => $image): ?>
-                                        <img src="../../<?php echo htmlspecialchars($image); ?>" 
+                                        <img src="../../../uploads/kos/<?php echo htmlspecialchars(basename($image)); ?>" 
                                              alt="<?php echo htmlspecialchars($property['name']); ?>"
                                              class="<?php echo $index === 0 ? 'active' : ''; ?>">
                                     <?php endforeach; ?>
@@ -330,7 +330,18 @@ try {
             </div>
         </div>
     </div>
-
+      <!-- Script dropdown user -->
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById("dropdownMenu");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+    window.addEventListener("click", function(e) {
+      if (!e.target.closest(".user-menu")) {
+        document.getElementById("dropdownMenu").style.display = "none";
+      }
+    });
+  </script>                                
     <script src="../js/approved.js"></script>
 </body>
 </html>

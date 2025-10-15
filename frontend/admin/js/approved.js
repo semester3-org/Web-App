@@ -67,11 +67,11 @@ function approveProperty(propertyId) {
 
   console.log("Sending approve request:", data);
 
-    fetch('/Web-App/backend/admin/classes/approved_process.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `action=approve&property_id=${propertyId}`
-    })
+  fetch("/Web-App/backend/admin/classes/approved_process.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `action=approve&property_id=${propertyId}`,
+  })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -229,29 +229,29 @@ function displayPropertyDetail(property) {
   const detailContent = document.getElementById("detailContent");
 
   let imagesHTML = "";
-  if (property.images && property.images.length > 0) {
-    imagesHTML = `
-            <div class="detail-images">
-                <div class="main-image">
-                    <img src="../../${property.images[0]}" alt="${
-      property.name
-    }" id="mainDetailImage">
-                </div>
-                <div class="thumbnail-images">
-                    ${property.images
-                      .map(
-                        (img, index) => `
-                        <img src="../../${img}" alt="${property.name}" 
-                             onclick="changeDetailImage('../../${img}')"
-                             class="${index === 0 ? "active" : ""}">
-                    `
-                      )
-                      .join("")}
-                </div>
-            </div>
-        `;
-  }
-
+if (property.images && property.images.length > 0) {
+  imagesHTML = `
+    <div class="detail-images">
+      <div class="main-image">
+        <img src="../../../uploads/kos/${property.images[0].split("/").pop()}" 
+             alt="${property.name}" 
+             id="mainDetailImage">
+      </div>
+      <div class="thumbnail-images">
+        ${property.images
+          .map(
+            (img, index) => `
+              <img src="../../../uploads/kos/${img.split("/").pop()}" 
+                   alt="${property.name}" 
+                   onclick="changeDetailImage('../../../uploads/kos/${img.split("/").pop()}')" 
+                   class="${index === 0 ? "active" : ""}">
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
   let facilitiesHTML = "";
   if (property.facilities && property.facilities.length > 0) {
     facilitiesHTML = `
