@@ -1,382 +1,314 @@
 <?php
-
-/**
- * File: frontend/admin/pages/approved.php
- * Admin Property Approval Page
- */
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
-require_once '../../../backend/config/db.php';
 
-// Check if admin is logged in
+// Use absolute path - adjust according to your structure
+$base_path = $_SERVER['DOCUMENT_ROOT'] . '/Web-App';
+
+// Try to include db.php - check multiple possible locations
+$db_paths = [
+    $base_path . '/backend/config/db.php',
+    $base_path . '/config/db.php',
+    __DIR__ . '/../../../backend/config/db.php',
+    __DIR__ . '/../../../config/db.php'
+];
+
+$db_loaded = false;
+foreach ($db_paths as $path) {
+    if (file_exists($path)) {
+        require_once $path;
+        $db_loaded = true;
+        break;
+    }
+}
+
+if (!$db_loaded) {
+    die("Error: Database config file not found. Checked paths:<br>" . implode('<br>', $db_paths));
+}
+
+// Try to include approved_process.php
+$process_paths = [
+    $base_path . '/backend/admin/classes/approved_process.php',
+    __DIR__ . '/../../../backend/admin/classes/approved_process.php'
+];
+
+$process_loaded = false;
+foreach ($process_paths as $path) {
+    if (file_exists($path)) {
+        require_once $path;
+        $process_loaded = true;
+        break;
+    }
+}
+
+if (!$process_loaded) {
+    die("Error: approved_process.php file not found. Checked paths:<br>" . implode('<br>', $process_paths));
+}
+
+// Check if user is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-    header('Location: ../../login.php');
-    exit();
+    die("Error: Anda harus login sebagai admin untuk mengakses halaman ini.");
 }
 
-// Get filter status from URL
-$filter_status = isset($_GET['status']) ? $_GET['status'] : 'pending';
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-
-// Pagination
-$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-$limit = 10;
-$offset = ($page - 1) * $limit;
-
-// Query untuk get properties
-$where_clauses = [];
-$count_params = [];
-$count_types = '';
-
-if ($filter_status !== 'all') {
-    $where_clauses[] = "k.status = ?";
-    $count_params[] = $filter_status;
-    $count_types .= 's';
+// Check database connection
+if (!isset($conn) || $conn->connect_error) {
+    die("Error: Database connection failed - " . ($conn->connect_error ?? 'Connection object not found'));
 }
 
-if (!empty($search)) {
-    $where_clauses[] = "(k.name LIKE ? OR k.city LIKE ? OR k.address LIKE ?)";
-    $search_param = "%$search%";
-    $count_params[] = $search_param;
-    $count_params[] = $search_param;
-    $count_params[] = $search_param;
-    $count_types .= 'sss';
+// Don't create ApprovalProcess here if it causes issues
+// We'll create it only when needed
+$approvalProcess = null;
+
+try {
+    // Only create if class exists
+    if (class_exists('ApprovalProcess')) {
+        $approvalProcess = new ApprovalProcess($conn);
+        
+        // Get filter status
+        $filter_status = isset($_GET['status']) ? $_GET['status'] : 'pending';
+        
+        // Get properties based on status
+        $properties = $approvalProcess->getPropertiesByStatus($filter_status);
+        
+        // Get statistics
+        $stats = $approvalProcess->getApprovalStats();
+    } else {
+        $properties = [];
+        $stats = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'total' => 0];
+    }
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
 }
-
-$where_sql = !empty($where_clauses) ? 'WHERE ' . implode(' AND ', $where_clauses) : '';
-
-// Count total records
-$count_sql = "SELECT COUNT(*) as total FROM kos k $where_sql";
-$count_stmt = $conn->prepare($count_sql);
-if (!empty($count_params)) {
-    $count_stmt->bind_param($count_types, ...$count_params);
-}
-$count_stmt->execute();
-$total_records = $count_stmt->get_result()->fetch_assoc()['total'];
-$total_pages = ceil($total_records / $limit);
-$count_stmt->close();
-
-// Get properties with owner info - Build params for main query
-$main_params = [];
-$main_types = '';
-
-if ($filter_status !== 'all') {
-    $main_params[] = $filter_status;
-    $main_types .= 's';
-}
-
-if (!empty($search)) {
-    $main_params[] = $search_param;
-    $main_params[] = $search_param;
-    $main_params[] = $search_param;
-    $main_types .= 'sss';
-}
-
-$sql = "SELECT 
-            k.*,
-            u.full_name as owner_name,
-            u.email as owner_email,
-            u.phone as owner_phone,
-            (SELECT image_url FROM kos_images WHERE kos_id = k.id LIMIT 1) as main_image,
-            (SELECT COUNT(*) FROM kos_images WHERE kos_id = k.id) as image_count
-        FROM kos k
-        LEFT JOIN users u ON k.owner_id = u.id
-        $where_sql
-        ORDER BY k.created_at DESC
-        LIMIT ? OFFSET ?";
-
-$main_params[] = $limit;
-$main_params[] = $offset;
-$main_types .= 'ii';
-
-$stmt = $conn->prepare($sql);
-if (!empty($main_params)) {
-    $stmt->bind_param($main_types, ...$main_params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-// DEBUG: Tambahkan ini
-echo "<!-- DEBUG: Total rows = " . $result->num_rows . " -->";
-echo "<!-- DEBUG: SQL = " . $sql . " -->";
-echo "<!-- DEBUG: Filter status = " . $filter_status . " -->";
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Property Approval - KostHub Admin</title>
+    <title>Approval Property - Admin Dashboard</title>
+    
+    <!-- Bootstrap Icons & Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+    
     <!-- Style Admin -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/approved.css">
-</head>>
-
+</head>
 <body>
-    <div class="wrapper">
-        <!-- Sidebar -->
-        <?php include '../includes/sidebar.php'; ?>
-
-        <!-- Main Content -->
-        <div class="content-wrapper">
-            <!-- Page Header -->
-            <div class="page-header">
-                <h2 class="mb-2"><i class="bi bi-check-circle"></i> Property Approval</h2>
-                <p class="mb-0">Kelola persetujuan property kos yang diajukan oleh owner</p>
+    <?php include '../includes/sidebar.php'; ?>
+    
+    <div class="main-content">
+        <!-- Header -->
+        <div class="approval-header">
+            <div class="header-content">
+                <h1><i class="fas fa-check-circle"></i> Approval Property</h1>
+                <p>Kelola persetujuan properti kos yang diajukan oleh pemilik</p>
             </div>
+        </div>
 
-            <!-- Alert Messages -->
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success alert-custom alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill"></i> <?php echo $_SESSION['success'];
-                                                            unset($_SESSION['success']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <!-- Statistics Cards -->
+        <div class="stats-container">
+            <div class="stat-card stat-pending">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
                 </div>
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger alert-custom alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <?php echo $_SESSION['error'];
-                                                                    unset($_SESSION['error']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="stat-info">
+                    <h3><?php echo $stats['pending']; ?></h3>
+                    <p>Menunggu Approval</p>
                 </div>
-            <?php endif; ?>
+            </div>
+            
+            <div class="stat-card stat-approved">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3><?php echo $stats['approved']; ?></h3>
+                    <p>Telah Disetujui</p>
+                </div>
+            </div>
+            
+            <div class="stat-card stat-rejected">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3><?php echo $stats['rejected']; ?></h3>
+                    <p>Ditolak</p>
+                </div>
+            </div>
+            
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div class="stat-info">
+                    <h3><?php echo $stats['total']; ?></h3>
+                    <p>Total Property</p>
+                </div>
+            </div>
+        </div>
 
-            <!-- Statistics -->
-            <div class="row mb-4">
-                <?php
-                $stats_sql = "SELECT 
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-                    SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-                    SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
-                    FROM kos";
-                $stats_result = $conn->query($stats_sql);
-                $stats = $stats_result->fetch_assoc();
-                ?>
-                <div class="col-md-4">
-                    <div class="stats-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-muted mb-1">Menunggu Approval</div>
-                                <div class="number"><?php echo $stats['pending'] ?? 0; ?></div>
-                            </div>
-                            <div class="text-warning" style="font-size: 2.5rem;">
-                                <i class="bi bi-clock-history"></i>
-                            </div>
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <a href="?status=pending" class="tab-btn <?php echo $filter_status === 'pending' ? 'active' : ''; ?>">
+                <i class="fas fa-clock"></i> Pending (<?php echo $stats['pending']; ?>)
+            </a>
+            <a href="?status=approved" class="tab-btn <?php echo $filter_status === 'approved' ? 'active' : ''; ?>">
+                <i class="fas fa-check-circle"></i> Approved (<?php echo $stats['approved']; ?>)
+            </a>
+            <a href="?status=rejected" class="tab-btn <?php echo $filter_status === 'rejected' ? 'active' : ''; ?>">
+                <i class="fas fa-times-circle"></i> Rejected (<?php echo $stats['rejected']; ?>)
+            </a>
+            <a href="?status=all" class="tab-btn <?php echo $filter_status === 'all' ? 'active' : ''; ?>">
+                <i class="fas fa-list"></i> Semua Property (<?php echo $stats['total']; ?>)
+            </a>
+        </div>
+
+        <!-- Properties List -->
+        <div class="properties-container">
+            <?php if (empty($properties)): ?>
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3>Tidak ada property</h3>
+                    <p>Belum ada property dengan status <?php echo $filter_status; ?></p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($properties as $property): ?>
+                    <div class="property-card" data-property-id="<?php echo $property['id']; ?>">
+                        <div class="property-images">
+                            <?php if (!empty($property['images'])): ?>
+                                <div class="image-slider">
+                                    <?php foreach ($property['images'] as $index => $image): ?>
+                                        <img src="../../<?php echo htmlspecialchars($image); ?>" 
+                                             alt="<?php echo htmlspecialchars($property['name']); ?>"
+                                             class="<?php echo $index === 0 ? 'active' : ''; ?>">
+                                    <?php endforeach; ?>
+                                    <?php if (count($property['images']) > 1): ?>
+                                        <button class="slider-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
+                                        <button class="slider-btn next-btn"><i class="fas fa-chevron-right"></i></button>
+                                        <div class="image-counter"><?php echo count($property['images']); ?> Foto</div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="no-image">
+                                    <i class="fas fa-image"></i>
+                                    <p>Tidak ada foto</p>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stats-card" style="border-left-color: var(--primary-green);">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-muted mb-1">Disetujui</div>
-                                <div class="number"><?php echo $stats['approved'] ?? 0; ?></div>
+                        
+                        <div class="property-info">
+                            <div class="property-header">
+                                <h3><?php echo htmlspecialchars($property['name']); ?></h3>
+                                <span class="status-badge status-<?php echo $property['status']; ?>">
+                                    <?php echo ucfirst($property['status']); ?>
+                                </span>
                             </div>
-                            <div style="font-size: 2.5rem; color: var(--primary-green);">
-                                <i class="bi bi-check-circle-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stats-card" style="border-left-color: #ef4444;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-muted mb-1">Ditolak</div>
-                                <div class="number"><?php echo $stats['rejected'] ?? 0; ?></div>
-                            </div>
-                            <div class="text-danger" style="font-size: 2.5rem;">
-                                <i class="bi bi-x-circle-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Tabs -->
-            <div class="filter-tabs">
-                <ul class="nav nav-pills">
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo $filter_status === 'all' ? 'active' : ''; ?>" href="?status=all">
-                            <i class="bi bi-grid"></i> Semua
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo $filter_status === 'pending' ? 'active' : ''; ?>" href="?status=pending">
-                            <i class="bi bi-clock"></i> Pending
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo $filter_status === 'approved' ? 'active' : ''; ?>" href="?status=approved">
-                            <i class="bi bi-check-circle"></i> Approved
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo $filter_status === 'rejected' ? 'active' : ''; ?>" href="?status=rejected">
-                            <i class="bi bi-x-circle"></i> Rejected
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Search Box -->
-            <div class="search-box">
-                <form method="GET" class="row g-2">
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
-                    <div class="col-md-10">
-                        <input type="text" name="search" class="form-control" placeholder="Cari nama property, kota, atau alamat..." value="<?php echo htmlspecialchars($search); ?>">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-approve w-100">
-                            <i class="bi bi-search"></i> Cari
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Properties List -->
-            <?php if ($result->num_rows > 0): ?>
-                <?php while ($property = $result->fetch_assoc()): ?>
-                    <div class="property-card">
-                        <div class="row g-0">
-                            <div class="col-md-3">
-                                <img src="../../../<?php echo $property['main_image'] ?? 'assets/no-image.png'; ?>"
-                                    class="property-image"
-                                    alt="<?php echo htmlspecialchars($property['name']); ?>">
-                            </div>
-                            <div class="col-md-9">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h5 class="mb-1"><?php echo htmlspecialchars($property['name']); ?></h5>
-                                            <p class="text-muted mb-2">
-                                                <i class="bi bi-geo-alt"></i> <?php echo htmlspecialchars($property['city'] . ', ' . $property['province']); ?>
-                                            </p>
-                                        </div>
-                                        <span class="status-badge status-<?php echo $property['status']; ?>">
-                                            <?php echo strtoupper($property['status']); ?>
-                                        </span>
-                                    </div>
-
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <div class="mb-2">
-                                                <span class="info-label">Owner:</span>
-                                                <span class="info-value"><?php echo htmlspecialchars($property['owner_name']); ?></span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <span class="info-label">Email:</span>
-                                                <span class="info-value"><?php echo htmlspecialchars($property['owner_email']); ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-2">
-                                                <span class="info-label">Jenis:</span>
-                                                <span class="info-value"><?php echo strtoupper($property['kos_type']); ?></span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <span class="info-label">Total Kamar:</span>
-                                                <span class="info-value"><?php echo $property['total_rooms']; ?> kamar</span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <span class="info-label">Harga:</span>
-                                                <span class="info-value">Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?>/bulan</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-view"
-                                            onclick="viewDetails(<?php echo $property['id']; ?>)">
-                                            <i class="bi bi-eye"></i> Lihat Detail
-                                        </button>
-
-                                        <?php if ($property['status'] === 'pending'): ?>
-                                            <button class="btn btn-approve"
-                                                onclick="approveProperty(<?php echo $property['id']; ?>, '<?php echo htmlspecialchars($property['name']); ?>')">
-                                                <i class="bi bi-check-lg"></i> Setujui
-                                            </button>
-                                            <button class="btn btn-reject"
-                                                onclick="showRejectModal(<?php echo $property['id']; ?>, '<?php echo htmlspecialchars($property['name']); ?>')">
-                                                <i class="bi bi-x-lg"></i> Tolak
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
+                            
+                            <div class="property-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>Pemilik: <?php echo htmlspecialchars($property['owner_name']); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span><?php echo htmlspecialchars($property['city'] . ', ' . $property['province']); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-venus-mars"></i>
+                                    <span>Tipe: <?php echo ucfirst($property['kos_type']); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-door-open"></i>
+                                    <span><?php echo $property['available_rooms']; ?> / <?php echo $property['total_rooms']; ?> Kamar Tersedia</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?> / bulan</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Diajukan: <?php echo date('d M Y, H:i', strtotime($property['created_at'])); ?></span>
                                 </div>
                             </div>
+
+                            <?php if (!empty($property['facilities'])): ?>
+                                <div class="facilities">
+                                    <strong><i class="fas fa-check"></i> Fasilitas:</strong>
+                                    <div class="facility-tags">
+                                        <?php foreach ($property['facilities'] as $facility): ?>
+                                            <span class="facility-tag"><?php echo htmlspecialchars($facility); ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($property['description']): ?>
+                                <div class="description">
+                                    <strong><i class="fas fa-align-left"></i> Deskripsi:</strong>
+                                    <p><?php echo nl2br(htmlspecialchars($property['description'])); ?></p>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($property['status'] === 'rejected' && !empty($property['rejection_reason'])): ?>
+                                <div class="rejection-info">
+                                    <strong><i class="fas fa-exclamation-triangle"></i> Alasan Penolakan:</strong>
+                                    <p><?php echo nl2br(htmlspecialchars($property['rejection_reason'])); ?></p>
+                                    <small>Ditolak oleh: <?php echo htmlspecialchars($property['rejected_by']); ?> pada <?php echo date('d M Y, H:i', strtotime($property['rejected_at'])); ?></small>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($property['status'] === 'approved'): ?>
+                                <div class="approval-info">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Disetujui oleh: <?php echo htmlspecialchars($property['verified_by_name']); ?> pada <?php echo date('d M Y, H:i', strtotime($property['verified_at'])); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="property-actions">
+                                <button class="btn-detail" onclick="viewDetail(<?php echo $property['id']; ?>)">
+                                    <i class="fas fa-eye"></i> Detail Lengkap
+                                </button>
+                                
+                                <?php if ($property['status'] === 'pending'): ?>
+                                    <button class="btn-approve" onclick="approveProperty(<?php echo $property['id']; ?>)">
+                                        <i class="fas fa-check"></i> Setujui
+                                    </button>
+                                    <button class="btn-reject" onclick="showRejectModal(<?php echo $property['id']; ?>, '<?php echo htmlspecialchars($property['name'], ENT_QUOTES); ?>')">
+                                        <i class="fas fa-times"></i> Tolak
+                                    </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
-                <?php endwhile; ?>
-
-                <!-- Pagination -->
-                <?php if ($total_pages > 1): ?>
-                    <nav>
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?status=<?php echo $filter_status; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">
-                                    <i class="bi bi-chevron-left"></i>
-                                </a>
-                            </li>
-
-                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                <li class="page-item <?php echo $i === $page ? 'active' : ''; ?>">
-                                    <a class="page-link" href="?status=<?php echo $filter_status; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>">
-                                        <?php echo $i; ?>
-                                    </a>
-                                </li>
-                            <?php endfor; ?>
-
-                            <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?status=<?php echo $filter_status; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">
-                                    <i class="bi bi-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                <?php endif; ?>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox" style="font-size: 4rem; color: #9ca3af;"></i>
-                    <h5 class="mt-3 text-muted">Tidak ada property ditemukan</h5>
-                    <p class="text-muted">Property dengan status "<?php echo $filter_status; ?>" tidak tersedia</p>
-                </div>
+                <?php endforeach; ?>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-x-circle"></i> Tolak Property</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="rejectForm" method="POST" action="../../../backend/admin/classes/approved_process.php">
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="reject">
-                        <input type="hidden" name="property_id" id="reject_property_id">
-
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Anda akan menolak property: <strong id="reject_property_name"></strong>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                            <textarea name="rejection_reason" class="form-control" rows="4" placeholder="Tuliskan alasan penolakan..." required></textarea>
-                        </div>
+    <!-- Modal Reject -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-times-circle"></i> Tolak Property</h2>
+                <button class="close-modal" onclick="closeRejectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Anda akan menolak property: <strong id="propertyName"></strong></p>
+                <form id="rejectForm">
+                    <input type="hidden" id="rejectPropertyId" name="property_id">
+                    <div class="form-group">
+                        <label for="rejectReason">Alasan Penolakan *</label>
+                        <textarea id="rejectReason" name="reason" rows="5" required placeholder="Jelaskan alasan penolakan property ini..."></textarea>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-reject">
-                            <i class="bi bi-x-lg"></i> Tolak Property
+                    <div class="modal-actions">
+                        <button type="button" class="btn-cancel" onclick="closeRejectModal()">Batal</button>
+                        <button type="submit" class="btn-confirm-reject">
+                            <i class="fas fa-times"></i> Tolak Property
                         </button>
                     </div>
                 </form>
@@ -384,90 +316,21 @@ echo "<!-- DEBUG: Filter status = " . $filter_status . " -->";
         </div>
     </div>
 
-    <!-- View Details Modal -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-info-circle"></i> Detail Property</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detailContent">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
+    <!-- Modal Detail -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> Detail Property</h2>
+                <button class="close-modal" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Memuat data...
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function approveProperty(id, name) {
-            if (confirm(`Setujui property "${name}"?`)) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '../../../backend/admin/classes/approved_process.php';
-
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'approve';
-
-                const idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.name = 'property_id';
-                idInput.value = id;
-
-                form.appendChild(actionInput);
-                form.appendChild(idInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-
-        function showRejectModal(id, name) {
-            document.getElementById('reject_property_id').value = id;
-            document.getElementById('reject_property_name').textContent = name;
-            new bootstrap.Modal(document.getElementById('rejectModal')).show();
-        }
-
-        function viewDetails(id) {
-            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-            modal.show();
-
-            fetch(`../../../backend/admin/api/get_property_detail.php?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('detailContent').innerHTML = data.html;
-                    } else {
-                        document.getElementById('detailContent').innerHTML =
-                            '<div class="alert alert-danger">Gagal memuat detail</div>';
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('detailContent').innerHTML =
-                        '<div class="alert alert-danger">Error: ' + error + '</div>';
-                });
-        }
-    </script>
+    <script src="../js/approved.js"></script>
 </body>
-
 </html>
-
-<?php
-if (!empty($stmt)) {
-    try {
-        $stmt->close();
-    } catch (Error $e) {
-        // Statement sudah ditutup, abaikan error
-    }
-}
-
-if (!empty($conn)) {
-    $conn->close();
-}
-?>
