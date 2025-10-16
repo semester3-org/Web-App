@@ -40,6 +40,8 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
   <meta charset="UTF-8">
   <title>Profile - Dashboard Owner</title>
   <link rel="stylesheet" href="../../css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
@@ -382,6 +384,20 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 <body>
 
   <main class="content">
+    <div class="py-3 d-flex align-items-center justify-content-center position-relative">
+
+    <button type="button" 
+              class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
+              onclick="window.history.back()">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+
+    <!-- Logo dan Judul -->
+   <div class="d-flex align-items-center text-center">
+        <img src="../../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
+        <h2 class="fw-bold m-0">KostHub</h2>
+      </div>
+    </div>
 
     <div class="profile-container" style="position: relative;">
   <!-- Judul Profile -->

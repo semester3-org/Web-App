@@ -40,6 +40,8 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
   <meta charset="UTF-8">
   <title>Profile - Dashboard Customer</title>
   <link rel="stylesheet" href="../css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
@@ -383,110 +385,129 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 
   <main class="content">
 
-    <div class="profile-container" style="position: relative;">
-  <!-- Judul Profile -->
-  <h1 style="text-align: center; margin-bottom: 30px;">Profile</h1>
+  <!-- Header Logo + Tombol Kembali -->
+  <div class="py-3 d-flex align-items-center justify-content-center position-relative">
 
-  <!-- Tombol Edit di pojok kanan atas -->
-  <button class="edit-btn" id="editToggle" title="Edit Profile"
-          style="position: absolute; top: 10px; right: 10px;">
-    <i class="fas fa-pencil-alt"></i>
-  </button>
-  
-  <!-- Pesan -->
-  <div id="msgBox" class="message"></div>
-  
-  <!-- Header Profil -->
-  <div class="profile-header">
+    <!-- Tombol Kembali -->
+    <button type="button" 
+              class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
+              onclick="window.history.back()">
+        <i class="bi bi-arrow-left"></i>
+      </button>
 
-    <!-- isi konten lain di sini -->
-        <div class="profile-avatar-container">
-          <div class="profile-avatar" id="avatarContainer">
-            <?php if (!empty($profilePicPath)): ?>
-              <img src="<?php echo htmlspecialchars($profilePicPath); ?>"
-                alt="Profile Picture"
-                id="currentAvatar"
-                onerror="console.error('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
-              <i class="fas fa-user" id="defaultAvatar" style="display: none; font-size: 60px; color: #999;"></i>
-            <?php else: ?>
-              <i class="fas fa-user" id="defaultAvatar" style="font-size: 60px; color: #999;"></i>
-            <?php endif; ?>
-          </div>
-          <div class="upload-overlay" onclick="document.getElementById('imageUpload').click();">
-            <i class="fas fa-camera"></i>
-            <div style="font-size: 10px;">Change Photo</div>
-          </div>
+    <!-- Logo dan Judul -->
+    <div class="d-flex align-items-center text-center">
+      <img src="../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
+      <h2 class="fw-bold m-0">KostHub</h2>
+    </div>
+  </div>
+
+  <!-- Container Profil -->
+  <div class="profile-container" style="position: relative;">
+
+    <!-- Judul Profile -->
+    <h1 style="text-align: center; margin-bottom: 30px;">Profile</h1>
+
+    <!-- Tombol Edit di pojok kanan atas -->
+    <button class="edit-btn" id="editToggle" title="Edit Profile"
+            style="position: absolute; top: 10px; right: 10px;">
+      <i class="fas fa-pencil-alt"></i>
+    </button>
+
+    <!-- Pesan -->
+    <div id="msgBox" class="message"></div>
+
+    <!-- Header Profil -->
+    <div class="profile-header">
+      <div class="profile-avatar-container">
+        <div class="profile-avatar" id="avatarContainer">
+          <?php if (!empty($profilePicPath)): ?>
+            <img src="<?php echo htmlspecialchars($profilePicPath); ?>"
+                 alt="Profile Picture"
+                 id="currentAvatar"
+                 onerror="console.error('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <i class="fas fa-user" id="defaultAvatar" style="display: none; font-size: 60px; color: #999;"></i>
+          <?php else: ?>
+            <i class="fas fa-user" id="defaultAvatar" style="font-size: 60px; color: #999;"></i>
+          <?php endif; ?>
         </div>
-
-        <input type="file" id="imageUpload" accept="image/jpeg,image/jpg,image/png,image/gif">
-
-        <h2 id="profileUsername"><?= htmlspecialchars($user['username'] ?? '') ?></h2>
-        <small id="profileEmail"><?= htmlspecialchars($user['email'] ?? '') ?></small>
+        <div class="upload-overlay" onclick="document.getElementById('imageUpload').click();">
+          <i class="fas fa-camera"></i>
+          <div style="font-size: 10px;">Change Photo</div>
+        </div>
       </div>
 
-      <form id="profileForm">
-        <div class="form-group">
-          <label class="form-label">Nama Lengkap</label>
-          <input type="text"
-            class="form-input"
-            id="full_name"
-            value="<?= htmlspecialchars($user['full_name'] ?? '') ?>"
-            readonly>
-          <span class="error-text" id="full_name_error"></span>
-        </div>
+      <input type="file" id="imageUpload" accept="image/jpeg,image/jpg,image/png,image/gif">
 
-        <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text"
-            class="form-input"
-            id="username"
-            value="<?= htmlspecialchars($user['username'] ?? '') ?>"
-            data-original="<?= htmlspecialchars($user['username'] ?? '') ?>"
-            readonly>
-          <span class="error-text" id="username_error"></span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email"
-            class="form-input"
-            id="email"
-            value="<?= htmlspecialchars($user['email'] ?? '') ?>"
-            data-original="<?= htmlspecialchars($user['email'] ?? '') ?>"
-            readonly>
-          <span class="error-text" id="email_error"></span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Nomor HP</label>
-          <input type="text"
-            class="form-input"
-            id="phone"
-            value="<?= htmlspecialchars($user['phone'] ?? '') ?>"
-            readonly>
-          <span class="error-text" id="phone_error"></span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Role</label>
-          <input type="text"
-            class="form-input"
-            value="<?= ucfirst($user['user_type'] ?? '') ?>"
-            readonly
-            disabled>
-        </div>
-
-        <div class="button-group hidden" id="actionButtons">
-          <button type="submit" class="save-btn" id="saveBtn">
-            <i class="fas fa-save"></i> Simpan
-          </button>
-          <button type="button" class="cancel-btn" id="cancelBtn">
-            <i class="fas fa-times"></i> Batal
-          </button>
-        </div>
-      </form>
+      <h2 id="profileUsername"><?= htmlspecialchars($user['username'] ?? '') ?></h2>
+      <small id="profileEmail"><?= htmlspecialchars($user['email'] ?? '') ?></small>
     </div>
-  </main>
+
+    <!-- Form Profil -->
+    <form id="profileForm">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text"
+               class="form-input"
+               id="full_name"
+               value="<?= htmlspecialchars($user['full_name'] ?? '') ?>"
+               readonly>
+        <span class="error-text" id="full_name_error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text"
+               class="form-input"
+               id="username"
+               value="<?= htmlspecialchars($user['username'] ?? '') ?>"
+               data-original="<?= htmlspecialchars($user['username'] ?? '') ?>"
+               readonly>
+        <span class="error-text" id="username_error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email"
+               class="form-input"
+               id="email"
+               value="<?= htmlspecialchars($user['email'] ?? '') ?>"
+               data-original="<?= htmlspecialchars($user['email'] ?? '') ?>"
+               readonly>
+        <span class="error-text" id="email_error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nomor HP</label>
+        <input type="text"
+               class="form-input"
+               id="phone"
+               value="<?= htmlspecialchars($user['phone'] ?? '') ?>"
+               readonly>
+        <span class="error-text" id="phone_error"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <input type="text"
+               class="form-input"
+               value="<?= ucfirst($user['user_type'] ?? '') ?>"
+               readonly
+               disabled>
+      </div>
+
+      <div class="button-group hidden" id="actionButtons">
+        <button type="submit" class="save-btn" id="saveBtn">
+          <i class="fas fa-save"></i> Simpan
+        </button>
+        <button type="button" class="cancel-btn" id="cancelBtn">
+          <i class="fas fa-times"></i> Batal
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
 
   <!-- Image Preview Modal -->
   <div class="image-preview-modal" id="previewModal">

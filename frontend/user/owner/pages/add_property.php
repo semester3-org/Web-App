@@ -26,16 +26,32 @@
 </head>
 
 <body>
+  
 
-  <!-- Header -->
-  <div class="text-center py-3 d-flex align-items-center justify-content-center">
-    <img src="../../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
-    <h2 class="fw-bold m-0">KostHub</h2>
-  </div>
+    <!-- Header -->
+    <div class="py-3 d-flex align-items-center justify-content-center position-relative">
+      <!-- Tombol kembali -->
+      <button type="button" 
+              class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
+              onclick="window.history.back()">
+        <i class="bi bi-arrow-left"></i>
+      </button>
 
-  <div class="container mb-5" style="max-width: 850px;">
-    <h3 class="fw-bold mb-2">Add New Property</h3>
-    <p class="text-muted">Selamat Datang ke Halaman Pembuatan Property<br>Isi form di bawah ini dengan lengkap</p>
+      <!-- Logo dan Judul -->
+      <div class="d-flex align-items-center text-center">
+        <img src="../../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
+        <h2 class="fw-bold m-0">KostHub</h2>
+      </div>
+    </div>
+
+    <!-- Konten Form -->
+    <div class="container mb-5" style="max-width: 850px;">
+      <h3 class="fw-bold mb-2">Add New Property</h3>
+      <p class="text-muted">
+        Selamat Datang ke Halaman Pembuatan Property<br>
+        Isi form di bawah ini dengan lengkap
+      </p>
+
 
     <div class="card-form mt-4">
       <form id="propertyForm" class="row g-3">

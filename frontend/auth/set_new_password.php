@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['reset_email'])) {
+  header("Location: forgot_password.php");
+  exit();
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -26,24 +30,31 @@ session_start();
       <!-- Left Form -->
       <div class="form-section p-5 d-flex flex-column justify-content-center">
         <h3 class="fw-bold mb-2 text-center">Set New Password</h3>
-        <p class="text-muted mb-4 text-center">Must be at least 8 characters</p>
+        <p class="text-muted mb-4 text-center">Password minimal 8 karakter</p>
 
-        <form action="login.php" method="POST">
+        <!-- ALERT -->
+        <?php if (isset($_GET['error'])): ?>
+          <div class="alert alert-danger text-center"><?php echo htmlspecialchars($_GET['error']); ?></div>
+        <?php elseif (isset($_GET['success'])): ?>
+          <div class="alert alert-success text-center"><?php echo htmlspecialchars($_GET['success']); ?></div>
+        <?php endif; ?>
+
+        <form action="/Web-App/backend/auth/process_reset_password.php" method="POST">
           <!-- Password -->
           <div class="mb-3">
-            <label for="password" class="form-label fw-semibold">Password</label>
+            <label for="password" class="form-label fw-semibold">Password Baru</label>
             <div class="input-group">
               <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
-              <input type="password" class="form-control" id="password" name="password" placeholder="Masukan Password" required>
+              <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan Password Baru" required>
             </div>
           </div>
 
           <!-- Confirm Password -->
           <div class="mb-3">
-            <label for="confirm_password" class="form-label fw-semibold">Confirm Password</label>
+            <label for="confirm_password" class="form-label fw-semibold">Konfirmasi Password</label>
             <div class="input-group">
               <span class="input-group-text bg-light"><i class="bi bi-lock-fill"></i></span>
-              <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Masukan Password" required>
+              <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Ulangi Password" required>
             </div>
           </div>
 
@@ -52,7 +63,7 @@ session_start();
         </form>
 
         <p class="mt-4 text-center">
-          Kembali ke <a href="login.php" class="text-success fw-bold">Login?</a>
+          Kembali ke <a href="login.php" class="text-success fw-bold">Login</a>
         </p>
       </div>
 

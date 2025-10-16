@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = trim($_POST['password']);
 
     if (empty($username) || empty($password)) {
-        header("Location: ../../frontend/auth/login.php?error=Username dan password wajib diisi");
+        header("Location: ../../../frontend/auth/login.php?error=Username dan password wajib diisi");
         exit;
     }
 
@@ -44,14 +44,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
             exit;
         } else {
-            header("Location: ../../frontend/auth/login.php?error=Password salah");
+            header("Location: ../../../frontend/auth/login.php?error=Password salah");
             exit;
         }
     } else {
-        header("Location: ../../frontend/auth/login.php?error=Username tidak ditemukan");
+        header("Location: ../../../frontend/auth/login.php?error=Username tidak ditemukan");
         exit;
     }
 } else {
-    header("Location: ../../frontend/auth/login.php");
+    header("Location: ../../../frontend/auth/login.php");
     exit;
 }

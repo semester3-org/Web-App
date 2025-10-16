@@ -1,5 +1,12 @@
 <?php
 session_start();
+$email = $_SESSION['reset_email'] ?? null;
+
+// Jika belum ada email (akses langsung halaman ini tanpa forgot password)
+if (!$email) {
+  header("Location: /Web-App/frontend/auth/forgot_password.php?error=Silakan masukkan email terlebih dahulu");
+  exit;
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -41,24 +48,34 @@ session_start();
       
       <!-- Left Form -->
       <div class="form-section p-5 d-flex flex-column justify-content-center">
-        <h3 class="fw-bold mb-2 text-center">Password Reset</h3>
-        <p class="text-muted mb-4 text-center">Kami mengirimkan kode ke <span class="text-success fw-semibold">emailanda@gmail.com</span></p>
+        <h3 class="fw-bold mb-2 text-center">Konfirmasi Kode</h3>
+        <p class="text-muted mb-4 text-center">
+          Kami telah mengirimkan kode ke <span class="text-success fw-semibold"><?= htmlspecialchars($email) ?></span>
+        </p>
 
-        <form action="set_new_password.php" method="POST">
+        <?php if (isset($_GET['error'])): ?>
+          <div class="alert alert-danger py-2"><?= htmlspecialchars($_GET['error']); ?></div>
+        <?php elseif (isset($_GET['success'])): ?>
+          <div class="alert alert-success py-2"><?= htmlspecialchars($_GET['success']); ?></div>
+        <?php endif; ?>
+
+        <form action="/Web-App/backend/auth/process_confirm_code.php" method="POST">
+          <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>">
+
           <!-- Code Input -->
           <div class="d-flex justify-content-between mb-4">
-            <input type="text" maxlength="1" class="form-control code-input" name="code[]">
-            <input type="text" maxlength="1" class="form-control code-input" name="code[]">
-            <input type="text" maxlength="1" class="form-control code-input" name="code[]">
-            <input type="text" maxlength="1" class="form-control code-input" name="code[]">
+            <?php for ($i = 0; $i < 4; $i++): ?>
+                <input type="text" maxlength="1" class="form-control code-input" name="code[]" required>
+            <?php endfor; ?>
+
           </div>
 
           <!-- Button -->
-          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Reset Password</button>
+          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Verifikasi Kode</button>
         </form>
 
         <p class="mt-4 text-center">
-          Tidak menerima email? <a href="#" class="text-success fw-bold">Kirim ulang</a>
+          Tidak menerima email? <a href="/Web-App/backend/auth/resend_code.php" class="text-success fw-bold">Kirim ulang</a>
         </p>
       </div>
 
@@ -73,7 +90,6 @@ session_start();
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Auto focus pindah ke input berikutnya
 const inputs = document.querySelectorAll(".code-input");
 inputs.forEach((input, index) => {
   input.addEventListener("input", () => {
