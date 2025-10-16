@@ -1,3 +1,20 @@
+<?php
+session_start();
+require_once "../../../../backend/config/db.php";
+
+// Debug - HAPUS SETELAH SELESAI TESTING
+if (!isset($_SESSION['user_id'])) {
+  die("ERROR: Session tidak ditemukan! Silakan login ulang. <a href='../../auth/login.php'>Login</a>");
+}
+
+if ($_SESSION['user_type'] !== 'owner') {
+  die("ERROR: Anda bukan owner! User Type: " . $_SESSION['user_type'] . " <a href='../../auth/login.php'>Login</a>");
+}
+
+// Uncomment untuk melihat semua session data
+// echo "<pre>"; print_r($_SESSION); echo "</pre>";
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -6,6 +23,10 @@
   <title>Add New Property - KostHub</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <!-- Custom CSS -->
   <link href="../css/add_property.css" rel="stylesheet">
   <style>
@@ -14,13 +35,44 @@
       width: 100%;
       border-radius: 8px;
       border: 2px solid #dee2e6;
+      z-index: 1;
     }
+
     .map-info {
       background-color: #e7f3ff;
       border-left: 4px solid #0d6efd;
       padding: 12px;
       border-radius: 4px;
       margin-top: 10px;
+    }
+
+    .search-box {
+      position: relative;
+      z-index: 1000;
+    }
+
+    #search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1001;
+    }
+
+    .search-result-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .search-result-item:hover {
+      background-color: #f8f9fa;
     }
   </style>
 </head>
@@ -54,7 +106,7 @@
 
 
     <div class="card-form mt-4">
-      <form id="propertyForm" class="row g-3">
+      <form id="propertyForm" action="../../../../backend/user/owner/classes/add_property_process.php" method="POST" enctype="multipart/form-data" class="row g-3">
         <!-- Nama & Kode Pos -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Nama Property</label>
@@ -65,11 +117,21 @@
           <input type="text" name="postal_code" class="form-control" placeholder="cth. 68121">
         </div>
 
-        <!-- Alamat -->
+        <!-- Alamat dengan Search -->
         <div class="col-12">
           <label class="form-label fw-semibold">Alamat</label>
-          <input type="text" id="address" name="address" class="form-control" placeholder="cth. Perum Mastrip Blok 0/18" required>
-          <small class="text-muted">Ketik alamat dan pilih dari saran untuk update peta otomatis</small>
+          <div class="search-box">
+            <div class="input-group">
+              <input type="text" id="address-search" class="form-control" placeholder="Cari alamat... (cth: Jember, Jawa Timur)">
+              <button type="button" id="search-btn" class="btn btn-primary">
+                <i class="bi bi-search"></i> Cari
+              </button>
+            </div>
+            <div id="search-results" style="display: none;"></div>
+          </div>
+          <small class="text-muted">Ketik nama tempat/alamat dan klik "Cari", lalu pilih dari hasil pencarian</small>
+
+          <input type="text" name="address" id="address" class="form-control mt-2" placeholder="Alamat lengkap akan terisi otomatis" required>
         </div>
 
         <!-- Provinsi & Kota -->
@@ -82,27 +144,28 @@
           <input type="text" name="city" class="form-control" placeholder="cth. Jember" required>
         </div>
 
-        <!-- Google Maps Section -->
+        <!-- Map Section -->
         <div class="col-12">
           <label class="form-label fw-semibold">
             <i class="bi bi-geo-alt-fill text-danger"></i> Lokasi di Peta
           </label>
           <div class="map-info">
             <small>
-              <i class="bi bi-info-circle"></i> 
-              <strong>Cara menggunakan:</strong> Drag marker merah atau klik di peta untuk menentukan lokasi yang tepat. 
-              Koordinat akan tersimpan otomatis.
+              <i class="bi bi-info-circle"></i>
+              <strong>Cara menggunakan:</strong>
+              Cari lokasi menggunakan kotak pencarian, atau klik langsung di peta untuk menentukan lokasi.
+              Marker merah bisa di-drag untuk menyesuaikan posisi.
             </small>
           </div>
           <div id="map" class="mt-2"></div>
-          
-          <!-- Hidden inputs untuk latitude dan longitude -->
+
+          <!-- Hidden inputs -->
           <input type="hidden" id="latitude" name="latitude" value="">
           <input type="hidden" id="longitude" name="longitude" value="">
-          
+
           <!-- Info koordinat -->
           <div class="mt-2 text-muted small">
-            <i class="bi bi-pin-map"></i> 
+            <i class="bi bi-pin-map"></i>
             Koordinat: <span id="coord-display">Belum dipilih</span>
           </div>
         </div>
@@ -125,11 +188,8 @@
         <!-- Fasilitas & Aturan -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Fasilitas</label>
-          
-          <!-- Accordion untuk kategori fasilitas -->
+
           <div class="accordion" id="facilitiesAccordion">
-            
-            <!-- Fasilitas Kamar -->
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#roomFacilities">
@@ -145,7 +205,6 @@
               </div>
             </div>
 
-            <!-- Fasilitas Kamar Mandi -->
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bathroomFacilities">
@@ -161,7 +220,6 @@
               </div>
             </div>
 
-            <!-- Fasilitas Umum -->
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#commonFacilities">
@@ -177,7 +235,6 @@
               </div>
             </div>
 
-            <!-- Fasilitas Parkir -->
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#parkingFacilities">
@@ -193,7 +250,6 @@
               </div>
             </div>
 
-            <!-- Fasilitas Keamanan -->
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#securityFacilities">
@@ -208,10 +264,8 @@
                 </div>
               </div>
             </div>
-
           </div>
 
-          <!-- Tempat menampilkan tag fasilitas yang dipilih -->
           <div id="facility-tags" class="mt-3 p-2 border rounded bg-light">
             <small class="text-muted">Fasilitas yang dipilih akan muncul di sini</small>
           </div>
@@ -226,19 +280,17 @@
             <option value="tidak_merokok">Tidak Boleh Merokok</option>
             <option value="tamu_terbatas">Tamu Terbatas</option>
           </select>
-
-          <!-- Tempat menampilkan tag aturan -->
           <div id="aturan-tags" class="mt-2"></div>
         </div>
 
         <!-- Harga -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Harga Perbulan</label>
-          <input type="number" name="price_monthly" class="form-control" placeholder="800000" required>
+          <input type="text" id="price_monthly" name="price_monthly" class="form-control">
         </div>
         <div class="col-md-6">
           <label class="form-label fw-semibold">Harga Perhari (Opsional)</label>
-          <input type="number" name="price_daily" class="form-control" placeholder="80000">
+          <input type="text" id="price_daily" name="price_daily" class="form-control">
         </div>
 
         <!-- Deskripsi -->
@@ -250,13 +302,25 @@
         <!-- Upload -->
         <div class="col-12">
           <label class="form-label fw-semibold">Gambar</label>
-          <div class="upload-box">
+
+          <!-- Upload Box -->
+          <div class="upload-box text-center rounded p-4 position-relative border-dashed" id="dropArea">
             <i class="bi bi-image fs-1 text-success"></i>
             <p class="mb-1"><strong>Upload a file</strong> or Drag and Drop</p>
             <p class="text-muted small">PNG, JPG, GIF up to 10MB</p>
-            <input type="file" name="images" class="form-control mt-2" accept="image/*" multiple>
+            <input
+              type="file"
+              id="imageInput"
+              name="images[]"
+              class="form-control mt-2"
+              accept="image/*"
+              multiple>
           </div>
+
+          <!-- Preview Container -->
+          <div id="previewContainer" class="d-flex flex-wrap gap-3 mt-3"></div>
         </div>
+
 
         <!-- Buttons -->
         <div class="col-12 d-flex justify-content-end gap-2 mt-3">
@@ -268,14 +332,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- Google Maps API - GANTI YOUR_API_KEY dengan API Key Anda -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
-  
-  <!-- JavaScript untuk Maps -->
-  <script src="../js/google_maps.js"></script>
-  
-  <!-- JavaScript untuk form lainnya (fasilitas, aturan, dll) -->
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Maps JS -->
+  <script src="../js/leaflet_maps.js"></script>
+
+  <!-- Form JS -->
   <script src="../js/add_property.js"></script>
 </body>
 

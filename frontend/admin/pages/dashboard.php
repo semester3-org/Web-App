@@ -51,6 +51,7 @@ $data_property = json_encode(array_values($bulan_labels));
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
 </head>
 <body>
   <!-- Sidebar -->

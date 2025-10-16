@@ -26,50 +26,7 @@ if ($userId) {
     }
 }
 ?>
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 fixed-top" style="height:65px;">
-  <a class="navbar-brand fw-bold d-flex align-items-center" href="dashboard.php">
-    <img src="../../../assets/logo_kos.png" alt="logo" style="height:30px;" class="me-2">
-    KostHub
-  </a>
 
-  <div class="collapse navbar-collapse">
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      <li class="nav-item">
-        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF'])=='dashboard.php' ? 'text-success fw-semibold' : ''; ?>" href="dashboard.php">Add Kos</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF'])=='your_property.php' ? 'text-success fw-semibold' : ''; ?>" href="your_property.php">Your Property</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF'])=='booking_list.php' ? 'text-success fw-semibold' : ''; ?>" href="booking_list.php">Booking List</a>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Search -->
-  <form class="d-flex me-3">
-    <input class="form-control form-control-sm" type="search" placeholder="Search">
-    <button class="btn btn-outline-success btn-sm ms-2" type="submit"><i class="bi bi-search"></i></button>
-  </form>
-
-  <!-- Profile Dropdown (sesuai code customer) -->
-  <div class="dropdown">
-    <a href="#" class="d-flex align-items-center text-dark text-decoration-none"
-       id="profileDropdown"
-       data-bs-toggle="dropdown"
-       aria-expanded="false">
-      <img src="<?= htmlspecialchars($profilePic) ?>" alt="profile"
-           class="rounded-circle border"
-           style="height:35px; width:35px; object-fit:cover;">
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
-      <li class="dropdown-item-text fw-semibold text-center"><?= $fullName ?></li>
-      <li><hr class="dropdown-divider"></li>
-      <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person-circle me-2"></i> Profile</a></li>
-      <li><a class="dropdown-item text-danger" href="../../../../logout.php"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a></li>
-    </ul>
-  </div>
-</nav>
 <?php
 session_start();
 require_once("../../../../backend/config/db.php");
@@ -118,11 +75,27 @@ if ($userId) {
     </ul>
   </div>
 
-  <!-- Search -->
-  <form class="d-flex me-3">
-    <input class="form-control form-control-sm" type="search" placeholder="Search">
-    <button class="btn btn-outline-success btn-sm ms-2" type="submit"><i class="bi bi-search"></i></button>
-  </form>
+
+
+    <!-- 🔔 Notification Bell -->
+  <div class="dropdown me-3">
+    <a href="#" class="text-dark position-relative" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-bell fs-5"></i>
+      <!-- Badge -->
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+        3
+      </span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" style="width: 250px;">
+      <li class="dropdown-header fw-semibold">Notifikasi</li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item small" href="#">Booking baru diterima</a></li>
+      <li><a class="dropdown-item small" href="#">Pembayaran berhasil</a></li>
+      <li><a class="dropdown-item small" href="#">Kamar sudah penuh</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item text-center small text-primary" href="#">Lihat semua</a></li>
+    </ul>
+  </div>
 
   <!-- Profile Dropdown (sesuai code customer) -->
   <div class="dropdown">

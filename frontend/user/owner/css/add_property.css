@@ -113,3 +113,47 @@ body {
     font-size: 0.85rem;
   }
 }
+
+/* Garis putus-putus untuk area upload */
+.border-dashed {
+  border: 2px dashed #28a745; /* warna hijau seperti Bootstrap success */
+  background-color: #f8f9fa;  /* abu lembut */
+  transition: all 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+/* Efek saat mouse di atas area */
+.border-dashed:hover {
+  background-color: #e9f7ef;
+  border-color: #198754;
+  transform: scale(1.01);
+}
+
+/* Sembunyikan border input file agar tidak ganggu tampilan */
+.upload-box input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.card {
+  background-color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success {
+  background-color: #198754 !important;
+  border: none !important;
+}
+
+body {
+  background-color: #f8f9fa;
+}
