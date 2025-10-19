@@ -2,15 +2,6 @@
    FACILITIES MODULE - CSS STYLESHEET FINAL
    ============================================ */
 
-/* Main Content Wrapper - Responsive dengan Sidebar */
-.main-content {
-  margin-left: 120px;
-  padding: 30px;
-  min-height: 100vh;
-  background: #f9f9f9;
-  transition: margin-left 0.3s ease;
-}
-
 /* Ketika sidebar di-minimize */
 body.sidebar-minimized .main-content {
   margin-left: 70px;
@@ -24,13 +15,24 @@ body.sidebar-minimized .main-content {
   }
 }
 
+/* Main Content Wrapper - Responsive dengan Sidebar */
+.main-content {
+    margin-left: 10px;
+    width: 1300px;
+    padding: 30px;
+    min-height: 100vh;
+    margin-right: 20px;
+    background-color: #f5f6fa;
+
+}
+
 /* ============================================
    FACILITIES CONTAINER
    ============================================ */
 .facilities-container {
   max-width: 100%;
   background: #fff;
-  padding: 35px 40px;
+  padding: 40px 40px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }

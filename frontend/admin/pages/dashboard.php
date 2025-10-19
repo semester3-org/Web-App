@@ -59,7 +59,6 @@ $data_property = json_encode(array_values($bulan_labels));
 
   <!-- Content -->
   <main class="content">
-  <div class="dashboard-wrapper">
     <h1>Dashboard</h1>
 
     <!-- Cards -->
@@ -83,7 +82,6 @@ $data_property = json_encode(array_values($bulan_labels));
       <h2>Property Bulan ke Bulan</h2>
       <canvas id="propertyChart"></canvas>
     </div>
-  </div>
 </main>
 
 
