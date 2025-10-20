@@ -8,7 +8,7 @@
 
 // Arrays untuk menyimpan data terpilih
 let selectedFacilities = [];
-let selectedRules = [];
+
 
 /**
  * ============================================
@@ -662,56 +662,62 @@ function removeFacility(id, element) {
 
 /**
  * ============================================
- * SETUP RULE HANDLERS
+ * SETUP RULE HANDLERS (VERSI BARU DENGAN KATEGORI)
  * ============================================
  */
+let selectedRules = []; // pastikan array ini didefinisikan global
+
 function setupRuleHandlers() {
   const ruleSelect = document.getElementById("aturan-select");
 
   if (ruleSelect) {
     ruleSelect.addEventListener("change", function () {
-      if (this.value) {
-        addRule(this.value, this.options[this.selectedIndex].text);
-        this.value = ""; // Reset select
+      const value = this.value;
+      const text = this.options[this.selectedIndex].text;
+      const group = this.options[this.selectedIndex].parentElement.label; // ambil kategori optgroup
+
+      if (value) {
+        addRule(value, text, group);
+        this.value = ""; // Reset dropdown ke default
       }
     });
   }
 }
 
 /**
- * Tambah aturan ke list
+ * Tambah aturan ke daftar tag
  */
-function addRule(value, text) {
-  // Cek jika sudah ada
-  if (selectedRules.includes(value)) {
-    return;
-  }
+function addRule(value, text, group) {
+  // Cegah duplikasi
+  if (selectedRules.includes(value)) return;
 
   selectedRules.push(value);
 
-  // Buat tag badge
+  // Buat container badge
   const tagsContainer = document.getElementById("aturan-tags");
+  const wrapper = document.createElement("span");
+  wrapper.className = "badge bg-success p-2 d-flex align-items-center me-2 mb-2";
+  wrapper.style.gap = "6px";
+  wrapper.dataset.value = value;
 
-  const badge = document.createElement("span");
-  badge.className = "badge bg-info me-2 mb-2";
-  badge.innerHTML = `
-        ${text}
-        <i class="bi bi-x-circle ms-1" style="cursor: pointer;" onclick="removeRule('${value}', this)"></i>
-    `;
+  wrapper.innerHTML = `
+    <div class="text-start">
+      <strong>${group}</strong><br>${text}
+    </div>
+    <i class="bi bi-x-circle" style="cursor:pointer; font-size:1rem;" onclick="removeRule('${value}', this)"></i>
+  `;
 
-  tagsContainer.appendChild(badge);
+  tagsContainer.appendChild(wrapper);
 }
 
 /**
- * Hapus aturan dari list
+ * Hapus aturan dari daftar tag
  */
 function removeRule(value, element) {
   const index = selectedRules.indexOf(value);
-  if (index > -1) {
-    selectedRules.splice(index, 1);
-  }
+  if (index > -1) selectedRules.splice(index, 1);
 
-  // Hapus badge
+  // Hapus elemen badge
   element.closest(".badge").remove();
 }
 

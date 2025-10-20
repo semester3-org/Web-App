@@ -112,6 +112,7 @@ if (!$stmt) {
 $stmt->bind_param("i", $id);
 
 if ($stmt->execute()) {
+    $conn->commit(); 
     $_SESSION['success'] = "Fasilitas '$facilityName' berhasil dihapus";
 } else {
     $_SESSION['error'] = "Gagal menghapus fasilitas: " . $conn->error;

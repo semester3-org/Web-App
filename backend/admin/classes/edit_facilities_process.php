@@ -143,6 +143,7 @@ if (!$stmt) {
 $stmt->bind_param("sssi", $name, $icon, $category, $id);
 
 if ($stmt->execute()) {
+    $conn->commit(); 
     $_SESSION['success'] = "Fasilitas '$name' berhasil diupdate";
 } else {
     $_SESSION['error'] = "Gagal mengupdate fasilitas: " . $conn->error;

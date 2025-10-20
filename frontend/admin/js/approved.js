@@ -229,8 +229,8 @@ function displayPropertyDetail(property) {
   const detailContent = document.getElementById("detailContent");
 
   let imagesHTML = "";
-if (property.images && property.images.length > 0) {
-  imagesHTML = `
+  if (property.images && property.images.length > 0) {
+    imagesHTML = `
     <div class="detail-images">
       <div class="main-image">
         <img src="../../../uploads/kos/${property.images[0].split("/").pop()}" 
@@ -243,34 +243,37 @@ if (property.images && property.images.length > 0) {
             (img, index) => `
               <img src="../../../uploads/kos/${img.split("/").pop()}" 
                    alt="${property.name}" 
-                   onclick="changeDetailImage('../../../uploads/kos/${img.split("/").pop()}')" 
+                   onclick="changeDetailImage('../../../uploads/kos/${img
+                     .split("/")
+                     .pop()}')" 
                    class="${index === 0 ? "active" : ""}">
             `
           )
           .join("")}
       </div>
     </div>
+  
   `;
-}
+  }
   let facilitiesHTML = "";
   if (property.facilities && property.facilities.length > 0) {
     facilitiesHTML = `
-            <div class="detail-section">
-                <h3><i class="fas fa-check-circle"></i> Fasilitas</h3>
-                <div class="facility-grid">
-                    ${property.facilities
-                      .map(
-                        (facility) => `
-                        <div class="facility-item">
-                            <i class="fas fa-check"></i>
-                            <span>${facility}</span>
-                        </div>
-                    `
-                      )
-                      .join("")}
-                </div>
-            </div>
-        `;
+    <div class="detail-section">
+      <h3><i class="fas fa-check-circle"></i> Fasilitas</h3>
+      <div class="facility-grid">
+        ${property.facilities
+          .map(
+            (facility) => `
+              <div class="facility-item">
+                <i class="fas ${facility.icon || "fa-check"}"></i>
+                <span>${facility.name}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
   }
 
   detailContent.innerHTML = `
@@ -370,6 +373,13 @@ if (property.images && property.images.length > 0) {
                         <span class="info-label">Koordinat:</span>
                         <span class="info-value">${property.latitude}, ${property.longitude}</span>
                     </div>
+                    <div class="info-item full-width">
+                        <a href="https://www.google.com/maps?q=${property.latitude},${property.longitude}" 
+                          target="_blank" 
+                          class="btn-maps">
+                          <i class="fas fa-map-marked-alt"></i> Lihat di Google Maps
+                        </a>
+                   </div>
                     `
                         : ""
                     }
@@ -544,6 +554,7 @@ notificationStyles.textContent = `
             opacity: 0;
         }
     }
+        
     
     .notification i {
         font-size: 24px;
@@ -744,6 +755,22 @@ notificationStyles.textContent = `
     .facility-item span {
         color: #1f2937;
         font-size: 14px;
+    }
+
+      /* Google Maps Button */
+    .btn-maps {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
     }
     
     @media (max-width: 768px) {

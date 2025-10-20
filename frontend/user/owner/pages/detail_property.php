@@ -1,18 +1,23 @@
 <!doctype html>
 <html lang="id">
+
 <head>
   <meta charset="utf-8">
   <title>Update Property - KostHub</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    body { background-color: #f4f9f6; }
+    body {
+      background-color: #f4f9f6;
+    }
+
     .card-form {
       background: #fff;
       border-radius: 12px;
       padding: 2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
     }
+
     .upload-box {
       border: 2px dashed #28a745;
       border-radius: 8px;
@@ -20,10 +25,19 @@
       text-align: center;
       background: #f8fdf9;
     }
-    .btn-success { border-radius: 20px; padding: 8px 24px; }
-    .btn-secondary { border-radius: 20px; padding: 8px 24px; }
+
+    .btn-success {
+      border-radius: 20px;
+      padding: 8px 24px;
+    }
+
+    .btn-secondary {
+      border-radius: 20px;
+      padding: 8px 24px;
+    }
   </style>
 </head>
+
 <body>
 
   <!-- Header -->
@@ -84,22 +98,49 @@
           <input type="text" class="form-control" placeholder="cth. Wifi, AC, Dapur">
         </div>
 
-    <div class="col-md-6">
-      <label class="form-label fw-semibold">Aturan</label>
-      <select id="aturan-select" class="form-select">
-        <option value="">Pilih Aturan</option>
-        <option value="bebas">Bebas</option>
-        <option value="jam_malam">Ada Jam Malam</option>
-        <option value="tidak_merokok">Tidak Boleh Merokok</option>
-        <option value="tamu_terbatas">Tamu Terbatas</option>
-      </select>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Aturan</label>
+          <select id="aturan-select" class="form-select">
+            <option value="">Pilih Aturan</option>
 
-      <!-- Tempat untuk tag aturan -->
-      <div id="aturan-tags" class="mt-2"></div>
-    </div>
+            <optgroup label="Perilaku Penghuni">
+              <option value="tidak_merokok">Tidak Boleh Merokok</option>
+              <option value="tidak_membawa_hewan">Tidak Boleh Membawa Hewan Peliharaan</option>
+              <option value="tidak_berisik">Tidak Boleh Berisik Setelah Jam 10 Malam</option>
+            </optgroup>
+
+            <optgroup label="Tamu & Akses">
+              <option value="tamu_sampai_21">Tamu Hanya Sampai Pukul 21.00</option>
+              <option value="tamu_tidak_menginap">Tamu Tidak Boleh Menginap</option>
+              <option value="tamu_lawan_jenis">Tamu Lawan Jenis Dilarang Masuk Kamar</option>
+            </optgroup>
+
+            <optgroup label="Kebersihan & Fasilitas">
+              <option value="jaga_kebersihan">Wajib Menjaga Kebersihan Kamar</option>
+              <option value="larangan_cuci_umum">Dilarang Mencuci di Kamar Mandi Umum</option>
+              <option value="modifikasi_fasilitas">Dilarang Memodifikasi Fasilitas Kos</option>
+            </optgroup>
+
+            <optgroup label="Keamanan">
+              <option value="kunci_gerbang">Wajib Mengunci Pintu Gerbang Setelah Jam 22.00</option>
+              <option value="kompor_menyala">Tidak Boleh Meninggalkan Kompor Menyala</option>
+              <option value="lapor_kehilangan">Wajib Lapor Jika Kehilangan Barang</option>
+            </optgroup>
+
+            <optgroup label="Pembayaran & Administrasi">
+              <option value="bayar_tepat_waktu">Pembayaran Wajib Sebelum Tanggal 5 Setiap Bulan</option>
+              <option value="denda_keterlambatan">Denda Keterlambatan Rp50.000 per Hari</option>
+              <option value="deposit_hangus">Deposit Hangus Jika Keluar Sebelum Kontrak Habis</option>
+            </optgroup>
+          </select>
+
+          <!-- Tempat tag aturan -->
+          <div id="aturan-tags" class="mt-2"></div>
+        </div>
 
 
-         <!-- Harga -->
+
+        <!-- Harga -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Harga Perbulan</label>
           <input type="text" class="form-control" placeholder="Rp. 800.000">
@@ -138,41 +179,49 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const select = document.getElementById("aturan-select");
-        const container = document.getElementById("aturan-tags");
+    document.addEventListener("DOMContentLoaded", function() {
+      const select = document.getElementById("aturan-select");
+      const container = document.getElementById("aturan-tags");
 
-        select.addEventListener("change", function () {
-          const value = this.value;
-          const text = this.options[this.selectedIndex].text;
+      if (!select || !container) {
+        console.warn("Elemen aturan-select atau aturan-tags tidak ditemukan di halaman");
+        return;
+      }
 
-          if (value && !document.querySelector(`[data-value="${value}"]`)) {
-            // wrapper untuk tiap tag aturan
-            const wrapper = document.createElement("div");
-            wrapper.className = "d-inline-block me-2 mb-2";
-            wrapper.dataset.value = value;
+      select.addEventListener("change", function() {
+        const value = this.value;
+        const text = this.options[this.selectedIndex].text;
+        const group = this.options[this.selectedIndex].parentElement.label; // ambil kategori
 
-            wrapper.innerHTML = `
-              <span class="badge bg-success p-2">
-                ${text}
-                <i class="bi bi-x-circle ms-1" style="cursor:pointer"></i>
-              </span>
-              <input type="hidden" name="aturan[]" value="${value}">
-            `;
+        if (value && !document.querySelector(`[data-value="${value}"]`)) {
+          // Buat wrapper untuk setiap tag
+          const wrapper = document.createElement("div");
+          wrapper.className = "d-inline-block me-2 mb-2";
+          wrapper.dataset.value = value;
 
-            container.appendChild(wrapper);
+          // Isi tag
+          wrapper.innerHTML = `
+          <span class="badge bg-success p-2 d-flex align-items-center" style="gap: 6px;">
+            <div class="text-start">
+              <strong>${group}</strong><br>${text}
+            </div>
+            <i class="bi bi-x-circle" style="cursor:pointer; font-size: 1rem;"></i>
+          </span>
+          <input type="hidden" name="aturan[]" value="${value}">
+        `;
 
-            // reset dropdown ke default
-            this.value = "";
+          container.appendChild(wrapper);
+          this.value = ""; // reset dropdown
 
-            // klik X hapus tag
-            wrapper.querySelector("i").addEventListener("click", function () {
-              wrapper.remove();
-            });
-          }
-        });
+          // Tombol X untuk hapus tag
+          wrapper.querySelector("i").addEventListener("click", function() {
+            wrapper.remove();
+          });
+        }
       });
-</script>
+    });
+  </script>
 
 </body>
+
 </html>

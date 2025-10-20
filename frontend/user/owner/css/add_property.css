@@ -67,29 +67,109 @@ body {
 
 /* ==================== Facility Tags Area ==================== */
 #facility-tags {
-  min-height: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 50px;
   background-color: #ffffff !important;
-  border: none !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 10px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
 }
 
-#facility-tags .badge {
-  font-size: 0.75rem;
-  font-weight: 500;
+/* Saat hover area tag, beri efek lembut */
+#facility-tags:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* ==================== Badge/Tag Styles ==================== */
-.badge {
+#facility-tags .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #198754; /* hijau Bootstrap success */
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 25px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: default;
+  transition: background-color 0.3s, transform 0.2s ease;
 }
 
-.badge i.bi-x-circle {
+/* Efek hover pada badge */
+#facility-tags .badge:hover {
+  background-color: #157347; /* hijau lebih gelap */
+  transform: translateY(-2px);
+}
+
+/* ==================== Ikon Hapus ==================== */
+#facility-tags .badge i.bi-x-circle {
+  color: #ffffff;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.badge i.bi-x-circle:hover {
-  transform: scale(1.2);
+#facility-tags .badge i.bi-x-circle:hover {
+  color: #d1f7d1;
+  transform: scale(1.3);
 }
+
+
+/* ==================== Aturan Tags Area ==================== */
+#aturan-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 50px;
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 10px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
+}
+
+/* Efek lembut ketika area aturan di-hover */
+#aturan-tags:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== Badge/Tag Styles ==================== */
+#aturan-tags .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #198754; /* hijau success */
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 25px; /* kelengkungan sama seperti fasilitas */
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: default;
+  transition: background-color 0.3s, transform 0.2s ease;
+}
+
+/* Efek hover pada badge aturan */
+#aturan-tags .badge:hover {
+  background-color: #157347; /* hijau lebih gelap */
+  transform: translateY(-2px);
+}
+
+/* ==================== Ikon Hapus ==================== */
+#aturan-tags .badge i.bi-x-circle {
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#aturan-tags .badge i.bi-x-circle:hover {
+  color: #d1f7d1;
+  transform: scale(1.3);
+}
+
 
 /* ==================== Form Labels ==================== */
 .form-label.fw-semibold {
@@ -157,3 +237,5 @@ body {
 body {
   background-color: #f8f9fa;
 }
+
+ 

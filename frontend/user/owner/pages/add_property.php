@@ -78,31 +78,31 @@ if ($_SESSION['user_type'] !== 'owner') {
 </head>
 
 <body>
-  
 
-    <!-- Header -->
-    <div class="py-3 d-flex align-items-center justify-content-center position-relative">
-      <!-- Tombol kembali -->
-      <button type="button" 
-              class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
-              onclick="window.history.back()">
-        <i class="bi bi-arrow-left"></i>
-      </button>
 
-      <!-- Logo dan Judul -->
-      <div class="d-flex align-items-center text-center">
-        <img src="../../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
-        <h2 class="fw-bold m-0">KostHub</h2>
-      </div>
+  <!-- Header -->
+  <div class="py-3 d-flex align-items-center justify-content-center position-relative">
+    <!-- Tombol kembali -->
+    <button type="button"
+      class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
+      onclick="window.history.back()">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+
+    <!-- Logo dan Judul -->
+    <div class="d-flex align-items-center text-center">
+      <img src="../../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
+      <h2 class="fw-bold m-0">KostHub</h2>
     </div>
+  </div>
 
-    <!-- Konten Form -->
-    <div class="container mb-5" style="max-width: 850px;">
-      <h3 class="fw-bold mb-2">Add New Property</h3>
-      <p class="text-muted">
-        Selamat Datang ke Halaman Pembuatan Property<br>
-        Isi form di bawah ini dengan lengkap
-      </p>
+  <!-- Konten Form -->
+  <div class="container mb-5" style="max-width: 850px;">
+    <h3 class="fw-bold mb-2">Add New Property</h3>
+    <p class="text-muted">
+      Selamat Datang ke Halaman Pembuatan Property<br>
+      Isi form di bawah ini dengan lengkap
+    </p>
 
 
     <div class="card-form mt-4">
@@ -123,7 +123,7 @@ if ($_SESSION['user_type'] !== 'owner') {
           <div class="search-box">
             <div class="input-group">
               <input type="text" id="address-search" class="form-control" placeholder="Cari alamat... (cth: Jember, Jawa Timur)">
-              <button type="button" id="search-btn" class="btn btn-primary">
+              <button type="button" id="search-btn" class="btn btn-success">
                 <i class="bi bi-search"></i> Cari
               </button>
             </div>
@@ -149,14 +149,21 @@ if ($_SESSION['user_type'] !== 'owner') {
           <label class="form-label fw-semibold">
             <i class="bi bi-geo-alt-fill text-danger"></i> Lokasi di Peta
           </label>
-          <div class="map-info">
+          <div class="map-info"
+            style="background-color: #e8f5e9; 
+            border: 1px solid #c8e6c9; 
+            border-radius: 10px; 
+            padding: 12px 16px; 
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
             <small>
-              <i class="bi bi-info-circle"></i>
+              <i class="bi bi-info-circle" style="color: #198754;"></i>
               <strong>Cara menggunakan:</strong>
               Cari lokasi menggunakan kotak pencarian, atau klik langsung di peta untuk menentukan lokasi.
               Marker merah bisa di-drag untuk menyesuaikan posisi.
             </small>
           </div>
+
           <div id="map" class="mt-2"></div>
 
           <!-- Hidden inputs -->
@@ -275,13 +282,42 @@ if ($_SESSION['user_type'] !== 'owner') {
           <label class="form-label fw-semibold">Aturan</label>
           <select id="aturan-select" class="form-select">
             <option value="">Pilih Aturan</option>
-            <option value="bebas">Bebas</option>
-            <option value="jam_malam">Ada Jam Malam</option>
-            <option value="tidak_merokok">Tidak Boleh Merokok</option>
-            <option value="tamu_terbatas">Tamu Terbatas</option>
+
+            <optgroup label="Perilaku Penghuni">
+              <option value="tidak_merokok">Tidak Boleh Merokok</option>
+              <option value="tidak_membawa_hewan">Tidak Boleh Membawa Hewan Peliharaan</option>
+              <option value="tidak_berisik">Tidak Boleh Berisik Setelah Jam 10 Malam</option>
+            </optgroup>
+
+            <optgroup label="Tamu & Akses">
+              <option value="tamu_sampai_21">Tamu Hanya Sampai Pukul 21.00</option>
+              <option value="tamu_tidak_menginap">Tamu Tidak Boleh Menginap</option>
+              <option value="tamu_lawan_jenis">Tamu Lawan Jenis Dilarang Masuk Kamar</option>
+            </optgroup>
+
+            <optgroup label="Kebersihan & Fasilitas">
+              <option value="jaga_kebersihan">Wajib Menjaga Kebersihan Kamar</option>
+              <option value="larangan_cuci_umum">Dilarang Mencuci di Kamar Mandi Umum</option>
+              <option value="modifikasi_fasilitas">Dilarang Memodifikasi Fasilitas Kos</option>
+            </optgroup>
+
+            <optgroup label="Keamanan">
+              <option value="kunci_gerbang">Wajib Mengunci Pintu Gerbang Setelah Jam 22.00</option>
+              <option value="kompor_menyala">Tidak Boleh Meninggalkan Kompor Menyala</option>
+              <option value="lapor_kehilangan">Wajib Lapor Jika Kehilangan Barang</option>
+            </optgroup>
+
+            <optgroup label="Pembayaran & Administrasi">
+              <option value="bayar_tepat_waktu">Pembayaran Wajib Sebelum Tanggal 5 Setiap Bulan</option>
+              <option value="denda_keterlambatan">Denda Keterlambatan Rp50.000 per Hari</option>
+              <option value="deposit_hangus">Deposit Hangus Jika Keluar Sebelum Kontrak Habis</option>
+            </optgroup>
           </select>
+
+          <!-- Tempat tag aturan -->
           <div id="aturan-tags" class="mt-2"></div>
         </div>
+
 
         <!-- Harga -->
         <div class="col-md-6">

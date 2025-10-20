@@ -25,45 +25,45 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--bg-light);
-  color: var(--text-dark);
-  transition: background-color 0.3s ease, width 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
 }
 
-/* Saat sidebar diminimalkan */
-body.sidebar-minimized {
-  background-color: var(--bg-light); /* samakan agar tidak ada gap putih */
-  width: 1400px; /* atur lebar body sesuai kebutuhan */
-}
 
 /* Main content wrapper */
 .main-content {
-  margin-left: 26px;
-  padding: 30px;
-  min-height: 100vh;
-  margin-right: 0;
-  width: 1250px;
-  transition: margin-left 0.3s ease, width 0.3s ease;
+    margin-left: 26px;
+    padding: 30px;
+    min-height: 100vh;
+    margin-right: 0 ;
 }
 
-/* Saat sidebar diminimalkan, konten ikut menyesuaikan */
-body.sidebar-minimized .main-content {
-  margin-left: 70px;  /* geser menyesuaikan sidebar kecil */
-  width: 1325px;      /* opsional: sedikit kecil agar tetap proporsional */
-}
+
 
 
 /* ============================================
    HEADER SECTION
    ============================================ */
 .approval-header {
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
-    margin-bottom: 30px;
-    box-shadow: var(--shadow);
-    color: black;
+  background: transparent;               /* hilangkan warna putih */
+  border-radius: 0;                      /* biar rata ke luar */
+  padding: 40px 0 25px 0;                /* spasi atas-bawah */
+  margin-bottom: 30px;
+  box-shadow: none;                      /* hilangkan bayangan */
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08); /* garis pemisah halus */
+  color: black;
+}
+
+.approval-header i {
+  color: var(--primary-green);
+  font-size: 36px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.approval-header i:hover {
+  transform: scale(1.1);
+  color: var(--primary-green-dark);
 }
 
 .header-content h1 {

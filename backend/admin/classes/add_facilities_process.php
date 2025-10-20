@@ -123,6 +123,7 @@ if (!$stmt) {
 $stmt->bind_param("sss", $name, $icon, $category);
 
 if ($stmt->execute()) {
+    $conn->commit(); 
     $_SESSION['success'] = "Fasilitas '$name' berhasil ditambahkan";
 } else {
     $_SESSION['error'] = "Gagal menambahkan fasilitas: " . $conn->error;

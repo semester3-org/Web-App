@@ -64,13 +64,13 @@ try {
     // Only create if class exists
     if (class_exists('ApprovalProcess')) {
         $approvalProcess = new ApprovalProcess($conn);
-        
+
         // Get filter status
         $filter_status = isset($_GET['status']) ? $_GET['status'] : 'pending';
-        
+
         // Get properties based on status
         $properties = $approvalProcess->getPropertiesByStatus($filter_status);
-        
+
         // Get statistics
         $stats = $approvalProcess->getApprovalStats();
     } else {
@@ -84,22 +84,24 @@ try {
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approval Property - Admin Dashboard</title>
-    
+
     <!-- Bootstrap Icons & Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
+
     <!-- Style Admin -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/approved.css">
 </head>
+
 <body>
     <?php include '../includes/sidebar.php'; ?>
-    
+
     <div class="main-content">
         <!-- Header -->
         <div class="approval-header">
@@ -120,7 +122,7 @@ try {
                     <p>Menunggu Approval</p>
                 </div>
             </div>
-            
+
             <div class="stat-card stat-approved">
                 <div class="stat-icon">
                     <i class="fas fa-check-circle"></i>
@@ -130,7 +132,7 @@ try {
                     <p>Telah Disetujui</p>
                 </div>
             </div>
-            
+
             <div class="stat-card stat-rejected">
                 <div class="stat-icon">
                     <i class="fas fa-times-circle"></i>
@@ -140,7 +142,7 @@ try {
                     <p>Ditolak</p>
                 </div>
             </div>
-            
+
             <div class="stat-card stat-total">
                 <div class="stat-icon">
                     <i class="fas fa-home"></i>
@@ -183,9 +185,9 @@ try {
                             <?php if (!empty($property['images'])): ?>
                                 <div class="image-slider">
                                     <?php foreach ($property['images'] as $index => $image): ?>
-                                        <img src="../../../uploads/kos/<?php echo htmlspecialchars(basename($image)); ?>" 
-                                             alt="<?php echo htmlspecialchars($property['name']); ?>"
-                                             class="<?php echo $index === 0 ? 'active' : ''; ?>">
+                                        <img src="../../../uploads/kos/<?php echo htmlspecialchars(basename($image)); ?>"
+                                            alt="<?php echo htmlspecialchars($property['name']); ?>"
+                                            class="<?php echo $index === 0 ? 'active' : ''; ?>">
                                     <?php endforeach; ?>
                                     <?php if (count($property['images']) > 1): ?>
                                         <button class="slider-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
@@ -200,7 +202,7 @@ try {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        
+
                         <div class="property-info">
                             <div class="property-header">
                                 <h3><?php echo htmlspecialchars($property['name']); ?></h3>
@@ -208,7 +210,7 @@ try {
                                     <?php echo ucfirst($property['status']); ?>
                                 </span>
                             </div>
-                            
+
                             <div class="property-details">
                                 <div class="detail-item">
                                     <i class="fas fa-user"></i>
@@ -241,7 +243,10 @@ try {
                                     <strong><i class="fas fa-check"></i> Fasilitas:</strong>
                                     <div class="facility-tags">
                                         <?php foreach ($property['facilities'] as $facility): ?>
-                                            <span class="facility-tag"><?php echo htmlspecialchars($facility); ?></span>
+                                            <span class="facility-tag">
+                                                <i class="fas <?php echo htmlspecialchars($facility['icon'] ?? 'fa-check'); ?>"></i>
+                                                <?php echo htmlspecialchars($facility['name']); ?>
+                                            </span>
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
@@ -273,7 +278,7 @@ try {
                                 <button class="btn-detail" onclick="viewDetail(<?php echo $property['id']; ?>)">
                                     <i class="fas fa-eye"></i> Detail Lengkap
                                 </button>
-                                
+
                                 <?php if ($property['status'] === 'pending'): ?>
                                     <button class="btn-approve" onclick="approveProperty(<?php echo $property['id']; ?>)">
                                         <i class="fas fa-check"></i> Setujui
@@ -330,18 +335,19 @@ try {
             </div>
         </div>
     </div>
-      <!-- Script dropdown user -->
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById("dropdownMenu");
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
-    }
-    window.addEventListener("click", function(e) {
-      if (!e.target.closest(".user-menu")) {
-        document.getElementById("dropdownMenu").style.display = "none";
-      }
-    });
-  </script>                                
+    <!-- Script dropdown user -->
+    <script>
+        function toggleDropdown() {
+            const menu = document.getElementById("dropdownMenu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+        window.addEventListener("click", function(e) {
+            if (!e.target.closest(".user-menu")) {
+                document.getElementById("dropdownMenu").style.display = "none";
+            }
+        });
+    </script>
     <script src="../js/approved.js"></script>
 </body>
+
 </html>
