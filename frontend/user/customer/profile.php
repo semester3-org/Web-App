@@ -934,4 +934,3 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 </body>
 
 </html>
-// ...existing code...

@@ -12,6 +12,7 @@ body.sidebar-minimized .main-content {
 
 body.sidebar-minimized {
   background-color: #f0fdf4; /* hilangkan gap putih di belakang sidebar */
+  width: 1400px; /* atur lebar body sesuai kebutuhan */
 }
 body {
   background-color: #f0fdf4; /* samakan dengan warna konten */
