@@ -98,7 +98,7 @@ body {
 /* Right Illustration */
 .illustration-section {
   flex: 1;                
-  background: #f9fafb;     /* lembut */
+  background: #fff;     /* lembut */
   display: flex;
   justify-content: center;
   align-items: center;

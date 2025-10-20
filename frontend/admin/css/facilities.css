@@ -2,40 +2,36 @@
    FACILITIES MODULE - CSS STYLESHEET FINAL
    ============================================ */
 
-/* Ketika sidebar di-minimize */
+
 body.sidebar-minimized .main-content {
   margin-left: 70px;
+  background-color:  #f0fdf4; /* tambahkan baris ini */
 }
 
-/* Responsive untuk mobile */
-@media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-    padding: 15px;
-  }
+
+
+body.sidebar-minimized {
+  background-color: #f0fdf4; /* hilangkan gap putih di belakang sidebar */
 }
+body {
+  background-color: #f0fdf4; /* samakan dengan warna konten */
+}
+
 
 /* Main Content Wrapper - Responsive dengan Sidebar */
 .main-content {
-    margin-left: 10px;
-    width: 1300px;
+    margin: 0;                 /* hilangkan jarak kiri dan kanan */
+    width: 100%;               /* buat full satu layar */
     padding: 30px;
     min-height: 100vh;
-    margin-right: 20px;
-    background-color: #f5f6fa;
-
+    background:  #f0fdf4; /* hilangkan warna abu-abu */
 }
+
 
 /* ============================================
    FACILITIES CONTAINER
    ============================================ */
-.facilities-container {
-  max-width: 100%;
-  background: #fff;
-  padding: 40px 40px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
+
 
 @media (max-width: 768px) {
   .facilities-container {

@@ -43,7 +43,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f6fa;
+      background:#f0fdf4;
     }
 
     .profile-container {

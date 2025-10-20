@@ -27,7 +27,7 @@ body {
 
 .illustration-section {
   flex: 0.45;           /* 45% */
-  background: #f9fafb;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,7 +98,7 @@ body {
 /* Right Illustration */
 .illustration-section {
   flex: 1;                
-  background: #f9fafb;     /* lembut */
+  background: #fff;     /* lembut */
   display: flex;
   justify-content: center;
   align-items: center;
