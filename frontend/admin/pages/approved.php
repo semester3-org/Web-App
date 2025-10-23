@@ -61,26 +61,37 @@ if (!isset($conn) || $conn->connect_error) {
 $approvalProcess = null;
 
 try {
-    // Only create if class exists
     if (class_exists('ApprovalProcess')) {
         $approvalProcess = new ApprovalProcess($conn);
 
         // Get filter status
         $filter_status = isset($_GET['status']) ? $_GET['status'] : 'pending';
+        
+        // Get current page
+        $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $limit = 5; // Properties per page
 
-        // Get properties based on status
-        $properties = $approvalProcess->getPropertiesByStatus($filter_status);
+        // Get total count
+        $total_properties = $approvalProcess->getTotalPropertiesByStatus($filter_status);
+        $total_pages = ceil($total_properties / $limit);
+
+        // Get properties based on status with pagination
+        $properties = $approvalProcess->getPropertiesByStatus($filter_status, $current_page, $limit);
 
         // Get statistics
         $stats = $approvalProcess->getApprovalStats();
     } else {
         $properties = [];
         $stats = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'total' => 0];
+        $total_properties = 0;
+        $total_pages = 0;
+        $current_page = 1;
     }
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -97,6 +108,8 @@ try {
     <!-- Style Admin -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/approved.css">
+    <link rel="stylesheet" href="../css/pagination.css">
+
 </head>
 
 <body>
@@ -335,6 +348,58 @@ try {
             </div>
         </div>
     </div>
+
+     <!-- Pagination -->
+                <?php if ($total_pages > 1): ?>
+                    <div class="pagination-container">
+                        
+                        
+                        <div class="pagination">
+                            <?php if ($current_page > 1): ?>
+                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $current_page - 1; ?>" 
+                                   class="page-link">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            <?php endif; ?>
+                            
+                            <?php
+                            $start_page = max(1, $current_page - 2);
+                            $end_page = min($total_pages, $current_page + 2);
+                            
+                            if ($start_page > 1): ?>
+                                <a href="?status=<?php echo $filter_status; ?>&page=1" class="page-link">1</a>
+                                <?php if ($start_page > 2): ?>
+                                    <span class="page-dots">...</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            
+                            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $i; ?>" 
+                                   class="page-link <?php echo $i === $current_page ? 'active' : ''; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            <?php endfor; ?>
+                            
+                            <?php if ($end_page < $total_pages): ?>
+                                <?php if ($end_page < $total_pages - 1): ?>
+                                    <span class="page-dots">...</span>
+                                <?php endif; ?>
+                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $total_pages; ?>" 
+                                   class="page-link"><?php echo $total_pages; ?></a>
+                            <?php endif; ?>
+                            
+                            <?php if ($current_page < $total_pages): ?>
+                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $current_page + 1; ?>" 
+                                   class="page-link">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+    </div>
+
     <!-- Script dropdown user -->
     <script>
         function toggleDropdown() {

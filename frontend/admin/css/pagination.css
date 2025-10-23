@@ -1,0 +1,163 @@
+/* ============================================
+   MODERN GREEN PAGINATION (REFINED BORDER STYLE)
+   ============================================ */
+
+.pagination-container {
+    margin-top: 40px;
+    padding: 24px 32px;
+    background: #f0fdf4;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    backdrop-filter: blur(6px);
+    transition: all 0.3s ease;
+}
+
+.pagination-info {
+    color: #065f46;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 22px;
+    background: #ecfdf5;
+    border-radius: 40px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+    border: 1px solid #a7f3d0;
+    transition: transform 0.3s ease;
+}
+
+.pagination-info:hover {
+    transform: scale(1.05);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.page-link {
+    min-width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    background: white;
+    color: #047857;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    border-radius: 12px;
+    border: 2px solid #d1fae5;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-link:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    border-color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+/* ✅ Active button (terpilih) */
+.page-link.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+
+    /* Pilih salah satu border di bawah ini 👇 */
+    /* border-color: #ffffff;       🤍 Opsi 1: border putih */
+    border-color: #a7f3d0; /* 💚 Opsi 2: border hijau muda */
+
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+    transform: scale(1.08);
+    animation: pulseGreen 2s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+    0%, 100% {
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.6);
+    }
+}
+
+.page-link i {
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.page-link.arrow {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #059669;
+}
+
+.page-link.arrow:hover {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    border-color: #10b981;
+}
+
+.page-dots {
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    height: 44px;
+}
+
+/* Floating hover effect */
+.page-link:hover:not(.active):not(.arrow) {
+    transform: translateY(-3px);
+}
+
+@media (max-width: 768px) {
+    .pagination-container {
+        padding: 20px;
+        margin-top: 30px;
+    }
+    .page-link {
+        min-width: 40px;
+        height: 40px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .pagination-info {
+        font-size: 13px;
+        padding: 8px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-link {
+        min-width: 36px;
+        height: 36px;
+        font-size: 13px;
+        padding: 0 10px;
+    }
+    .page-dots {
+        font-size: 16px;
+    }
+}
+
+/* Smooth appearance */
+.properties-container {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
