@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<?php include("navbar.php"); ?>
+<?php include "../includes/navbar.php"; ?>
 
 <div class="container mt-4">
   <h4 class="fw-bold mb-4"><i class="bi bi-buildings me-2"></i>Your Own Properties</h4>

@@ -48,9 +48,15 @@ if (isset($_SESSION['user_id'])) {
           </a>
         </li>
         <li>
+          <a href="" class="<?= basename($_SERVER['PHP_SELF']) === '' ? 'active' : '' ?>" data-tooltip="Transaction">
+            <i class="fas fa-dollar"></i>
+            <span class="nav-text">Transaction</span>
+          </a>
+        </li>
+        <li>
           <a href="facilities.php" class="<?= basename($_SERVER['PHP_SELF']) === 'facilities.php' ? 'active' : '' ?>" data-tooltip="Facilities List">
             <i class="fas fa-tools"></i>
-            <span class="nav-text">Fasilitas</span>
+            <span class="nav-text">Facilities</span>
           </a>
         </li>
         <li>
