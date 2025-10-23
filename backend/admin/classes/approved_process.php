@@ -37,76 +37,107 @@ class ApprovalProcess
     /**
      * Get properties by status
      */
-    public function getPropertiesByStatus($status = 'pending')
-    {
-        try {
-            $query = "SELECT 
-                        k.id,
-                        k.name,
-                        k.description,
-                        k.address,
-                        k.city,
-                        k.province,
-                        k.postal_code,
-                        k.latitude,
-                        k.longitude,
-                        k.kos_type,
-                        k.total_rooms,
-                        k.available_rooms,
-                        k.price_monthly,
-                        k.price_daily,
-                        k.rules,
-                        k.status,
-                        k.created_at,
-                        k.updated_at,
-                        k.verified_at,
-                        u.full_name as owner_name,
-                        u.email as owner_email,
-                        u.phone as owner_phone,
-                        admin.full_name as verified_by_name,
-                        pr.reason as rejection_reason,
-                        pr.created_at as rejected_at,
-                        reject_admin.full_name as rejected_by
-                    FROM kos k
-                    INNER JOIN users u ON k.owner_id = u.id
-                    LEFT JOIN users admin ON k.verified_by = admin.id
-                    LEFT JOIN property_rejections pr ON k.id = pr.kos_id
-                    LEFT JOIN users reject_admin ON pr.admin_id = reject_admin.id";
+    public function getPropertiesByStatus($status = 'pending', $page = 1, $limit = 5)
+{
+    try {
+        $offset = ($page - 1) * $limit;
+        
+        $query = "SELECT 
+                    k.id,
+                    k.name,
+                    k.description,
+                    k.address,
+                    k.city,
+                    k.province,
+                    k.postal_code,
+                    k.latitude,
+                    k.longitude,
+                    k.kos_type,
+                    k.total_rooms,
+                    k.available_rooms,
+                    k.price_monthly,
+                    k.price_daily,
+                    k.rules,
+                    k.status,
+                    k.created_at,
+                    k.updated_at,
+                    k.verified_at,
+                    u.full_name as owner_name,
+                    u.email as owner_email,
+                    u.phone as owner_phone,
+                    admin.full_name as verified_by_name,
+                    pr.reason as rejection_reason,
+                    pr.created_at as rejected_at,
+                    reject_admin.full_name as rejected_by
+                FROM kos k
+                INNER JOIN users u ON k.owner_id = u.id
+                LEFT JOIN users admin ON k.verified_by = admin.id
+                LEFT JOIN property_rejections pr ON k.id = pr.kos_id
+                LEFT JOIN users reject_admin ON pr.admin_id = reject_admin.id";
 
-            if ($status !== 'all') {
-                $query .= " WHERE k.status = ?";
-            }
-
-            $query .= " ORDER BY k.created_at DESC";
-
-            $stmt = $this->conn->prepare($query);
-
-            if ($status !== 'all') {
-                $stmt->bind_param("s", $status);
-            }
-
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $properties = [];
-            while ($row = $result->fetch_assoc()) {
-                // Get images
-                $images = $this->getPropertyImages($row['id']);
-                $row['images'] = $images;
-
-                // Get facilities
-                $facilities = $this->getPropertyFacilities($row['id']);
-                $row['facilities'] = $facilities;
-
-                $properties[] = $row;
-            }
-
-            return $properties;
-        } catch (Exception $e) {
-            error_log("Error getting properties: " . $e->getMessage());
-            return [];
+        if ($status !== 'all') {
+            $query .= " WHERE k.status = ?";
         }
+
+        $query .= " ORDER BY k.created_at DESC";
+        $query .= " LIMIT ? OFFSET ?";
+
+        $stmt = $this->conn->prepare($query);
+
+        if ($status !== 'all') {
+            $stmt->bind_param("sii", $status, $limit, $offset);
+        } else {
+            $stmt->bind_param("ii", $limit, $offset);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $properties = [];
+        while ($row = $result->fetch_assoc()) {
+            // Get images
+            $images = $this->getPropertyImages($row['id']);
+            $row['images'] = $images;
+
+            // Get facilities
+            $facilities = $this->getPropertyFacilities($row['id']);
+            $row['facilities'] = $facilities;
+
+            $properties[] = $row;
+        }
+
+        return $properties;
+    } catch (Exception $e) {
+        error_log("Error getting properties: " . $e->getMessage());
+        return [];
     }
+}
+
+public function getTotalPropertiesByStatus($status = 'pending')
+{
+    try {
+        $query = "SELECT COUNT(*) as total FROM kos";
+        
+        if ($status !== 'all') {
+            $query .= " WHERE status = ?";
+        }
+
+        $stmt = $this->conn->prepare($query);
+        
+        if ($status !== 'all') {
+            $stmt->bind_param("s", $status);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        
+        return $row['total'];
+    } catch (Exception $e) {
+        error_log("Error getting total properties: " . $e->getMessage());
+        return 0;
+    }
+}
 
     /**
      * Get property images

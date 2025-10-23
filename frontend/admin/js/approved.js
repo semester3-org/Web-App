@@ -506,6 +506,116 @@ function formatDateTime(dateTimeString) {
   };
   return date.toLocaleDateString("id-ID", options);
 }
+// ============================================
+// MODERN PAGINATION ENHANCEMENT
+// ============================================
+
+document.addEventListener("DOMContentLoaded", function () {
+  // Smooth scroll to top when clicking pagination
+  const pageLinks = document.querySelectorAll(".page-link");
+
+  pageLinks.forEach((link) => {
+    link.addEventListener("click", function (e) {
+      // Add loading state
+      const paginationContainer = document.querySelector(".pagination-container");
+      if (paginationContainer) {
+        paginationContainer.classList.add("loading");
+      }
+      
+      // Scroll to top of properties container with smooth animation
+      const mainContent = document.querySelector(".main-content");
+      if (mainContent) {
+        mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  });
+
+  // Highlight current page in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentPage = urlParams.get("page") || "1";
+  const currentStatus = urlParams.get("status") || "pending";
+
+  // Update page title with current info
+  updatePageInfo(currentPage, currentStatus);
+});
+
+// Update page information
+function updatePageInfo(page, status) {
+  const headerTitle = document.querySelector(".approval-header h1");
+  if (headerTitle && page > 1) {
+    const pageInfo = document.createElement("span");
+    pageInfo.className = "page-info-badge";
+    pageInfo.textContent = `Halaman ${page}`;
+    pageInfo.style.cssText = `
+            font-size: 14px;
+            margin-left: 12px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+        `;
+    headerTitle.appendChild(pageInfo);
+  }
+}
+
+// Keyboard navigation for pagination
+document.addEventListener("keydown", function (e) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentPage = parseInt(urlParams.get("page") || "1");
+  const status = urlParams.get("status") || "pending";
+
+  // Get total pages from pagination
+  const paginationLinks = document.querySelectorAll(".page-link:not(.active)");
+  const lastPageLink = Array.from(paginationLinks)
+    .filter((link) => !link.querySelector("i"))
+    .pop();
+  const totalPages = lastPageLink
+    ? parseInt(lastPageLink.textContent)
+    : currentPage;
+
+  // Left arrow key - previous page
+  if (e.key === "ArrowLeft" && currentPage > 1) {
+    window.location.href = `?status=${status}&page=${currentPage - 1}`;
+  }
+
+  // Right arrow key - next page
+  if (e.key === "ArrowRight" && currentPage < totalPages) {
+    window.location.href = `?status=${status}&page=${currentPage + 1}`;
+  }
+});
+
+// Add loading indicator when changing pages
+document.querySelectorAll(".page-link").forEach((link) => {
+  link.addEventListener("click", function () {
+    const propertiesContainer = document.querySelector(".properties-container");
+    if (propertiesContainer) {
+      propertiesContainer.style.opacity = "0.5";
+      propertiesContainer.style.pointerEvents = "none";
+
+      // Add loading spinner
+      const loadingDiv = document.createElement("div");
+      loadingDiv.className = "page-loading";
+      loadingDiv.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Memuat halaman...';
+      loadingDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 20px 40px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                z-index: 9999;
+                font-size: 16px;
+                color: #10b981;
+                font-weight: 600;
+            `;
+      document.body.appendChild(loadingDiv);
+    }
+  });
+});
 
 // ============================================
 // ADD NOTIFICATION STYLES DYNAMICALLY
