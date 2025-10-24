@@ -64,21 +64,31 @@ try {
     if (class_exists('ApprovalProcess')) {
         $approvalProcess = new ApprovalProcess($conn);
 
-        // Get filter status
-        $filter_status = isset($_GET['status']) ? $_GET['status'] : 'pending';
-        
-        // Get current page
-        $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-        $limit = 5; // Properties per page
+        // Ambil status tab aktif
+        $filter_status = $_GET['status'] ?? 'pending';
 
-        // Get total count
-        $total_properties = $approvalProcess->getTotalPropertiesByStatus($filter_status);
+        // Ambil halaman saat ini
+        $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $limit = 5; // jumlah data per halaman
+
+        // 🟩 Ambil filter tambahan dari form
+        $filters = [
+            'city' => $_GET['city'] ?? '',
+            'kos_type' => $_GET['kos_type'] ?? '',
+            'price_min' => $_GET['price_min'] ?? '',
+            'price_max' => $_GET['price_max'] ?? ''
+        ];
+
+        // Ambil total & data properti dengan filter
+        $total_properties = $approvalProcess->getTotalPropertiesByStatus($filter_status, $filters);
         $total_pages = ceil($total_properties / $limit);
 
-        // Get properties based on status with pagination
-        $properties = $approvalProcess->getPropertiesByStatus($filter_status, $current_page, $limit);
+        $properties = $approvalProcess->getPropertiesByStatus($filter_status, $current_page, $limit, $filters);
 
-        // Get statistics
+        // Ambil daftar kota
+        $cities = $approvalProcess->getDistinctCities();
+
+        // Statistik
         $stats = $approvalProcess->getApprovalStats();
     } else {
         $properties = [];
@@ -86,6 +96,7 @@ try {
         $total_properties = 0;
         $total_pages = 0;
         $current_page = 1;
+        $cities = [];
     }
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
@@ -182,6 +193,61 @@ try {
                 <i class="fas fa-list"></i> Semua Property (<?php echo $stats['total']; ?>)
             </a>
         </div>
+
+        <?php if ($filter_status === 'all'): ?>
+    <!-- Advanced Filter -->
+    <div class="advanced-filter">
+        <form method="GET" action="">
+            <input type="hidden" name="status" value="all">
+
+            <div class="filter-row">
+                <!-- City Filter -->
+                <div class="filter-group">
+                    <label for="city">Kota:</label>
+                    <select name="city" id="city">
+                        <option value="">Semua Kota</option>
+                        <?php
+                        $cities = $approvalProcess->getDistinctCities();
+                        foreach ($cities as $c) {
+                            $selected = (isset($_GET['city']) && $_GET['city'] === $c) ? 'selected' : '';
+                            echo "<option value='$c' $selected>$c</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Kos Type -->
+                <div class="filter-group">
+                    <label for="kos_type">Tipe Kos:</label>
+                    <select name="kos_type" id="kos_type">
+                        <option value="">Semua Tipe</option>
+                        <option value="putra" <?= (isset($_GET['kos_type']) && $_GET['kos_type'] === 'putra') ? 'selected' : '' ?>>Putra</option>
+                        <option value="putri" <?= (isset($_GET['kos_type']) && $_GET['kos_type'] === 'putri') ? 'selected' : '' ?>>Putri</option>
+                        <option value="campur" <?= (isset($_GET['kos_type']) && $_GET['kos_type'] === 'campur') ? 'selected' : '' ?>>Campur</option>
+                    </select>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-group">
+                    <label>Harga (Rp):</label>
+                    <span>
+                    <input type="number" name="price_min" placeholder="Min" value="<?= htmlspecialchars($_GET['price_min'] ?? '') ?>">
+                    -
+                    <input type="number" name="price_max" placeholder="Max" value="<?= htmlspecialchars($_GET['price_max'] ?? '') ?>">
+                </span>
+                </div>
+
+                <!-- Submit -->
+                <div class="filter-group">
+                    <button type="submit" class="btn-apply-filter">
+                        <i class="fas fa-filter"></i> Terapkan
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+<?php endif; ?>
+
 
         <!-- Properties List -->
         <div class="properties-container">
@@ -351,52 +417,67 @@ try {
 
      <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>
-                    <div class="pagination-container">
-                        
-                        
-                        <div class="pagination">
-                            <?php if ($current_page > 1): ?>
-                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $current_page - 1; ?>" 
-                                   class="page-link">
-                                    <i class="fas fa-chevron-left"></i>
-                                </a>
-                            <?php endif; ?>
-                            
-                            <?php
-                            $start_page = max(1, $current_page - 2);
-                            $end_page = min($total_pages, $current_page + 2);
-                            
-                            if ($start_page > 1): ?>
-                                <a href="?status=<?php echo $filter_status; ?>&page=1" class="page-link">1</a>
-                                <?php if ($start_page > 2): ?>
-                                    <span class="page-dots">...</span>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                            
-                            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $i; ?>" 
-                                   class="page-link <?php echo $i === $current_page ? 'active' : ''; ?>">
-                                    <?php echo $i; ?>
-                                </a>
-                            <?php endfor; ?>
-                            
-                            <?php if ($end_page < $total_pages): ?>
-                                <?php if ($end_page < $total_pages - 1): ?>
-                                    <span class="page-dots">...</span>
-                                <?php endif; ?>
-                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $total_pages; ?>" 
-                                   class="page-link"><?php echo $total_pages; ?></a>
-                            <?php endif; ?>
-                            
-                            <?php if ($current_page < $total_pages): ?>
-                                <a href="?status=<?php echo $filter_status; ?>&page=<?php echo $current_page + 1; ?>" 
-                                   class="page-link">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+    <div class="pagination-container">
+        <div class="pagination">
+            <?php
+            // Simpan semua filter di URL pagination
+            $queryParams = [
+                'status' => $filter_status,
+                'city' => $filters['city'],
+                'kos_type' => $filters['kos_type'],
+                'price_min' => $filters['price_min'],
+                'price_max' => $filters['price_max']
+            ];
+
+            // Helper buat bikin URL
+            function makePageUrl($page, $params) {
+                $params['page'] = $page;
+                return '?' . http_build_query($params);
+            }
+            ?>
+
+            <?php if ($current_page > 1): ?>
+                <a href="<?= makePageUrl($current_page - 1, $queryParams) ?>" class="page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            <?php endif; ?>
+
+            <?php
+            $start_page = max(1, $current_page - 2);
+            $end_page = min($total_pages, $current_page + 2);
+
+            if ($start_page > 1): ?>
+                <a href="<?= makePageUrl(1, $queryParams) ?>" class="page-link">1</a>
+                <?php if ($start_page > 2): ?>
+                    <span class="page-dots">...</span>
                 <?php endif; ?>
+            <?php endif; ?>
+
+            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <a href="<?= makePageUrl($i, $queryParams) ?>"
+                   class="page-link <?= $i === $current_page ? 'active' : '' ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+
+            <?php if ($end_page < $total_pages): ?>
+                <?php if ($end_page < $total_pages - 1): ?>
+                    <span class="page-dots">...</span>
+                <?php endif; ?>
+                <a href="<?= makePageUrl($total_pages, $queryParams) ?>" class="page-link">
+                    <?= $total_pages ?>
+                </a>
+            <?php endif; ?>
+
+            <?php if ($current_page < $total_pages): ?>
+                <a href="<?= makePageUrl($current_page + 1, $queryParams) ?>" class="page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
             </div>
     </div>
 

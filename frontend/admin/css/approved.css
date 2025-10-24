@@ -865,3 +865,100 @@ body {
         font-size: 20px;
     }
 }
+
+/* === Advanced Filter Section === */
+.advanced-filter {
+  background: #f0fdf4;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+}
+
+.advanced-filter form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Baris utama filter */
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Setiap grup filter */
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+  width: 180px;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: #3a86ff;
+}
+
+/* Harga min–max */
+.filter-group input[type="number"] {
+  width: 100px;
+}
+
+.filter-group span {
+  align-self: center;
+  font-weight: bold;
+  color: #555;
+}
+
+/* Tombol Apply Filter */
+.btn-apply-filter {
+  background-color: #3a86ff;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 22px;
+  transition: 0.2s ease;
+}
+
+.btn-apply-filter:hover {
+  background-color: #2d6cdf;
+}
+
+/* Responsif untuk layar kecil */
+@media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group,
+  .btn-apply-filter {
+    width: 100%;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    width: 100%;
+  }
+}
