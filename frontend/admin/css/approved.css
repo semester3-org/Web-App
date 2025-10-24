@@ -48,7 +48,8 @@ body {
 .approval-header {
   background: transparent;               /* hilangkan warna putih */
   border-radius: 0;                      /* biar rata ke luar */
-  padding: 40px 0 25px 0;                /* spasi atas-bawah */
+  padding: 40px 0 25px 0;    
+  margin-top: -25px;            /* spasi atas-bawah */
   margin-bottom: 30px;
   box-shadow: none;                      /* hilangkan bayangan */
   border-bottom: 2px solid rgba(0, 0, 0, 0.08); /* garis pemisah halus */

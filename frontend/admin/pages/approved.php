@@ -46,8 +46,7 @@ if (!$process_loaded) {
     die("Error: approved_process.php file not found. Checked paths:<br>" . implode('<br>', $process_paths));
 }
 
-// Check if user is admin
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
     die("Error: Anda harus login sebagai admin untuk mengakses halaman ini.");
 }
 

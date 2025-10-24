@@ -1,20 +1,26 @@
 <?php
-// Mulai session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_type'])) {
-    // Jika belum login, redirect ke login admin
-    header("Location: auth/login.php?type=admin&error=Silakan login terlebih dahulu");
-    exit();
-}
+if (
+    !isset($_SESSION['user_id']) ||
+    !in_array($_SESSION['user_type'], ['admin', 'superadmin'])
+) {
+    // Jika request datang dari AJAX / API
+    if (
+        !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+    ) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            "success" => false,
+            "message" => "Unauthorized access"
+        ]);
+        exit;
+    }
 
-// Cek apakah user adalah admin
-if ($_SESSION['user_type'] !== 'admin') {
-    // Jika bukan admin, destroy session dan redirect
-    session_destroy();
-    header("Location: auth/login.php?type=admin&error=Hanya admin yang boleh mengakses");
-    exit();
+    // Jika request datang dari browser (bukan AJAX)
+    header("Location: auth/login.php?type=admin&error=Hanya admin atau superadmin yang boleh mengakses");
+    exit;
 }

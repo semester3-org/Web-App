@@ -31,12 +31,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Redirect sesuai role
             switch ($user['user_type']) {
+                case 'superadmin':
                 case 'admin':
                     header("Location: /Web-App/frontend/admin/pages/dashboard.php");
                     break;
                 case 'owner':
                     header("Location: /Web-App/frontend/user/owner/pages/dashboard.php");
                     break;
+                case 'user':
                 case 'customer':
                 default:
                     header("Location: /Web-App/frontend/user/customer/home.php");

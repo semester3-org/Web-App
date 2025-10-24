@@ -33,4 +33,23 @@ window.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // Handle submenu toggle dengan mempertimbangkan inline style dari PHP
+  document.querySelectorAll('.menu-toggle').forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      const parent = item.closest('.has-submenu');
+      const submenu = parent.querySelector('.submenu');
+      
+      // Toggle class open
+      parent.classList.toggle('open');
+      
+      // Toggle submenu display dengan handle inline style
+      if (parent.classList.contains('open')) {
+        submenu.style.display = 'block';
+      } else {
+        submenu.style.display = 'none';
+      }
+    });
+  });
 });

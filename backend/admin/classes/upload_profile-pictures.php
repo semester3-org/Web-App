@@ -103,6 +103,7 @@ try {
         unlink($uploadPath);
         throw new Exception('Gagal menyimpan ke database: ' . $stmt->error);
     }
+    $conn->commit(); // <--- Tambahkan ini
     
     // Hapus foto lama jika ada
     if ($oldPhoto && $oldPhoto !== '' && file_exists(__DIR__ . '/../../../' . $oldPhoto)) {

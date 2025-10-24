@@ -1,6 +1,6 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+  session_start();
 }
 
 require_once "../../../backend/config/db.php"; // sesuaikan path config db kamu
@@ -12,20 +12,20 @@ $profilePicture = $defaultAvatar;
 
 // Ambil foto profil user dari database
 if (isset($_SESSION['user_id'])) {
-    $stmt = $conn->prepare("SELECT profile_picture FROM users WHERE id = ?");
-    $stmt->bind_param("i", $_SESSION['user_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        if (!empty($row['profile_picture'])) {
-            $profilePicture = $row['profile_picture'];
-        }
+  $stmt = $conn->prepare("SELECT profile_picture FROM users WHERE id = ?");
+  $stmt->bind_param("i", $_SESSION['user_id']);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  if ($row = $result->fetch_assoc()) {
+    if (!empty($row['profile_picture'])) {
+      $profilePicture = $row['profile_picture'];
     }
-    $stmt->close();
+  }
+  $stmt->close();
 }
 ?>
 
-  
+
 
 
 <aside class="sidebar" id="sidebar">
@@ -38,7 +38,7 @@ if (isset($_SESSION['user_id'])) {
         <i class="fas fa-bars"></i>
       </div>
     </div>
-    
+
     <nav>
       <ul>
         <li>
@@ -59,6 +59,35 @@ if (isset($_SESSION['user_id'])) {
             <span class="nav-text">Facilities</span>
           </a>
         </li>
+        <?php if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'superadmin'): ?>
+          <?php
+          // Cek apakah halaman saat ini adalah salah satu submenu Master Data
+          $current_page = basename($_SERVER['PHP_SELF']);
+          $master_data_pages = ['admin.php', 'users.php'];
+          $is_master_data_active = in_array($current_page, $master_data_pages);
+          ?>
+          <li class="has-submenu <?= $is_master_data_active ? 'active open' : '' ?>">
+            <a href="#" class="menu-toggle">
+              <i class="fas fa-crown"></i>
+              <span class="nav-text">Master Data</span>
+              <i class="fas fa-chevron-down arrow"></i>
+            </a>
+            <ul class="submenu" style="<?= $is_master_data_active ? 'display: block;' : '' ?>">
+              <li>
+                <a href="admin.php" class="<?= $current_page === 'admin.php' ? 'active' : '' ?>">
+                  <i class="fas fa-user-shield"></i>
+                  <span class="nav-text">Admin</span>
+                </a>
+              </li>
+              <li>
+                <a href="users.php" class="<?= $current_page === 'users.php' ? 'active' : '' ?>">
+                  <i class="fas fa-users"></i>
+                  <span class="nav-text">Users</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        <?php endif; ?>
         <li>
           <a href="approved.php" class="<?= basename($_SERVER['PHP_SELF']) === 'approved.php' ? 'active' : '' ?>" data-tooltip="Approved List">
             <i class="fas fa-check"></i>
@@ -74,9 +103,9 @@ if (isset($_SESSION['user_id'])) {
       </ul>
     </nav>
   </div>
-  
-<!-- User Menu -->
- <!-- User Menu -->
+
+  <!-- User Menu -->
+  <!-- User Menu -->
   <div class="user-menu">
     <div class="user-btn" onclick="toggleDropdown()">
       <img src="<?php echo htmlspecialchars($profilePicture); ?>" alt="Profile" class="profile-avatar">
@@ -90,6 +119,5 @@ if (isset($_SESSION['user_id'])) {
     </div>
   </div>
 </aside>
-
+<link rel="stylesheet" href="../css/sidebar.css">
 <script src="../js/sidebar.js"></script>
-

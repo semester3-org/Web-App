@@ -10,6 +10,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Check if user is admin or superadmin
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
+    return false;
+}
+
 // Adjust path based on where the file is included from
 if (!isset($conn)) {
     require_once __DIR__ . '/../../config/db.php';
@@ -25,7 +30,8 @@ class ApprovalProcess
         $this->conn = $db_connection;
 
         // Check if user is admin
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
+        // Check if user is admin or superadmin
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
             exit();
@@ -37,12 +43,21 @@ class ApprovalProcess
     /**
      * Get properties by status
      */
+<<<<<<< HEAD
+    public function getPropertiesByStatus($status = 'pending', $page = 1, $limit = 5)
+    {
+        try {
+            $offset = ($page - 1) * $limit;
+
+            $query = "SELECT 
+=======
    public function getPropertiesByStatus($status = 'pending', $page = 1, $limit = 5, $filters = [])
 {
     try {
         $offset = ($page - 1) * $limit;
 
         $query = "SELECT 
+>>>>>>> 4fbd83f82246033b5b7d5c1524b265ab6708cc45
                     k.id,
                     k.name,
                     k.description,
@@ -75,6 +90,44 @@ class ApprovalProcess
                 LEFT JOIN property_rejections pr ON k.id = pr.kos_id
                 LEFT JOIN users reject_admin ON pr.admin_id = reject_admin.id";
 
+<<<<<<< HEAD
+            if ($status !== 'all') {
+                $query .= " WHERE k.status = ?";
+            }
+
+            $query .= " ORDER BY k.created_at DESC";
+            $query .= " LIMIT ? OFFSET ?";
+
+            $stmt = $this->conn->prepare($query);
+
+            if ($status !== 'all') {
+                $stmt->bind_param("sii", $status, $limit, $offset);
+            } else {
+                $stmt->bind_param("ii", $limit, $offset);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $properties = [];
+            while ($row = $result->fetch_assoc()) {
+                // Get images
+                $images = $this->getPropertyImages($row['id']);
+                $row['images'] = $images;
+
+                // Get facilities
+                $facilities = $this->getPropertyFacilities($row['id']);
+                $row['facilities'] = $facilities;
+
+                $properties[] = $row;
+            }
+
+            return $properties;
+        } catch (Exception $e) {
+            error_log("Error getting properties: " . $e->getMessage());
+            return [];
+        }
+=======
         $where = [];
         $params = [];
         $types = "";
@@ -136,9 +189,35 @@ class ApprovalProcess
     } catch (Exception $e) {
         error_log("Error getting filtered properties: " . $e->getMessage());
         return [];
+>>>>>>> 4fbd83f82246033b5b7d5c1524b265ab6708cc45
     }
-}
 
+<<<<<<< HEAD
+    public function getTotalPropertiesByStatus($status = 'pending')
+    {
+        try {
+            $query = "SELECT COUNT(*) as total FROM kos";
+
+            if ($status !== 'all') {
+                $query .= " WHERE status = ?";
+            }
+
+            $stmt = $this->conn->prepare($query);
+
+            if ($status !== 'all') {
+                $stmt->bind_param("s", $status);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+
+            return $row['total'];
+        } catch (Exception $e) {
+            error_log("Error getting total properties: " . $e->getMessage());
+            return 0;
+        }
+=======
 public function getTotalPropertiesByStatus($status = 'pending', $filters = [])
 {
     try {
@@ -195,8 +274,8 @@ public function getTotalPropertiesByStatus($status = 'pending', $filters = [])
     } catch (Exception $e) {
         error_log("Error getting total filtered properties: " . $e->getMessage());
         return 0;
+>>>>>>> 4fbd83f82246033b5b7d5c1524b265ab6708cc45
     }
-}
 
 
 public function getDistinctCities()

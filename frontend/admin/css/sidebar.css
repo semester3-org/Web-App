@@ -1,0 +1,75 @@
+/* ==== MASTER DATA MENU ==== */
+
+/* Wrapper submenu */
+.sidebar .has-submenu {
+  position: relative;
+}
+
+/* Panah di kanan “Master Data” */
+.sidebar .has-submenu .arrow {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+/* Submenu container */
+.sidebar .submenu {
+  display: none;
+  list-style: none;
+  padding-left: 30px;
+  background: none; /* transparan agar menyatu dengan sidebar */
+}
+
+/* Teks dan ikon submenu */
+.sidebar .submenu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #bbb;
+  text-decoration: none;
+  padding: 8px 20px;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Hover effect submenu */
+.sidebar .submenu li a:hover {
+  color: #18b868;
+  background-color: #222;
+}
+
+/* Submenu aktif (halaman saat ini) */
+.sidebar .submenu li a.active {
+  color: #fff;
+  background-color: #18b868
+}
+
+/* Saat submenu terbuka */
+.sidebar .has-submenu.open .submenu {
+  display: block;
+}
+
+/* Rotasi panah saat terbuka */
+.sidebar .has-submenu.open .arrow {
+  transform: rotate(180deg);
+}
+
+/* Submenu default tersembunyi */
+.submenu {
+  display: none;
+  transition: all 0.3s ease;
+}
+
+/* Submenu terbuka */
+.has-submenu.open .submenu {
+  display: block;
+}
+
+/* Arrow rotation ketika menu terbuka */
+.has-submenu.open .arrow {
+  transform: rotate(180deg);
+}
+
+/* Style untuk menu aktif */
+.has-submenu.active > a {
+  background-color: rgba(255, 255, 255, 0.1);
+}

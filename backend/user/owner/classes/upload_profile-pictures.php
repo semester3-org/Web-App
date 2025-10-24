@@ -72,6 +72,7 @@ try {
         @unlink($uploadPath);
         throw new Exception('Gagal menyimpan ke database: ' . $stmt->error);
     }
+    $conn->commit(); // <--- Tambahkan ini
     $stmt->close();
 
     if (!empty($oldPhoto)) {
