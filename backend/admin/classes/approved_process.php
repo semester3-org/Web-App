@@ -10,14 +10,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is admin or superadmin
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
-    return false;
-}
-
 // Adjust path based on where the file is included from
 if (!isset($conn)) {
     require_once __DIR__ . '/../../config/db.php';
+}
+
+// Check if user is admin or superadmin
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
+    return false;
 }
 
 class ApprovalProcess
@@ -28,8 +28,6 @@ class ApprovalProcess
     public function __construct($db_connection)
     {
         $this->conn = $db_connection;
-
-        // Check if user is admin
         // Check if user is admin or superadmin
         if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
             http_response_code(403);
@@ -43,21 +41,12 @@ class ApprovalProcess
     /**
      * Get properties by status
      */
-<<<<<<< HEAD
-    public function getPropertiesByStatus($status = 'pending', $page = 1, $limit = 5)
+    public function getPropertiesByStatus($status = 'pending', $page = 1, $limit = 5, $filters = [])
     {
         try {
             $offset = ($page - 1) * $limit;
 
             $query = "SELECT 
-=======
-   public function getPropertiesByStatus($status = 'pending', $page = 1, $limit = 5, $filters = [])
-{
-    try {
-        $offset = ($page - 1) * $limit;
-
-        $query = "SELECT 
->>>>>>> 4fbd83f82246033b5b7d5c1524b265ab6708cc45
                     k.id,
                     k.name,
                     k.description,
@@ -90,211 +79,147 @@ class ApprovalProcess
                 LEFT JOIN property_rejections pr ON k.id = pr.kos_id
                 LEFT JOIN users reject_admin ON pr.admin_id = reject_admin.id";
 
-<<<<<<< HEAD
+            $where = [];
+            $params = [];
+            $types = "";
+
+            // Filter by status
             if ($status !== 'all') {
-                $query .= " WHERE k.status = ?";
+                $where[] = "k.status = ?";
+                $params[] = $status;
+                $types .= "s";
             }
 
-            $query .= " ORDER BY k.created_at DESC";
-            $query .= " LIMIT ? OFFSET ?";
+            // Advanced Filters
+            if (!empty($filters['city'])) {
+                $where[] = "k.city = ?";
+                $params[] = $filters['city'];
+                $types .= "s";
+            }
+
+            if (!empty($filters['kos_type'])) {
+                $where[] = "k.kos_type = ?";
+                $params[] = $filters['kos_type'];
+                $types .= "s";
+            }
+
+            if (!empty($filters['price_min'])) {
+                $where[] = "k.price_monthly >= ?";
+                $params[] = (int)$filters['price_min'];
+                $types .= "i";
+            }
+
+            if (!empty($filters['price_max'])) {
+                $where[] = "k.price_monthly <= ?";
+                $params[] = (int)$filters['price_max'];
+                $types .= "i";
+            }
+
+            if (count($where) > 0) {
+                $query .= " WHERE " . implode(" AND ", $where);
+            }
+
+            $query .= " ORDER BY k.created_at DESC LIMIT ? OFFSET ?";
+            $params[] = $limit;
+            $params[] = $offset;
+            $types .= "ii";
 
             $stmt = $this->conn->prepare($query);
-
-            if ($status !== 'all') {
-                $stmt->bind_param("sii", $status, $limit, $offset);
-            } else {
-                $stmt->bind_param("ii", $limit, $offset);
-            }
-
+            $stmt->bind_param($types, ...$params);
             $stmt->execute();
             $result = $stmt->get_result();
 
             $properties = [];
             while ($row = $result->fetch_assoc()) {
-                // Get images
-                $images = $this->getPropertyImages($row['id']);
-                $row['images'] = $images;
-
-                // Get facilities
-                $facilities = $this->getPropertyFacilities($row['id']);
-                $row['facilities'] = $facilities;
-
+                $row['images'] = $this->getPropertyImages($row['id']);
+                $row['facilities'] = $this->getPropertyFacilities($row['id']);
                 $properties[] = $row;
             }
 
             return $properties;
         } catch (Exception $e) {
-            error_log("Error getting properties: " . $e->getMessage());
+            error_log("Error getting filtered properties: " . $e->getMessage());
             return [];
         }
-=======
-        $where = [];
-        $params = [];
-        $types = "";
-
-        // Filter by status
-        if ($status !== 'all') {
-            $where[] = "k.status = ?";
-            $params[] = $status;
-            $types .= "s";
-        }
-
-        // Advanced Filters
-        if (!empty($filters['city'])) {
-            $where[] = "k.city = ?";
-            $params[] = $filters['city'];
-            $types .= "s";
-        }
-
-        if (!empty($filters['kos_type'])) {
-            $where[] = "k.kos_type = ?";
-            $params[] = $filters['kos_type'];
-            $types .= "s";
-        }
-
-        if (!empty($filters['price_min'])) {
-            $where[] = "k.price_monthly >= ?";
-            $params[] = (int)$filters['price_min'];
-            $types .= "i";
-        }
-
-        if (!empty($filters['price_max'])) {
-            $where[] = "k.price_monthly <= ?";
-            $params[] = (int)$filters['price_max'];
-            $types .= "i";
-        }
-
-        if (count($where) > 0) {
-            $query .= " WHERE " . implode(" AND ", $where);
-        }
-
-        $query .= " ORDER BY k.created_at DESC LIMIT ? OFFSET ?";
-        $params[] = $limit;
-        $params[] = $offset;
-        $types .= "ii";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $properties = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['images'] = $this->getPropertyImages($row['id']);
-            $row['facilities'] = $this->getPropertyFacilities($row['id']);
-            $properties[] = $row;
-        }
-
-        return $properties;
-    } catch (Exception $e) {
-        error_log("Error getting filtered properties: " . $e->getMessage());
-        return [];
->>>>>>> 4fbd83f82246033b5b7d5c1524b265ab6708cc45
     }
 
-<<<<<<< HEAD
-    public function getTotalPropertiesByStatus($status = 'pending')
+    public function getTotalPropertiesByStatus($status = 'pending', $filters = [])
     {
         try {
-            $query = "SELECT COUNT(*) as total FROM kos";
+            $query = "SELECT COUNT(*) as total FROM kos k";
+            $where = [];
+            $params = [];
+            $types = "";
 
             if ($status !== 'all') {
-                $query .= " WHERE status = ?";
+                $where[] = "k.status = ?";
+                $params[] = $status;
+                $types .= "s";
+            }
+
+            // Advanced Filters
+            if (!empty($filters['city'])) {
+                $where[] = "k.city = ?";
+                $params[] = $filters['city'];
+                $types .= "s";
+            }
+
+            if (!empty($filters['kos_type'])) {
+                $where[] = "k.kos_type = ?";
+                $params[] = $filters['kos_type'];
+                $types .= "s";
+            }
+
+            if (!empty($filters['price_min'])) {
+                $where[] = "k.price_monthly >= ?";
+                $params[] = (int)$filters['price_min'];
+                $types .= "i";
+            }
+
+            if (!empty($filters['price_max'])) {
+                $where[] = "k.price_monthly <= ?";
+                $params[] = (int)$filters['price_max'];
+                $types .= "i";
+            }
+
+            if (count($where) > 0) {
+                $query .= " WHERE " . implode(" AND ", $where);
             }
 
             $stmt = $this->conn->prepare($query);
-
-            if ($status !== 'all') {
-                $stmt->bind_param("s", $status);
+            if (!empty($params)) {
+                $stmt->bind_param($types, ...$params);
             }
 
             $stmt->execute();
             $result = $stmt->get_result();
             $row = $result->fetch_assoc();
 
-            return $row['total'];
+            return $row['total'] ?? 0;
         } catch (Exception $e) {
-            error_log("Error getting total properties: " . $e->getMessage());
+            error_log("Error getting total filtered properties: " . $e->getMessage());
             return 0;
         }
-=======
-public function getTotalPropertiesByStatus($status = 'pending', $filters = [])
-{
-    try {
-        $query = "SELECT COUNT(*) as total FROM kos k";
-        $where = [];
-        $params = [];
-        $types = "";
-
-        if ($status !== 'all') {
-            $where[] = "k.status = ?";
-            $params[] = $status;
-            $types .= "s";
-        }
-
-        // Advanced Filters
-        if (!empty($filters['city'])) {
-            $where[] = "k.city = ?";
-            $params[] = $filters['city'];
-            $types .= "s";
-        }
-
-        if (!empty($filters['kos_type'])) {
-            $where[] = "k.kos_type = ?";
-            $params[] = $filters['kos_type'];
-            $types .= "s";
-        }
-
-        if (!empty($filters['price_min'])) {
-            $where[] = "k.price_monthly >= ?";
-            $params[] = (int)$filters['price_min'];
-            $types .= "i";
-        }
-
-        if (!empty($filters['price_max'])) {
-            $where[] = "k.price_monthly <= ?";
-            $params[] = (int)$filters['price_max'];
-            $types .= "i";
-        }
-
-        if (count($where) > 0) {
-            $query .= " WHERE " . implode(" AND ", $where);
-        }
-
-        $stmt = $this->conn->prepare($query);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-
-        return $row['total'] ?? 0;
-    } catch (Exception $e) {
-        error_log("Error getting total filtered properties: " . $e->getMessage());
-        return 0;
->>>>>>> 4fbd83f82246033b5b7d5c1524b265ab6708cc45
     }
 
 
-public function getDistinctCities()
-{
-    try {
-        $sql = "SELECT DISTINCT city FROM kos WHERE city IS NOT NULL AND city <> '' ORDER BY city ASC";
-        $result = $this->conn->query($sql);
+    public function getDistinctCities()
+    {
+        try {
+            $sql = "SELECT DISTINCT city FROM kos WHERE city IS NOT NULL AND city <> '' ORDER BY city ASC";
+            $result = $this->conn->query($sql);
 
-        $cities = [];
-        while ($row = $result->fetch_assoc()) {
-            $cities[] = $row['city'];
+            $cities = [];
+            while ($row = $result->fetch_assoc()) {
+                $cities[] = $row['city'];
+            }
+
+            return $cities;
+        } catch (Exception $e) {
+            error_log("Error getting distinct cities: " . $e->getMessage());
+            return [];
         }
-
-        return $cities;
-    } catch (Exception $e) {
-        error_log("Error getting distinct cities: " . $e->getMessage());
-        return [];
     }
-}
 
 
     /**
