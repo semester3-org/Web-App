@@ -47,12 +47,36 @@ if (isset($_SESSION['user_id'])) {
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
-        <li>
-          <a href="" class="<?= basename($_SERVER['PHP_SELF']) === '' ? 'active' : '' ?>" data-tooltip="Transaction">
-            <i class="fas fa-dollar"></i>
+        <?php
+        // Cek apakah halaman saat ini adalah salah satu submenu Transaction
+        $current_page = basename($_SERVER['PHP_SELF']);
+        $transaction_pages = ['bookings.php', 'add_property_tax.php'];
+        $is_transaction_active = in_array($current_page, $transaction_pages);
+        ?>
+
+        <li class="has-submenu <?= $is_transaction_active ? 'active open' : '' ?>">
+          <a href="#" class="menu-toggle">
+            <i class="fas fa-dollar-sign"></i>
             <span class="nav-text">Transaction</span>
+            <i class="fas fa-chevron-down arrow"></i>
           </a>
+          <ul class="submenu" style="<?= $is_transaction_active ? 'display: block;' : '' ?>">
+            <li>
+              <a href="bookings.php" class="<?= $current_page === 'bookings.php' ? 'active' : '' ?>">
+                <i class="fas fa-calendar-check"></i>
+                <span class="nav-text">Bookings</span>
+              </a>
+            </li>
+            <li>
+              <a href="add_property_tax.php" class="<?= $current_page === 'add_property_tax.php' ? 'active' : '' ?>">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="nav-text">Add Property Tax</span>
+              </a>
+            </li>
+          </ul>
         </li>
+
+
         <li>
           <a href="facilities.php" class="<?= basename($_SERVER['PHP_SELF']) === 'facilities.php' ? 'active' : '' ?>" data-tooltip="Facilities List">
             <i class="fas fa-tools"></i>
