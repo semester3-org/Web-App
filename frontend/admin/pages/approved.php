@@ -415,32 +415,37 @@ try {
     </div>
 
      <!-- Pagination -->
-                <?php if ($total_pages > 1): ?>
+                <?php
+// Pastikan nilai current_page valid (integer)
+$current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
+if ($current_page < 1) $current_page = 1;
+
+if ($total_pages > 1):
+    // Simpan semua filter agar tetap ada di pagination
+    $queryParams = [
+        'status' => $filter_status,
+        'city' => $filters['city'] ?? '',
+        'kos_type' => $filters['kos_type'] ?? '',
+        'price_min' => $filters['price_min'] ?? '',
+        'price_max' => $filters['price_max'] ?? ''
+    ];
+
+    // Helper buat bikin URL pagination
+    function makePageUrl($page, $params) {
+        $params['page'] = $page;
+        return '?' . http_build_query($params);
+    }
+    ?>
     <div class="pagination-container">
         <div class="pagination">
-            <?php
-            // Simpan semua filter di URL pagination
-            $queryParams = [
-                'status' => $filter_status,
-                'city' => $filters['city'],
-                'kos_type' => $filters['kos_type'],
-                'price_min' => $filters['price_min'],
-                'price_max' => $filters['price_max']
-            ];
-
-            // Helper buat bikin URL
-            function makePageUrl($page, $params) {
-                $params['page'] = $page;
-                return '?' . http_build_query($params);
-            }
-            ?>
-
+            <!-- Tombol Previous -->
             <?php if ($current_page > 1): ?>
                 <a href="<?= makePageUrl($current_page - 1, $queryParams) ?>" class="page-link">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             <?php endif; ?>
 
+            <!-- Nomor Halaman -->
             <?php
             $start_page = max(1, $current_page - 2);
             $end_page = min($total_pages, $current_page + 2);
@@ -468,6 +473,7 @@ try {
                 </a>
             <?php endif; ?>
 
+            <!-- Tombol Next -->
             <?php if ($current_page < $total_pages): ?>
                 <a href="<?= makePageUrl($current_page + 1, $queryParams) ?>" class="page-link">
                     <i class="fas fa-chevron-right"></i>
@@ -476,6 +482,7 @@ try {
         </div>
     </div>
 <?php endif; ?>
+
 
             </div>
     </div>
