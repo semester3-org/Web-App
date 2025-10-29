@@ -21,7 +21,7 @@
 
   // Check login
   if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
-    header('Location: ../../../auth/login.php');
+    header('Location: ../../login.php');
     exit();
   }
 
@@ -61,7 +61,7 @@
     if ($properties->num_rows > 0):
     ?>
       <div class="container mt-5">
-        <h5 class="fw-bold mb-3">List Property Payment</h5>
+        <h5 class="fw-bold mb-3">My Properties</h5>
         <div class="row">
           <?php while ($property = $properties->fetch_assoc()): ?>
             <div class="col-md-4 mb-3">
@@ -70,16 +70,7 @@
                   <h5><?php echo htmlspecialchars($property['name']); ?></h5>
                   <p class="text-muted"><?php echo htmlspecialchars($property['city']); ?></p>
 
-                  <p class="mb-2">
-                    <strong>Status Kos:</strong>
-                    <?php if (is_null($property['status'])): ?>
-                      <span class="badge bg-secondary">Belum Dibayar</span>
-                    <?php else: ?>
-                      <span class="badge bg-<?php echo $property['status'] === 'approved' ? 'success' : ($property['status'] === 'pending' ? 'warning' : 'danger'); ?>">
-                        <?php echo strtoupper($property['status']); ?>
-                      </span>
-                    <?php endif; ?>
-                  </p>
+                 
 
                   <p class="mb-2">
                     <strong>Status Bayar:</strong>
@@ -124,12 +115,12 @@
           <div class="payment-summary">
             <table>
               <tr>
-                <td>Harga Perbulan:</td>
-                <td class="text-end" id="price-monthly">Rp 0</td>
+                <td>Harga Property/Bulan:</td>
+                <td class="text-end text-muted" id="price-monthly">Rp 0</td>
               </tr>
               <tr>
-                <td>Biaya Listing (Pajak <?php echo TAX_PERCENTAGE; ?>%):</td>
-                <td class="text-end" id="tax-amount">Rp 0</td>
+                <td><strong>Biaya Listing (Pajak <?php echo TAX_PERCENTAGE; ?>%):</strong></td>
+                <td class="text-end" id="tax-amount" style="font-size: 1.1rem;"><strong>Rp 0</strong></td>
               </tr>
               <tr class="total-row">
                 <td>Total Pembayaran:</td>
@@ -140,7 +131,7 @@
             <div class="alert alert-info mb-0">
               <small>
                 <i class="bi bi-info-circle"></i>
-                Pembayaran berlaku untuk 1 bulan pertama property listing
+                Anda hanya membayar biaya listing (pajak platform). Harga property untuk customer.
               </small>
             </div>
           </div>
@@ -198,25 +189,16 @@
 
     function showPaymentModal(kosId) {
       fetch(`../../../../backend/user/owner/api/get_payment_data.php?kos_id=${kosId}`)
-        .then(response => response.text()) // Ubah ke .text() dulu untuk debug
-        .then(text => {
-          console.log('Raw response:', text); // Lihat response aslinya
-
-          try {
-            const data = JSON.parse(text);
-            if (data.success) {
-              showPaymentModalWithData(data.payment);
-            } else {
-              Swal.fire('Error', data.message, 'error');
-            }
-          } catch (error) {
-            console.error('JSON Parse Error:', error);
-            console.error('Response was:', text);
-            Swal.fire('Error', 'Terjadi kesalahan saat memuat data pembayaran', 'error');
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showPaymentModalWithData(data.payment);
+          } else {
+            Swal.fire('Error', data.message, 'error');
           }
         })
         .catch(error => {
-          console.error('Fetch Error:', error);
+          console.error('Error:', error);
           Swal.fire('Error', 'Terjadi kesalahan saat memuat data pembayaran', 'error');
         });
     }
@@ -245,17 +227,69 @@
         .then(response => response.json())
         .then(result => {
           if (result.success) {
+            // Store order_id for status checking
+            window.currentOrderId = result.order_id;
+
             snap.pay(result.snap_token, {
               onSuccess: function(result) {
-                handlePaymentSuccess(result);
+                // Check immediately
+                checkPaymentStatusAndUpdate(window.currentOrderId, true);
               },
               onPending: function(result) {
-                handlePaymentPending(result);
+                // Start polling for pending payments (QRIS, Bank Transfer, etc)
+                Swal.fire({
+                  icon: 'info',
+                  title: 'Pembayaran Pending',
+                  html: 'Silakan selesaikan pembayaran Anda.<br><small>System akan otomatis check status</small>',
+                  confirmButtonColor: '#10b981',
+                  timer: 3000,
+                  timerProgressBar: true
+                });
+
+                // Start polling
+                startPaymentPolling(window.currentOrderId);
               },
               onError: function(result) {
-                handlePaymentError(result);
+                Swal.fire('Error', 'Pembayaran gagal. Silakan coba lagi.', 'error');
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="bi bi-credit-card"></i> Bayar Sekarang';
               },
               onClose: function() {
+                // User close popup
+                // Check status once
+                setTimeout(() => {
+                  fetch(`../../../backend/user/owner/api/check_payment_status.php?order_id=${window.currentOrderId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.transaction_status === 'pending') {
+                        // Still pending, ask user
+                        Swal.fire({
+                          title: 'Pembayaran Pending',
+                          text: 'Pembayaran Anda masih pending. Lanjutkan check otomatis?',
+                          icon: 'question',
+                          showCancelButton: true,
+                          confirmButtonText: 'Ya, Check Otomatis',
+                          cancelButtonText: 'Bayar Nanti',
+                          confirmButtonColor: '#10b981'
+                        }).then((result) => {
+                          if (result.isConfirmed) {
+                            // Start polling
+                            startPaymentPolling(window.currentOrderId);
+                          } else {
+                            location.reload();
+                          }
+                        });
+                      } else if (data.kos_payment_status === 'paid') {
+                        // Already paid
+                        Swal.fire({
+                          icon: 'success',
+                          title: 'Pembayaran Berhasil!',
+                          confirmButtonColor: '#10b981'
+                        }).then(() => location.reload());
+                      }
+                    });
+                }, 1000);
+
                 payButton.disabled = false;
                 payButton.innerHTML = '<i class="bi bi-credit-card"></i> Bayar Sekarang';
               }
@@ -272,6 +306,158 @@
           payButton.disabled = false;
           payButton.innerHTML = '<i class="bi bi-credit-card"></i> Bayar Sekarang';
         });
+    }
+
+    // Check payment status from Midtrans
+    // Check payment status with polling
+    function checkPaymentStatusAndUpdate(orderId, isManualCheck = false) {
+      if (isManualCheck) {
+        Swal.fire({
+          title: 'Checking Payment Status...',
+          html: 'Mohon tunggu sebentar',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      }
+
+      fetch(`../../../../backend/user/owner/api/check_payment_status.php?order_id=${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Payment status:', data);
+
+          if (data.success) {
+            if (data.kos_payment_status === 'paid') {
+              // PAYMENT SUCCESS
+              Swal.fire({
+                icon: 'success',
+                title: 'Pembayaran Berhasil!',
+                text: 'Property Anda akan segera ditinjau admin.',
+                confirmButtonColor: '#10b981'
+              }).then(() => {
+                location.reload();
+              });
+
+            } else if (data.transaction_status === 'pending') {
+              // STILL PENDING
+              if (isManualCheck) {
+                Swal.fire({
+                  icon: 'info',
+                  title: 'Pembayaran Pending',
+                  html: 'Silakan selesaikan pembayaran Anda.<br><small>Scan QR code atau selesaikan di app GoPay</small>',
+                  confirmButtonColor: '#10b981'
+                });
+              }
+              // Continue polling jika tidak manual check
+
+            } else if (data.transaction_status === 'expire' || data.transaction_status === 'cancel') {
+              // EXPIRED/CANCELLED
+              Swal.fire({
+                icon: 'warning',
+                title: 'Pembayaran ' + (data.transaction_status === 'expire' ? 'Expired' : 'Dibatalkan'),
+                text: 'Silakan coba lagi untuk membayar.',
+                confirmButtonColor: '#10b981'
+              }).then(() => {
+                location.reload();
+              });
+
+            } else {
+              // OTHER STATUS
+              if (isManualCheck) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Status: ' + data.transaction_status,
+                  text: 'Silakan check kembali atau hubungi support.',
+                  confirmButtonColor: '#10b981'
+                });
+              }
+            }
+          } else {
+            if (isManualCheck) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal Check Status',
+                text: data.message,
+                confirmButtonColor: '#10b981'
+              });
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          if (isManualCheck) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Gagal check status pembayaran',
+              confirmButtonColor: '#10b981'
+            });
+          }
+        });
+    }
+
+    // Start polling payment status
+    function startPaymentPolling(orderId) {
+      let pollCount = 0;
+      const maxPolls = 120; // 120 x 5 seconds = 10 minutes
+
+      const pollInterval = setInterval(() => {
+        pollCount++;
+
+        // Stop after max polls
+        if (pollCount >= maxPolls) {
+          clearInterval(pollInterval);
+          Swal.fire({
+            icon: 'warning',
+            title: 'Timeout',
+            text: 'Silakan check status pembayaran secara manual dari dashboard.',
+            confirmButtonColor: '#10b981'
+          });
+          return;
+        }
+
+        // Check status
+        fetch(`../../../../backend/user/owner/api/check_payment_status.php?order_id=${orderId}`)
+          .then(response => response.json())
+          .then(data => {
+            console.log('Poll #' + pollCount + ':', data.transaction_status);
+
+            if (data.success && data.kos_payment_status === 'paid') {
+              // PAYMENT SUCCESS - Stop polling
+              clearInterval(pollInterval);
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Pembayaran Berhasil!',
+                text: 'Property Anda akan segera ditinjau admin.',
+                confirmButtonColor: '#10b981'
+              }).then(() => {
+                location.reload();
+              });
+            } else if (data.transaction_status === 'expire' || data.transaction_status === 'cancel' || data.transaction_status === 'deny') {
+              // FAILED - Stop polling
+              clearInterval(pollInterval);
+
+              Swal.fire({
+                icon: 'error',
+                title: 'Pembayaran Gagal',
+                text: 'Status: ' + data.transaction_status,
+                confirmButtonColor: '#10b981'
+              }).then(() => {
+                location.reload();
+              });
+            }
+            // If still pending, continue polling
+          })
+          .catch(error => {
+            console.error('Poll error:', error);
+          });
+
+      }, 5000); // Check every 5 seconds
+
+      // Store interval ID untuk stop manual
+      window.paymentPollInterval = pollInterval;
     }
 
     function payLater() {
@@ -297,247 +483,88 @@
       });
     }
 
-    function handlePaymentSuccess(result) {
-      fetch('../../../../backend/user/owner/api/payment_callback.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            order_id: result.order_id,
-            transaction_status: 'settlement',
-            payment_type: result.payment_type,
-            transaction_id: result.transaction_id
-          })
-        })
-        .then(() => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Pembayaran Berhasil!',
-            text: 'Property Anda akan segera ditinjau admin.',
-            confirmButtonColor: '#10b981'
-          }).then(() => {
-            location.reload();
-          });
-        });
-    }
+    // Handle payment return dari Midtrans
+    window.addEventListener('DOMContentLoaded', function() {
+      // Check URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('order_id');
+      const statusCode = urlParams.get('status_code');
+      const transactionStatus = urlParams.get('transaction_status');
 
-    function handlePaymentPending(result) {
-      console.log('Payment pending for order:', result.order_id);
+      // Jika ada parameter payment dari Midtrans
+      if (orderId && transactionStatus) {
+        console.log('Payment return detected:', orderId, transactionStatus);
 
-      // Deteksi environment (sandbox/production)
-      const isSandbox = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-      const autoSimulateTime = 5; // detik
-      let countdown = autoSimulateTime;
-      let countdownTimer = null;
-
-      Swal.fire({
-        icon: 'info',
-        title: 'Pembayaran Diproses',
-        html: `
-      <p class="mb-2">Silakan selesaikan pembayaran Anda.</p>
-      <p class="text-sm text-gray-600 mb-3">Status akan diperbarui otomatis...</p>
-      
-      ${isSandbox ? `
-        <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-          <div class="flex items-center justify-center mb-2">
-            <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-            <span class="text-sm font-semibold text-yellow-800">Sandbox Mode</span>
-          </div>
-          <p class="text-xs text-yellow-700 mb-3">
-            Auto-simulating payment in <span id="countdown" class="font-bold text-lg">${countdown}</span>s
-          </p>
-          <button id="simulateBtn" onclick="simulatePaymentNow('${result.order_id}')" 
-                  class="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm">
-            🧪 Simulate Payment Now
-          </button>
-          <button onclick="cancelSimulation()" 
-                  class="w-full mt-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-xs hover:bg-gray-200 transition-colors">
-            Cancel Auto-Simulate
-          </button>
-        </div>
-      ` : ''}
-      
-      <div class="mt-4">
-        <div class="animate-pulse flex justify-center">
-          <div class="h-2 w-2 bg-green-500 rounded-full mx-1 animate-bounce"></div>
-          <div class="h-2 w-2 bg-green-500 rounded-full mx-1 animate-bounce" style="animation-delay: 0.2s"></div>
-          <div class="h-2 w-2 bg-green-500 rounded-full mx-1 animate-bounce" style="animation-delay: 0.4s"></div>
-        </div>
-      </div>
-    `,
-        showConfirmButton: false,
-        showCloseButton: true,
-        allowOutsideClick: false,
-        didOpen: () => {
-          // Start checking payment status
-          checkPaymentStatus(result.order_id);
-
-          // Auto-simulate countdown (hanya di sandbox)
-          if (isSandbox) {
-            const countdownEl = document.getElementById('countdown');
-
-            countdownTimer = setInterval(() => {
-              countdown--;
-              if (countdownEl) {
-                countdownEl.textContent = countdown;
-
-                // Animasi countdown
-                if (countdown <= 3) {
-                  countdownEl.classList.add('text-red-600');
-                }
-              }
-
-              if (countdown <= 0) {
-                clearInterval(countdownTimer);
-                simulatePaymentNow(result.order_id);
-              }
-            }, 1000);
-          }
-        },
-        willClose: () => {
-          if (countdownTimer) {
-            clearInterval(countdownTimer);
-          }
-        }
-      });
-    }
-
-    // Fungsi untuk simulate payment segera
-    function simulatePaymentNow(orderId) {
-      console.log('Simulating payment for:', orderId);
-
-      // Disable button
-      const btn = document.getElementById('simulateBtn');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Processing...';
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-      }
-
-      fetch('../../../../backend/user/owner/api/manual_update_payment.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `order_id=${orderId}&status=settlement`
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Payment simulation result:', data);
-
-          if (data.success) {
-            // Update button
-            if (btn) {
-              btn.innerHTML = '✅ Payment Simulated!';
-              btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-              btn.classList.add('bg-green-500');
-            }
-          } else {
-            console.error('Simulation failed:', data.error);
-
-            if (btn) {
-              btn.innerHTML = '❌ Simulation Failed';
-              btn.classList.remove('bg-green-600');
-              btn.classList.add('bg-red-600');
-            }
-          }
-        })
-        .catch(error => {
-          console.error('Error simulating payment:', error);
-
-          if (btn) {
-            btn.innerHTML = '❌ Error Occurred';
-            btn.classList.remove('bg-green-600');
-            btn.classList.add('bg-red-600');
+        // Show loading
+        Swal.fire({
+          title: 'Memproses Pembayaran...',
+          html: 'Mohon tunggu, sedang memverifikasi pembayaran Anda',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
           }
         });
-    }
 
-    // Fungsi untuk cancel auto-simulation
-    function cancelSimulation() {
-      Swal.update({
-        html: Swal.getHtmlContainer().innerHTML.replace(/Auto-simulating.*?<\/p>/, '<p class="text-xs text-gray-600">Auto-simulation cancelled. Waiting for manual payment...</p>')
-      });
+        // Check payment status
+        setTimeout(() => {
+          fetch(`../../../../backend/user/owner/api/check_payment_status.php?order_id=${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+              console.log('Status check result:', data);
 
-      // Hapus countdown
-      const countdownEl = document.getElementById('countdown');
-      if (countdownEl && countdownEl.parentElement) {
-        countdownEl.parentElement.remove();
-      }
-    }
-
-    function checkPaymentStatus(orderId) {
-      const interval = setInterval(() => {
-        fetch(`../../../../backend/user/owner/api/check_payment_status.php?order_id=${orderId}`)
-          .then(response => response.json())
-          .then(data => {
-            console.log('Payment status check:', data);
-
-            // Success statuses
-            if (data.payment_status === 'settlement' || data.payment_status === 'capture') {
-              clearInterval(interval);
-
-              Swal.fire({
-                icon: 'success',
-                title: 'Pembayaran Berhasil!',
-                html: `
-              <p>Transaksi Anda telah dikonfirmasi.</p>
-              <p class="text-sm text-gray-600 mt-2">Order ID: ${data.order_id}</p>
-            `,
-                confirmButtonColor: '#10b981',
-                confirmButtonText: 'OK'
-              }).then(() => {
-                location.reload();
-              });
-            }
-            // Failed statuses
-            else if (data.payment_status === 'deny' || data.payment_status === 'expire' || data.payment_status === 'cancel') {
-              clearInterval(interval);
-
+              if (data.success && data.kos_payment_status === 'paid') {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Pembayaran Berhasil!',
+                  text: 'Property Anda akan segera ditinjau admin.',
+                  confirmButtonColor: '#10b981'
+                }).then(() => {
+                  // Clean URL dan reload
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                  location.reload();
+                });
+              } else if (data.transaction_status === 'pending') {
+                Swal.fire({
+                  icon: 'info',
+                  title: 'Pembayaran Pending',
+                  text: 'Pembayaran Anda sedang diproses. Mohon tunggu beberapa saat.',
+                  confirmButtonColor: '#10b981'
+                }).then(() => {
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Status: ' + data.transaction_status,
+                  text: 'Silakan check kembali dari dashboard.',
+                  confirmButtonColor: '#10b981'
+                }).then(() => {
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                  location.reload();
+                });
+              }
+            })
+            .catch(error => {
+              console.error('Error checking status:', error);
               Swal.fire({
                 icon: 'error',
-                title: 'Pembayaran Gagal',
-                text: `Status: ${data.payment_status}`,
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'OK'
+                title: 'Error',
+                text: 'Gagal memverifikasi pembayaran. Silakan check manual.',
+                confirmButtonColor: '#10b981'
               }).then(() => {
+                window.history.replaceState({}, document.title, window.location.pathname);
                 location.reload();
               });
-            }
-          })
-          .catch(error => {
-            console.error('Error checking payment:', error);
-          });
-      }, 3000); // Check setiap 3 detik
+            });
+        }, 2000); // Delay 2 detik untuk ensure Midtrans sudah update
+      }
 
-      // Stop polling setelah 10 menit
-      setTimeout(() => {
-        clearInterval(interval);
-
-        Swal.fire({
-          icon: 'warning',
-          title: 'Waktu Habis',
-          text: 'Silakan refresh halaman untuk memeriksa status pembayaran.',
-          confirmButtonColor: '#f59e0b'
-        });
-      }, 600000);
-    }
-
-
-
-
-    function handlePaymentError(result) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Pembayaran Gagal',
-        text: 'Silakan coba lagi.',
-        confirmButtonColor: '#10b981'
-      });
-    }
+      // Check pending payment modal (existing code)
+      if (paymentData) {
+        showPaymentModalWithData(paymentData);
+      }
+    });
   </script>
 
   <!-- Toast Notification -->
@@ -554,10 +581,6 @@
       }
     });
   </script>
-  <script>
-    console.log('showPaymentModal:', typeof showPaymentModal);
-  </script>
-
 
   <?php if (isset($_SESSION['success'])): ?>
     <script>

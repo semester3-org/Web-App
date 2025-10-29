@@ -43,16 +43,16 @@ function getMidtransConfig() {
 }
 
 /**
- * Calculate tax amount
+ * Calculate tax amount (hanya pajak, bukan total)
  */
 function calculateTax($price) {
     return (int) ($price * TAX_PERCENTAGE / 100);
 }
 
 /**
- * Calculate total with tax
+ * Calculate total payment (HANYA PAJAK)
  */
-function calculateTotalWithTax($price) {
+function calculateTotalPayment($price) {
     return calculateTax($price);
 }
 
@@ -60,6 +60,6 @@ function calculateTotalWithTax($price) {
  * Generate unique order ID
  */
 function generateOrderId($prefix = 'KOS') {
-    return $prefix . '-' . date('Ymd') . '-' . uniqid();
+    return $prefix . '-' . date('Ymd') . '-' . strtoupper(uniqid());
 }
 ?>

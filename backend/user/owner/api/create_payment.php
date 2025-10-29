@@ -1,6 +1,4 @@
 <?php
-error_reporting(0); // ← Tambahkan ini
-ini_set('display_errors', 0); // ← Tambahkan ini
 /**
  * ============================================
  * CREATE PAYMENT - MIDTRANS SNAP
@@ -43,20 +41,19 @@ try {
             FROM property_payments pp
             JOIN kos k ON pp.kos_id = k.id
             JOIN users u ON pp.owner_id = u.id
-            WHERE pp.id = ? AND pp.owner_id = ? AND pp.payment_status = 'pending'";
-
+            WHERE pp.id = ? AND pp.owner_id = ?";
+    
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('ii', $payment_id, $owner_id);
     $stmt->execute();
     $payment = $stmt->get_result()->fetch_assoc();
-
+    
     if (!$payment) {
-        throw new Exception('Payment not found or already processed');
+        throw new Exception('Payment not found');
     }
-
-    // Check apakah snap_token sudah ada (transaksi sebelumnya dibatalkan)
-    if (!empty($payment['snap_token'])) {
-        // Jika ada, langsung return token yang lama
+    
+    // Jika sudah punya snap_token dan masih pending, gunakan yang lama
+    if (!empty($payment['snap_token']) && $payment['payment_status'] === 'pending') {
         echo json_encode([
             'success' => true,
             'snap_token' => $payment['snap_token'],
@@ -64,46 +61,39 @@ try {
         ]);
         exit();
     }
-
-    // Atau generate order_id baru jika snap_token kosong dan payment_status pending
-    if (empty($payment['snap_token'])) {
-        // Generate order_id baru
-        $new_order_id = generateOrderId('KOS');
-
-        // Update order_id di database
-        $update_order = "UPDATE property_payments SET order_id = ? WHERE id = ?";
+    
+    // Generate order_id baru jika transaksi sebelumnya gagal
+    if ($payment['payment_status'] !== 'pending') {
+        $order_id = generateOrderId('KOS');
+        $update_order = "UPDATE property_payments SET order_id = ?, payment_status = 'pending' WHERE id = ?";
         $stmt_update = $conn->prepare($update_order);
-        $stmt_update->bind_param('si', $new_order_id, $payment_id);
+        $stmt_update->bind_param('si', $order_id, $payment_id);
         $stmt_update->execute();
-
-        $order_id = $new_order_id;
     } else {
         $order_id = $payment['order_id'];
     }
-
+    
     // Configure Midtrans
     \Midtrans\Config::$serverKey = MIDTRANS_SERVER_KEY;
     \Midtrans\Config::$isProduction = MIDTRANS_IS_PRODUCTION;
     \Midtrans\Config::$isSanitized = MIDTRANS_IS_SANITIZED;
     \Midtrans\Config::$is3ds = MIDTRANS_IS_3DS;
-
+    
     // Prepare transaction details
     $transaction_details = [
         'order_id' => $order_id,
         'gross_amount' => $payment['total_amount']
     ];
-
-    // Item details
-    // Item details - HANYA pajak yang dibayar
+    
+    // Item details - HANYA PAJAK
     $item_details = [
         [
             'id' => 'TAX-' . $payment['kos_id'],
-            'price' => $payment['tax_amount'], // ← Pajak saja
+            'price' => $payment['tax_amount'],
             'quantity' => 1,
-            'name' => 'Biaya Listing Property: ' . $payment['kos_name'] . ' (Pajak Platform ' . $payment['tax_percentage'] . '%)'
+            'name' => 'Biaya Listing: ' . substr($payment['kos_name'], 0, 40) . ' (Pajak ' . $payment['tax_percentage'] . '%)'
         ]
     ];
-
     
     // Customer details
     $customer_details = [
@@ -111,14 +101,14 @@ try {
         'email' => $payment['email'],
         'phone' => $payment['phone'] ?? '08123456789'
     ];
-
+    
     // Expiry settings
     $custom_expiry = [
         'start_time' => date('Y-m-d H:i:s O'),
         'unit' => 'hour',
         'duration' => PAYMENT_EXPIRY_DURATION
     ];
-
+    
     // Transaction parameters
     $params = [
         'transaction_details' => $transaction_details,
@@ -127,24 +117,22 @@ try {
         'expiry' => $custom_expiry,
         'enabled_payments' => PAYMENT_ENABLED_METHODS
     ];
-
+    
     // Get Snap Token
     $snap_token = \Midtrans\Snap::getSnapToken($params);
-
+    
     // Save snap token to database
     $update_sql = "UPDATE property_payments SET snap_token = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
     $update_stmt->bind_param('si', $snap_token, $payment_id);
     $update_stmt->execute();
-
-    // Log
-    error_log("Snap token created for order: $order_id");
-
+    
     echo json_encode([
         'success' => true,
         'snap_token' => $snap_token,
         'order_id' => $order_id
     ]);
+    
 } catch (Exception $e) {
     error_log("Create payment error: " . $e->getMessage());
     echo json_encode([
@@ -154,3 +142,4 @@ try {
 }
 
 $conn->close();
+?>

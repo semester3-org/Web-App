@@ -110,7 +110,7 @@ try {
         throw new Exception('Gagal menyimpan data property');
     }
 
-    $kos_id = (int) $conn->insert_id;
+    $kos_id = $conn->insert_id;
 
     // 2. INSERT FACILITIES
     if (!empty($facilities) && is_array($facilities)) {
@@ -195,8 +195,10 @@ try {
     // 5. CREATE PAYMENT RECORD
     $order_id = generateOrderId('KOS');
     $tax_amount = calculateTax($price_monthly);
-    $total_amount = $tax_amount;
+    $total_amount = $tax_amount; // HANYA PAJAK yang dibayar
     $expired_at = date('Y-m-d H:i:s', strtotime('+' . PAYMENT_EXPIRY_DURATION . ' hours'));
+    
+    $tax_percentage = TAX_PERCENTAGE; // Convert constant to variable
 
     $sql_payment = "INSERT INTO property_payments (
         kos_id, owner_id, order_id, price_monthly, 
@@ -205,7 +207,6 @@ try {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)";
 
     $stmt_payment = $conn->prepare($sql_payment);
-    $tax_percentage = TAX_PERCENTAGE;
     $stmt_payment->bind_param(
         'iisiiiis',
         $kos_id, $owner_id, $order_id, $price_monthly,
@@ -216,7 +217,7 @@ try {
         throw new Exception('Gagal membuat record pembayaran');
     }
 
-    $payment_id = (int) $conn->insert_id;
+    $payment_id = $conn->insert_id;
 
     // 6. UPDATE KOS dengan payment_id
     $update_kos = "UPDATE kos SET payment_id = ? WHERE id = ?";
