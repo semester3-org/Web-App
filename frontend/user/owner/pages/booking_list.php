@@ -23,7 +23,7 @@
 </head>
 <body class="bg-light">
 
-<?php include "navbar.php"; ?>
+<?php include "../includes/navbar.php"; ?>
 
 
 <div class="container py-4">

@@ -5,7 +5,7 @@
 
 /* ==================== General Styles ==================== */
 body {
-  background-color: #f4f9f6;
+  background-color: #f0fdf4;
 }
 
 /* ==================== Card Form ==================== */
@@ -219,23 +219,6 @@ body {
   height: 100%;
   cursor: pointer;
 }
-.card {
-  background-color: #fff;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-
-.btn-success {
-  background-color: #198754 !important;
-  border: none !important;
-}
-
-body {
-  background-color: #f8f9fa;
-}
 
  
