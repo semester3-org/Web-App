@@ -63,6 +63,7 @@ class ApprovalProcess
                     k.price_daily,
                     k.rules,
                     k.status,
+                    k.payment_status,
                     k.created_at,
                     k.updated_at,
                     k.verified_at,
@@ -83,11 +84,20 @@ class ApprovalProcess
             $params = [];
             $types = "";
 
-            // Filter by status
-            if ($status !== 'all') {
-                $where[] = "k.status = ?";
-                $params[] = $status;
-                $types .= "s";
+
+            // Filter by status and payment
+            if ($status === 'pending') {
+                // Hanya tampilkan property yang sudah bayar dan menunggu approval
+                $where[] = "k.status = 'pending'";
+                $where[] = "k.payment_status = 'paid'";
+            } elseif ($status === 'approved') {
+                $where[] = "k.status = 'approved'";
+            } elseif ($status === 'rejected') {
+                $where[] = "k.status = 'rejected'";
+            } elseif ($status === 'all') {
+                // Tampilkan semua yang sudah bayar (exclude unpaid/null)
+                $where[] = "k.status IS NOT NULL";
+                $where[] = "k.payment_status = 'paid'";
             }
 
             // Advanced Filters
@@ -151,13 +161,19 @@ class ApprovalProcess
             $params = [];
             $types = "";
 
-            if ($status !== 'all') {
-                $where[] = "k.status = ?";
-                $params[] = $status;
-                $types .= "s";
+            // === Bagian yang diminta untuk diubah ===
+            if ($status === 'pending') {
+                $where[] = "k.status = 'pending' AND k.payment_status = 'paid'";
+            } elseif ($status === 'approved') {
+                $where[] = "k.status = 'approved'";
+            } elseif ($status === 'rejected') {
+                $where[] = "k.status = 'rejected'";
+            } elseif ($status === 'all') {
+                $where[] = "k.status IS NOT NULL AND k.payment_status = 'paid'";
             }
 
-            // Advanced Filters
+
+            // Advanced Filters (tambahan opsional dari kamu)
             if (!empty($filters['city'])) {
                 $where[] = "k.city = ?";
                 $params[] = $filters['city'];
@@ -292,12 +308,32 @@ class ApprovalProcess
                 'total' => 0
             ];
 
-            $query = "SELECT status, COUNT(*) as count FROM kos GROUP BY status";
-            $result = $this->conn->query($query);
+            // Pending: hanya yang sudah bayar
+            $pending_query = "SELECT COUNT(*) as count FROM kos WHERE status = 'pending' AND payment_status = 'paid'";
+            $result = $this->conn->query($pending_query);
+            if ($result && $row = $result->fetch_assoc()) {
+                $stats['pending'] = $row['count'];
+            }
 
-            while ($row = $result->fetch_assoc()) {
-                $stats[$row['status']] = $row['count'];
-                $stats['total'] += $row['count'];
+            // Approved
+            $approved_query = "SELECT COUNT(*) as count FROM kos WHERE status = 'approved'";
+            $result = $this->conn->query($approved_query);
+            if ($result && $row = $result->fetch_assoc()) {
+                $stats['approved'] = $row['count'];
+            }
+
+            // Rejected
+            $rejected_query = "SELECT COUNT(*) as count FROM kos WHERE status = 'rejected'";
+            $result = $this->conn->query($rejected_query);
+            if ($result && $row = $result->fetch_assoc()) {
+                $stats['rejected'] = $row['count'];
+            }
+
+            // Total: semua yang sudah bayar (pending, approved, rejected)
+            $total_query = "SELECT COUNT(*) as count FROM kos WHERE status IS NOT NULL AND payment_status = 'paid'";
+            $result = $this->conn->query($total_query);
+            if ($result && $row = $result->fetch_assoc()) {
+                $stats['total'] = $row['count'];
             }
 
             return $stats;
@@ -311,6 +347,7 @@ class ApprovalProcess
             ];
         }
     }
+
 
     /**
      * Approve property

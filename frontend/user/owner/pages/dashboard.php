@@ -61,7 +61,7 @@
     if ($properties->num_rows > 0):
     ?>
       <div class="container mt-5">
-        <h5 class="fw-bold mb-3">My Properties</h5>
+        <h5 class="fw-bold mb-3">My Properties Payment list</h5>
         <div class="row">
           <?php while ($property = $properties->fetch_assoc()): ?>
             <div class="col-md-4 mb-3">

@@ -112,20 +112,26 @@ try {
 
     $kos_id = $conn->insert_id;
 
-    // 2. INSERT FACILITIES
-    if (!empty($facilities) && is_array($facilities)) {
-        $sql_facility = "INSERT INTO kos_facilities (kos_id, facility_id) VALUES (?, ?)";
-        $stmt_facility = $conn->prepare($sql_facility);
+// 2. INSERT FACILITIES
+// Decode JSON string menjadi array
+// Debug - hapus setelah berhasil
+error_log("Facilities raw: " . $_POST['facilities']);
+error_log("Facilities decoded: " . print_r($facilities, true));
+$facilities = isset($_POST['facilities']) ? json_decode($_POST['facilities'], true) : [];
 
-        foreach ($facilities as $facility_id) {
-            $facility_id = intval($facility_id);
-            if ($facility_id > 0) {
-                $stmt_facility->bind_param('ii', $kos_id, $facility_id);
-                $stmt_facility->execute();
-            }
+if (!empty($facilities) && is_array($facilities)) {
+    $sql_facility = "INSERT INTO kos_facilities (kos_id, facility_id) VALUES (?, ?)";
+    $stmt_facility = $conn->prepare($sql_facility);
+
+    foreach ($facilities as $facility_id) {
+        $facility_id = intval($facility_id);
+        if ($facility_id > 0) {
+            $stmt_facility->bind_param('ii', $kos_id, $facility_id);
+            $stmt_facility->execute();
         }
-        $stmt_facility->close();
     }
+    $stmt_facility->close();
+}
 
     // 3. UPLOAD IMAGES
     $uploaded_images = [];
