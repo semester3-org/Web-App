@@ -281,3 +281,5 @@ vite.config.ts.timestamp-*
 
 # PHP/Composer dependencies
 vendor/
+# ignore uploaded files
+/uploads/
