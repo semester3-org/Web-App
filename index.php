@@ -1,10 +1,21 @@
 <?php
-// Panggil session hanya sekali
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+session_start();
+
+if (isset($_SESSION['user_id'])) {
+  switch ($_SESSION['user_type']) {
+    case 'admin':
+      header("Location: /Web-App/frontend/admin/pages/dashboard.php");
+      exit;
+    case 'owner':
+      header("Location: /Web-App/frontend/user/owner/pages/dashboard.php");
+      exit;
+    case 'user':
+      header("Location: /Web-App/frontend/user/customer/home.php");
+      exit;
+  }
 }
-$isLoggedIn = isset($_SESSION['username']);
 ?>
+
 
 <!doctype html>
 <html lang="id">
