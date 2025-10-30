@@ -131,7 +131,7 @@
             <div class="alert alert-info mb-0">
               <small>
                 <i class="bi bi-info-circle"></i>
-                Anda hanya membayar biaya listing (pajak platform). Harga property untuk customer.
+                Anda hanya membayar biaya pajak dan peembayaran pajak hanya 1x setiap menambah property.
               </small>
             </div>
           </div>
@@ -333,7 +333,7 @@
               Swal.fire({
                 icon: 'success',
                 title: 'Pembayaran Berhasil!',
-                text: 'Property Anda akan segera ditinjau admin.',
+                text: 'Property Anda akan segera ditinjau admin dan untuk lebih lengkapnya bisa ke menu your property ',
                 confirmButtonColor: '#10b981'
               }).then(() => {
                 location.reload();
