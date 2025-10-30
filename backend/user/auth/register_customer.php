@@ -42,6 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($stmt->execute()) {
         // Redirect ke login kalau berhasil
+        $conn->commit();
+        $stmt->close();
         header("Location: ../../../frontend/auth/login.php");
         exit;
     } else {

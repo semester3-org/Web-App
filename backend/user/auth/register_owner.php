@@ -45,6 +45,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $phone, $user_type);
 
     if ($stmt->execute()) {
+        $conn->commit();
+
         $stmt->close();
         header("Location: ../../../frontend/auth/login.php?success=Registrasi owner berhasil, silakan login");
         exit;

@@ -1,0 +1,444 @@
+
+/* ========================================
+   DASHBOARD OWNER - GREEN THEME STYLESHEET
+   ======================================== */
+
+/* Root Variables - Green Color Palette */
+:root {
+  --primary-green: #10b981;
+  --primary-green-dark: #059669;
+  --primary-green-light: #34d399;
+  --accent-green: #6ee7b7;
+  --bg-green-light: #d1fae5;
+  --bg-green-subtle: #f0fdf4;
+  
+  --text-dark: #1f2937;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+  
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 2px 8px rgba(16, 185, 129, 0.1);
+  --shadow-md: 0 4px 16px rgba(16, 185, 129, 0.15);
+  --shadow-lg: 0 8px 24px rgba(16, 185, 129, 0.2);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+}
+
+/* General Styles */
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Header Title */
+h3.fw-bold {
+  color: var(--primary-green-dark);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+}
+
+/* Add Property Card */
+.card.shadow-sm {
+  background: white;
+  border: 2px solid var(--accent-green);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+  overflow: hidden;
+  position: relative;
+}
+
+.card.shadow-sm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+}
+
+.card.shadow-sm:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-green);
+}
+
+.card.shadow-sm h5 {
+  color: var(--primary-green-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+/* Add Property Button */
+.btn-success {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, var(--primary-green-dark) 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-success:active {
+  transform: translateY(0);
+}
+
+.btn-success i {
+  font-size: 1.2rem;
+}
+
+/* Property List Section */
+.container.mt-5 h5.fw-bold {
+  color: var(--primary-green-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid var(--accent-green);
+}
+
+/* Property Cards */
+.col-md-4 .card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  background: white;
+}
+
+.col-md-4 .card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-green);
+}
+
+.col-md-4 .card-body {
+  padding: 1.5rem;
+}
+
+.col-md-4 .card-body h5 {
+  color: var(--primary-green-dark);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.col-md-4 .card-body .text-muted {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.col-md-4 .card-body .text-muted::before {
+  content: '📍';
+  margin-right: 0.5rem;
+}
+
+.col-md-4 .card-body p {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.col-md-4 .card-body strong {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+/* Badges */
+.badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  color: white;
+}
+
+.badge.bg-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.badge.bg-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.badge.bg-secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+/* Pay Now Button in Cards */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-sm.btn-success {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.btn-sm.btn-success:hover {
+  background: linear-gradient(135deg, var(--primary-green-dark) 0%, #047857 100%);
+  transform: scale(1.05);
+}
+
+/* Payment Modal */
+.modal-content {
+  border: none;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  color: white;
+  padding: 1.5rem;
+  border: none;
+}
+
+.modal-header .modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-header .modal-title i {
+  font-size: 1.5rem;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+/* Payment Warning */
+.payment-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #92400e;
+}
+
+.payment-warning i {
+  font-size: 1.5rem;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.payment-warning strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* Payment Summary */
+.payment-summary {
+  background: var(--bg-green-subtle);
+  border: 2px solid var(--accent-green);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.payment-summary table {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.payment-summary table tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.payment-summary table tr:last-child {
+  border-bottom: none;
+}
+
+.payment-summary table td {
+  padding: 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.payment-summary table .total-row {
+  border-top: 2px solid var(--primary-green);
+  margin-top: 0.5rem;
+}
+
+.payment-summary table .total-row td {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-green-dark);
+  padding-top: 1rem;
+}
+
+.payment-summary .alert-info {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid #60a5fa;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.payment-summary .alert-info small {
+  color: #1e40af;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Property Detail */
+#property-name {
+  background: white;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-green);
+  font-weight: 600;
+  color: var(--primary-green-dark);
+}
+
+/* Modal Buttons */
+.btn-pay-later {
+  background: white;
+  color: var(--text-muted);
+  border: 2px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.btn-pay-later:hover {
+  background: var(--bg-green-subtle);
+  border-color: var(--accent-green);
+  color: var(--primary-green-dark);
+}
+
+.btn-pay-now {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-pay-now:hover {
+  background: linear-gradient(135deg, var(--primary-green-dark) 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-pay-now:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  h3.fw-bold {
+    font-size: 1.5rem;
+  }
+  
+  .card.shadow-sm {
+    width: 100% !important;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .btn-pay-later,
+  .btn-pay-now {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .d-flex.gap-2 {
+    flex-direction: column;
+  }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card,
+.modal-content {
+  animation: fadeInUp 0.4s ease;
+}
+
+/* Loading State */
+.btn-pay-now:disabled {
+  background: var(--text-light);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Icon Styles */
+i.bi {
+  vertical-align: middle;
+}

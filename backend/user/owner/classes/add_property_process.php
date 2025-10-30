@@ -1,247 +1,274 @@
 <?php
+/**
+ * ============================================
+ * ADD PROPERTY WITH PAYMENT
+ * File: backend/user/owner/classes/add_property_process.php
+ * ============================================
+ */
+
 session_start();
 require_once '../../../config/db.php';
+require_once '../../../config/midtrans.php';
 
-// Enable error reporting untuk debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Log file untuk debugging
-$log_file = '../../../logs/property_add.log';
-$log_dir = dirname($log_file);
-if (!file_exists($log_dir)) {
-    mkdir($log_dir, 0755, true);
-}
-
-// Cek apakah user sudah login dan merupakan owner
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'owner') {
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - User not logged in or not owner. User ID: " . ($_SESSION['user_id'] ?? 'not set') . ", User Type: " . ($_SESSION['user_type'] ?? 'not set') . "\n", FILE_APPEND);
-    header('Location: ../../../../frontend/auth/login.php');
+// Check if owner is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
+    $_SESSION['error'] = 'Anda harus login sebagai owner';
+    header('Location: ../../../../frontend/user/owner/pages/login.php');
     exit();
 }
 
 $owner_id = $_SESSION['user_id'];
 
-// Validasi method POST
+// Validate request method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Not POST method\n", FILE_APPEND);
-    header('Location: ../../../../frontend/user/owner/add_property.php');
-    exit();
-}
-
-// Log semua POST data
-file_put_contents($log_file, date('Y-m-d H:i:s') . " - POST Data: " . print_r($_POST, true) . "\n", FILE_APPEND);
-file_put_contents($log_file, date('Y-m-d H:i:s') . " - FILES Data: " . print_r($_FILES, true) . "\n", FILE_APPEND);
-
-// Ambil dan sanitasi data dari form
-$name = trim($_POST['name']);
-$postal_code = trim($_POST['postal_code'] ?? '');
-$address = trim($_POST['address']);
-$province = trim($_POST['province']);
-$city = trim($_POST['city']);
-$latitude = !empty($_POST['latitude']) ? floatval($_POST['latitude']) : null;
-$longitude = !empty($_POST['longitude']) ? floatval($_POST['longitude']) : null;
-$total_rooms = intval($_POST['total_rooms']);
-$kos_type = $_POST['kos_type'];
-$price_monthly = intval(preg_replace('/[^0-9]/', '', $_POST['price_monthly']));
-$price_daily = !empty($_POST['price_daily']) ? intval(preg_replace('/[^0-9]/', '', $_POST['price_daily'])) : null;
-$description = trim($_POST['description'] ?? '');
-
-// Ambil fasilitas dan aturan dari form (data JSON dari JavaScript)
-$facilities = isset($_POST['facilities']) ? json_decode($_POST['facilities'], true) : [];
-$rules = isset($_POST['rules']) ? json_decode($_POST['rules'], true) : [];
-
-// Convert rules array ke JSON string untuk disimpan di database
-$rules_json = !empty($rules) ? json_encode($rules) : null;
-
-// Validasi data wajib
-if (empty($name) || empty($address) || empty($province) || empty($city) || empty($kos_type) || $total_rooms <= 0 || $price_monthly <= 0) {
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Validation failed: name=$name, address=$address, province=$province, city=$city, kos_type=$kos_type, total_rooms=$total_rooms, price_monthly=$price_monthly\n", FILE_APPEND);
-    $_SESSION['error'] = 'Mohon lengkapi semua field yang wajib diisi!';
-    header('Location: ../../../../frontend/user/owner/add_property.php');
-    exit();
-}
-
-// Validasi jenis kos
-$valid_kos_types = ['putra', 'putri', 'campur'];
-if (!in_array($kos_type, $valid_kos_types)) {
-    $_SESSION['error'] = 'Jenis kos tidak valid!';
-    header('Location: ../../../../frontend/user/owner/add_property.php');
-    exit();
-}
-// Tangani facilities
-if (isset($_POST['facilities'])) {
-    $facilities = is_string($_POST['facilities'])
-        ? json_decode($_POST['facilities'], true)
-        : $_POST['facilities'];
-} else {
-    $facilities = [];
-}
-
-// Tangani rules
-if (isset($_POST['rules'])) {
-    $rules = is_string($_POST['rules'])
-        ? json_decode($_POST['rules'], true)
-        : $_POST['rules'];
-} else {
-    $rules = [];
-}
-
-
-try {
-    // Log start transaction
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Starting transaction\n", FILE_APPEND);
-    
-    // Mulai transaction
-    $conn->begin_transaction();
-    
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Preparing INSERT query\n", FILE_APPEND);
-    
-    // Insert data ke tabel kos
-    $stmt = $conn->prepare("INSERT INTO kos (owner_id, name, description, address, latitude, longitude, city, province, postal_code, kos_type, total_rooms, available_rooms, price_monthly, price_daily, rules, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
-    
-    if (!$stmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
-    }
-    
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Binding parameters: owner_id=$owner_id, name=$name, kos_type=$kos_type\n", FILE_APPEND);
-    
-    $stmt->bind_param("isssddssssiiiis", 
-        $owner_id, 
-        $name, 
-        $description, 
-        $address, 
-        $latitude, 
-        $longitude, 
-        $city, 
-        $province, 
-        $postal_code, 
-        $kos_type, 
-        $total_rooms, 
-        $total_rooms, // available_rooms sama dengan total_rooms saat pertama dibuat
-        $price_monthly, 
-        $price_daily, 
-        $rules_json
-    );
-    
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Executing INSERT\n", FILE_APPEND);
-    
-    if (!$stmt->execute()) {
-        throw new Exception("Gagal menyimpan data property: " . $stmt->error);
-    }
-    
-    $kos_id = $conn->insert_id;
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Insert success, kos_id=$kos_id\n", FILE_APPEND);
-    $stmt->close();
-    
-    // Insert fasilitas jika ada
-    if (!empty($facilities) && is_array($facilities)) {
-        $stmt_facility = $conn->prepare("INSERT INTO kos_facilities (kos_id, facility_id) VALUES (?, ?)");
-        
-        if (!$stmt_facility) {
-            throw new Exception("Prepare facility failed: " . $conn->error);
-        }
-        
-        foreach ($facilities as $facility_id) {
-            $facility_id = intval($facility_id);
-            $stmt_facility->bind_param("ii", $kos_id, $facility_id);
-            
-            if (!$stmt_facility->execute()) {
-                throw new Exception("Gagal menyimpan fasilitas: " . $stmt_facility->error);
-            }
-        }
-        
-        $stmt_facility->close();
-    }
-    
-    // Upload dan simpan gambar
-    if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-        $upload_dir = '../../../../uploads/kos/';
-        
-        // Buat folder jika belum ada
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        $max_size = 10 * 1024 * 1024; // 10MB
-        
-        $stmt_image = $conn->prepare("INSERT INTO kos_images (kos_id, image_url) VALUES (?, ?)");
-        
-        if (!$stmt_image) {
-            throw new Exception("Prepare image failed: " . $conn->error);
-        }
-        
-        $total_files = count($_FILES['images']['name']);
-        $uploaded_count = 0;
-        
-        for ($i = 0; $i < $total_files; $i++) {
-            // Cek error upload
-            if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK) {
-                continue;
-            }
-            
-            $file_name = $_FILES['images']['name'][$i];
-            $file_tmp = $_FILES['images']['tmp_name'][$i];
-            $file_size = $_FILES['images']['size'][$i];
-            $file_type = $_FILES['images']['type'][$i];
-            
-            // Validasi tipe file
-            if (!in_array($file_type, $allowed_types)) {
-                continue;
-            }
-            
-            // Validasi ukuran file
-            if ($file_size > $max_size) {
-                continue;
-            }
-            
-            // Generate nama file unik
-            $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-            $new_file_name = 'kos_' . $kos_id . '_' . time() . '_' . uniqid() . '.' . $file_ext;
-            $file_path = $upload_dir . $new_file_name;
-            
-            // Upload file
-            if (move_uploaded_file($file_tmp, $file_path)) {
-                // Simpan path relatif ke database
-                $relative_path = 'uploads/kos/' . $new_file_name;
-                $stmt_image->bind_param("is", $kos_id, $relative_path);
-                
-                if ($stmt_image->execute()) {
-                    $uploaded_count++;
-                }
-            }
-        }
-        
-        $stmt_image->close();
-        
-        // Cek apakah ada gambar yang berhasil diupload
-        if ($uploaded_count === 0) {
-            throw new Exception("Tidak ada gambar yang berhasil diupload. Pastikan format dan ukuran file sesuai.");
-        }
-    }
-    
-    // Commit transaction
-    $conn->commit();
-    $conn->close();
-    
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Transaction committed successfully\n", FILE_APPEND);
-    
-    $_SESSION['success'] = 'Property berhasil ditambahkan dan menunggu persetujuan admin!';
-    header('Location: ../../../../frontend/user/owner/pages/dashboard.php');
-    exit();
-    
-} catch (Exception $e) {
-    // Rollback jika terjadi error
-    $conn->rollback();
-    
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
-    
-    $_SESSION['error'] = 'Terjadi kesalahan: ' . $e->getMessage();
+    $_SESSION['error'] = 'Invalid request method';
     header('Location: ../../../../frontend/user/owner/pages/add_property.php');
     exit();
 }
 
+// Get form data
+$name = trim($_POST['name'] ?? '');
+$address = trim($_POST['address'] ?? '');
+$city = trim($_POST['city'] ?? '');
+$province = trim($_POST['province'] ?? '');
+$postal_code = trim($_POST['postal_code'] ?? '');
+$latitude = trim($_POST['latitude'] ?? '');
+$longitude = trim($_POST['longitude'] ?? '');
+$kos_type = trim($_POST['kos_type'] ?? '');
+$total_rooms = intval($_POST['total_rooms'] ?? 0);
+$price_monthly = intval($_POST['price_monthly'] ?? 0);
+$price_daily = !empty($_POST['price_daily']) ? intval($_POST['price_daily']) : null;
+$description = trim($_POST['description'] ?? '');
+$facilities = $_POST['facilities'] ?? [];
+$rules = $_POST['rules'] ?? [];
 
+// Validation
+$errors = [];
+if (empty($name)) $errors[] = 'Nama property wajib diisi';
+if (empty($address)) $errors[] = 'Alamat wajib diisi';
+if (empty($city)) $errors[] = 'Kota wajib diisi';
+if (empty($province)) $errors[] = 'Provinsi wajib diisi';
+if (empty($latitude) || empty($longitude)) $errors[] = 'Lokasi di peta wajib dipilih';
+if (!in_array($kos_type, ['putra', 'putri', 'campur'])) $errors[] = 'Jenis kos tidak valid';
+if ($total_rooms < 1) $errors[] = 'Total kamar minimal 1';
+if ($price_monthly < 1) $errors[] = 'Harga perbulan wajib diisi';
+if (empty($_FILES['images']['name'][0])) $errors[] = 'Minimal upload 1 gambar';
+
+if (!empty($errors)) {
+    $_SESSION['error'] = implode('<br>', $errors);
+    header('Location: ../../../../frontend/user/owner/pages/add_property.php');
+    exit();
+}
+
+// Setup upload path
+$root_path = realpath(dirname(__FILE__) . '/../../../../');
+$upload_dir = $root_path . '/uploads/kos/';
+
+if (!is_dir($upload_dir)) {
+    if (!mkdir($upload_dir, 0755, true)) {
+        $_SESSION['error'] = 'Gagal membuat folder upload';
+        header('Location: ../../../../frontend/user/owner/pages/add_property.php');
+        exit();
+    }
+}
+
+if (!is_writable($upload_dir)) {
+    $_SESSION['error'] = 'Folder upload tidak writable';
+    header('Location: ../../../../frontend/user/owner/pages/add_property.php');
+    exit();
+}
+
+/**
+ * ============================================
+ * BEGIN TRANSACTION
+ * ============================================
+ */
+try {
+    $conn->begin_transaction();
+
+    // 1. INSERT KOS dengan status NULL (kosong) dan payment_status 'unpaid'
+    // Status kos baru akan diisi 'pending' setelah payment selesai
+    $sql_kos = "INSERT INTO kos (
+        owner_id, name, description, address, latitude, longitude, 
+        city, province, postal_code, kos_type, total_rooms, 
+        available_rooms, price_monthly, price_daily, rules, 
+        status, payment_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'unpaid')";
+
+    $stmt_kos = $conn->prepare($sql_kos);
+    $rules_json = !empty($rules) ? json_encode($rules) : null;
+    $available_rooms = $total_rooms;
+    
+    $stmt_kos->bind_param(
+        'isssddssssiiiss',
+        $owner_id, $name, $description, $address, $latitude, $longitude,
+        $city, $province, $postal_code, $kos_type, $total_rooms,
+        $available_rooms, $price_monthly, $price_daily, $rules_json
+    );
+
+    if (!$stmt_kos->execute()) {
+        throw new Exception('Gagal menyimpan data property');
+    }
+
+    $kos_id = $conn->insert_id;
+
+// 2. INSERT FACILITIES
+// Decode JSON string menjadi array
+// Debug - hapus setelah berhasil
+error_log("Facilities raw: " . $_POST['facilities']);
+error_log("Facilities decoded: " . print_r($facilities, true));
+$facilities = isset($_POST['facilities']) ? json_decode($_POST['facilities'], true) : [];
+
+if (!empty($facilities) && is_array($facilities)) {
+    $sql_facility = "INSERT INTO kos_facilities (kos_id, facility_id) VALUES (?, ?)";
+    $stmt_facility = $conn->prepare($sql_facility);
+
+    foreach ($facilities as $facility_id) {
+        $facility_id = intval($facility_id);
+        if ($facility_id > 0) {
+            $stmt_facility->bind_param('ii', $kos_id, $facility_id);
+            $stmt_facility->execute();
+        }
+    }
+    $stmt_facility->close();
+}
+
+    // 3. UPLOAD IMAGES
+    $uploaded_images = [];
+    $files = $_FILES['images'];
+    $file_count = count($files['name']);
+
+    if ($file_count > 10) {
+        throw new Exception('Maksimal upload 10 gambar');
+    }
+
+    for ($i = 0; $i < $file_count; $i++) {
+        if (empty($files['name'][$i])) continue;
+
+        $file_name = $files['name'][$i];
+        $file_tmp = $files['tmp_name'][$i];
+        $file_size = $files['size'][$i];
+        $file_error = $files['error'][$i];
+
+        if ($file_error !== UPLOAD_ERR_OK) {
+            throw new Exception("Error upload gambar: $file_name");
+        }
+
+        if ($file_size > 10 * 1024 * 1024) {
+            throw new Exception("Ukuran file $file_name terlalu besar (max 10MB)");
+        }
+
+        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file_tmp);
+        finfo_close($finfo);
+
+        if (!in_array($mime_type, $allowed_types)) {
+            throw new Exception("File $file_name bukan gambar yang valid");
+        }
+
+        $file_extension = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        $new_file_name = 'kos_' . $kos_id . '_' . time() . '_' . uniqid() . '.' . $file_extension;
+        $file_path = $upload_dir . $new_file_name;
+
+        if (!move_uploaded_file($file_tmp, $file_path)) {
+            throw new Exception("Gagal upload file: $file_name");
+        }
+
+        $image_url = 'uploads/kos/' . $new_file_name;
+        $uploaded_images[] = [
+            'url' => $image_url,
+            'path' => $file_path
+        ];
+    }
+
+    if (empty($uploaded_images)) {
+        throw new Exception('Gagal upload gambar. Minimal 1 gambar diperlukan');
+    }
+
+    // 4. INSERT IMAGES
+    $sql_image = "INSERT INTO kos_images (kos_id, image_url) VALUES (?, ?)";
+    $stmt_image = $conn->prepare($sql_image);
+
+    foreach ($uploaded_images as $image_data) {
+        $stmt_image->bind_param('is', $kos_id, $image_data['url']);
+        if (!$stmt_image->execute()) {
+            throw new Exception('Gagal menyimpan data gambar');
+        }
+    }
+    $stmt_image->close();
+
+    // 5. CREATE PAYMENT RECORD
+    $order_id = generateOrderId('KOS');
+    $tax_amount = calculateTax($price_monthly);
+    $total_amount = $tax_amount; // HANYA PAJAK yang dibayar
+    $expired_at = date('Y-m-d H:i:s', strtotime('+' . PAYMENT_EXPIRY_DURATION . ' hours'));
+    
+    $tax_percentage = TAX_PERCENTAGE; // Convert constant to variable
+
+    $sql_payment = "INSERT INTO property_payments (
+        kos_id, owner_id, order_id, price_monthly, 
+        tax_percentage, tax_amount, total_amount, 
+        payment_status, expired_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)";
+
+    $stmt_payment = $conn->prepare($sql_payment);
+    $stmt_payment->bind_param(
+        'iisiiiis',
+        $kos_id, $owner_id, $order_id, $price_monthly,
+        $tax_percentage, $tax_amount, $total_amount, $expired_at
+    );
+
+    if (!$stmt_payment->execute()) {
+        throw new Exception('Gagal membuat record pembayaran');
+    }
+
+    $payment_id = $conn->insert_id;
+
+    // 6. UPDATE KOS dengan payment_id
+    $update_kos = "UPDATE kos SET payment_id = ? WHERE id = ?";
+    $stmt_update = $conn->prepare($update_kos);
+    $stmt_update->bind_param('ii', $payment_id, $kos_id);
+    $stmt_update->execute();
+
+    // COMMIT TRANSACTION
+    $conn->commit();
+
+    // Store data untuk payment page
+    $_SESSION['pending_payment'] = [
+        'kos_id' => $kos_id,
+        'payment_id' => $payment_id,
+        'order_id' => $order_id,
+        'kos_name' => $name,
+        'price_monthly' => $price_monthly,
+        'tax_amount' => $tax_amount,
+        'total_amount' => $total_amount
+    ];
+
+    $_SESSION['success'] = 'Property berhasil ditambahkan! Silakan lakukan pembayaran.';
+    
+    // Redirect ke dashboard (payment modal akan muncul)
+    header('Location: ../../../../frontend/user/owner/pages/dashboard.php');
+    exit();
+
+} catch (Exception $e) {
+    // ROLLBACK
+    $conn->rollback();
+
+    // Cleanup uploaded files
+    if (!empty($uploaded_images)) {
+        foreach ($uploaded_images as $image_data) {
+            if (file_exists($image_data['path'])) {
+                unlink($image_data['path']);
+            }
+        }
+    }
+
+    $_SESSION['error'] = 'Gagal menambahkan property: ' . $e->getMessage();
+    header('Location: ../../../../frontend/user/owner/pages/add_property.php');
+    exit();
+}
+
+if (isset($stmt_kos)) $stmt_kos->close();
+$conn->close();
 ?>
