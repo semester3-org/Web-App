@@ -5,8 +5,16 @@
 
 /* ==================== General Styles ==================== */
 body {
-  background-color: #f0fdf4;
+  background-color: #ffff;
 }
+
+.header-bar {
+  border-bottom: 2px solid #dee2e6; /* warna abu Bootstrap */
+  background-color: #fff;           /* pastikan header tetap bersih */
+  margin-bottom: 1.5rem;
+}
+
+
 
 /* ==================== Card Form ==================== */
 .card-form {
@@ -221,4 +229,11 @@ body {
 }
 
 
- 
+ #map {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    z-index: 1;
+    position: relative;
+}
