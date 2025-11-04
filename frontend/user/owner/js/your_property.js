@@ -68,57 +68,61 @@ function renderProperties(properties) {
       property.status.charAt(0).toUpperCase() + property.status.slice(1);
 
     col.innerHTML = `
-            <div class="property-card">
-                <img src="/Web-App/${property.image_url}" 
-                    alt="${property.name}" 
-                    class="property-image">
-                <div class="property-body">
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                    <h5 class="property-title">${property.name}</h5>
-                    <div class="property-location">
-                        <i class="bi bi-geo-alt-fill text-danger"></i>
-                        ${property.city}, ${property.province}
-                    </div>
-                    <div class="property-price">
-                        Rp ${formatNumber(
-                          property.price_monthly
-                        )} <small class="text-muted fs-6">/ bulan</small>
-                    </div>
-                    <div class="property-info">
-                        <div class="info-item">
-                            <i class="bi bi-door-closed-fill"></i>
-                            <span>${property.available_rooms}/${
+      <div class="property-card">
+          <img src="/Web-App/${property.image_url}" alt="${
+      property.name
+    }" class="property-image">
+          <div class="property-body">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+              <h5 class="property-title">${property.name}</h5>
+              <div class="property-location">
+                  <i class="bi bi-geo-alt-fill text-danger"></i>
+                  ${property.city}, ${property.province}
+              </div>
+              <div class="property-price">
+                  Rp ${formatNumber(
+                    property.price_monthly
+                  )} <small class="text-muted fs-6">/ bulan</small>
+              </div>
+              <div class="property-info">
+                  <div class="info-item">
+                      <i class="bi bi-door-closed-fill"></i>
+                      <span>${property.available_rooms}/${
       property.total_rooms
     } Kamar</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-gender-ambiguous"></i>
-                            <span>${property.kos_type}</span>
-                        </div>
-                    </div>
-                    <div class="property-actions">
-                        <button class="btn btn-action btn-edit" onclick="editProperty(${
-                          property.id
-                        })">
-                            <i class="bi bi-pencil-fill"></i> Edit
-                        </button>
-                        <button class="btn btn-action btn-detail" onclick="viewDetail(${
-                          property.id
-                        })">
-                            <i class="bi bi-eye-fill"></i> Detail
-                        </button>
-                        <button class="btn btn-action btn-delete" onclick="confirmDelete(${
-                          property.id
-                        }, '${property.name}')">
-                            <i class="bi bi-trash-fill"></i> Hapus
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+                  </div>
+                  <div class="info-item">
+                      <i class="bi bi-gender-ambiguous"></i>
+                      <span>${property.kos_type}</span>
+                  </div>
+              </div>
+              <div class="property-actions">
+                  <button class="btn btn-action btn-edit" onclick="editProperty(${
+                    property.id
+                  })">
+                      <i class="bi bi-pencil-fill"></i> Edit
+                  </button>
+                  <button class="btn btn-action btn-detail" onclick="viewDetail(${
+                    property.id
+                  })">
+                      <i class="bi bi-eye-fill"></i> Detail
+                  </button>
+                  <button class="btn btn-action btn-delete" onclick="confirmDelete(${
+                    property.id
+                  }, '${property.name}')">
+                      <i class="bi bi-trash-fill"></i> Hapus
+                  </button>
+              </div>
+          </div>
+      </div>
+    `;
 
     grid.appendChild(col);
   });
+
+  // ✅ tampilkan grid setelah dirender
+  grid.style.display = "flex";
+  grid.style.flexWrap = "wrap";
 }
 
 // Format number to Indonesian currency
@@ -133,11 +137,10 @@ function editProperty(id) {
 
 // View detail (placeholder for now)
 function viewDetail(id) {
-    const targetUrl = `../pages/detail_property.php?id=${id}`;
-    console.log("Redirecting to:", targetUrl);
-    window.location.href = targetUrl;
+  const targetUrl = `../pages/detail_property.php?id=${id}`;
+  console.log("Redirecting to:", targetUrl);
+  window.location.href = targetUrl;
 }
-
 
 // Confirm delete
 function confirmDelete(id, name) {
