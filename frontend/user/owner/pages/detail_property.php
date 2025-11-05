@@ -99,6 +99,8 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     <title>Detail Property - <?php echo htmlspecialchars($property['name']); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="../css/detail_property.css" rel="stylesheet">
 </head>
@@ -120,30 +122,38 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     <!-- Main Content -->
     <div class="container my-4">
         <!-- Image Gallery -->
-        <div class="row g-2 mb-4">
+        <div class="row g-3 mb-4">
             <?php if (count($images) > 0): ?>
                 <div class="col-md-8">
-                    <img src="../../../../<?php echo $images[0]['image_url']; ?>"
-                        class="img-fluid rounded main-image"
-                        alt="Main"
+                    <img
+                        src="../../../../<?php echo $images[0]['image_url']; ?>"
+                        class="img-fluid rounded main-image shadow-sm"
+                        alt="Main Image"
+                        onclick="openLightbox(0)"
                         onerror="this.src='../../../assets/default-kos.jpg'">
                 </div>
+
                 <div class="col-md-4">
                     <div class="row g-2">
                         <?php for ($i = 1; $i < min(4, count($images)); $i++): ?>
                             <div class="col-6">
-                                <img src="../../../../<?php echo $images[$i]['image_url']; ?>"
-                                    class="img-fluid rounded thumbnail-image"
+                                <img
+                                    src="../../../../<?php echo $images[$i]['image_url']; ?>"
+                                    class="img-fluid rounded thumbnail-image shadow-sm"
                                     alt="Thumbnail"
+                                    onclick="openLightbox(<?php echo $i; ?>)"
                                     onerror="this.src='../../../assets/default-kos.jpg'">
                             </div>
                         <?php endfor; ?>
+
                         <?php if (count($images) > 4): ?>
                             <div class="col-6 position-relative">
-                                <img src="../../../../<?php echo $images[4]['image_url']; ?>"
-                                    class="img-fluid rounded thumbnail-image"
-                                    alt="Thumbnail">
-                                <div class="overlay-more" onclick="showAllPhotos()">
+                                <img
+                                    src="../../../../<?php echo $images[4]['image_url']; ?>"
+                                    class="img-fluid rounded thumbnail-image shadow-sm"
+                                    alt="Thumbnail"
+                                    onclick="openLightbox(4)">
+                                <div class="overlay-more d-flex align-items-center justify-content-center" onclick="openLightbox(4)">
                                     <span>+<?php echo count($images) - 4; ?> Foto</span>
                                 </div>
                             </div>
@@ -151,6 +161,17 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Lightbox Modal -->
+        <div id="lightbox" class="lightbox">
+            <span class="close" onclick="closeLightbox()">&times;</span>
+            <img id="lightbox-img" class="lightbox-content" alt="Preview">
+            <div class="lightbox-controls">
+                <span class="prev" onclick="changeImage(-1)">&#10094;</span>
+                <span class="next" onclick="changeImage(1)">&#10095;</span>
+            </div>
+            <div id="lightbox-caption" class="caption"></div>
         </div>
 
         <div class="row">
@@ -215,19 +236,27 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div class="detail-card mb-4">
                         <h5 class="section-title"><i class="bi bi-star-fill"></i> Fasilitas</h5>
 
-                        <?php foreach ($grouped_facilities as $category => $items): ?>
-                            <div class="mb-3">
-                                <h6 class="facility-category"><?php echo ucfirst($category); ?></h6>
-                                <div class="facility-grid">
-                                    <?php foreach ($items as $facility): ?>
-                                        <div class="facility-item">
-                                            <i class="bi bi-check-circle-fill"></i>
-                                            <?php echo htmlspecialchars($facility['name']); ?>
+                        <?php if (!empty($grouped_facilities)): ?>
+                            <?php foreach ($grouped_facilities as $category => $items): ?>
+                                <?php if (!empty($items) && is_array($items)): ?>
+                                    <div class="mb-3">
+                                        <h6 class="facility-category"><?php echo ucfirst($category); ?></h6>
+                                        <div class="facility-grid">
+                                            <?php foreach ($items as $facility): ?>
+                                                <div class="facility-item">
+                                                    <?php if (!empty($facility['icon'])): ?>
+                                                        <i class="fa <?php echo htmlspecialchars($facility['icon']); ?>"></i>
+                                                    <?php else: ?>
+                                                        <i class="bi bi-check-circle-fill"></i>
+                                                    <?php endif; ?>
+                                                    <?php echo htmlspecialchars($facility['name']); ?>
+                                                </div>
+                                            <?php endforeach; ?>
                                         </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
@@ -341,13 +370,26 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                         <h6 class="mb-3">Disimpan Oleh</h6>
                         <div class="saved-users">
                             <?php foreach (array_slice($saved_by, 0, 5) as $user): ?>
+                                <?php
+                                // ✅ Ambil path foto profil
+                                $profilePath = $user['profile_picture'] ?? '';
+
+                                // Jika path belum mengandung 'Web-App', tambahkan prefix
+                                if (strpos($profilePath, 'Web-App/') === false) {
+                                    $profilePath = 'Web-App/' . $profilePath;
+                                }
+
+                                // Tambahkan slash depan supaya path absolut ke localhost
+                                $profilePath = '/' . ltrim($profilePath, '/');
+                                ?>
                                 <div class="saved-user-item">
-                                    <img src="../../../../<?php echo $user['profile_picture'] ?? 'assets/default-avatar.png'; ?>"
+                                    <img src="<?php echo $profilePath ?: '/Web-App/frontend/assets/default-avatar.png'; ?>"
                                         alt="User"
-                                        onerror="this.src='../../../assets/default-avatar.png'">
+                                        onerror="this.src='/Web-App/frontend/assets/default-avatar.png'">
                                     <small><?php echo htmlspecialchars($user['full_name']); ?></small>
                                 </div>
                             <?php endforeach; ?>
+
                             <?php if (count($saved_by) > 5): ?>
                                 <small class="text-muted">+<?php echo count($saved_by) - 5; ?> lainnya</small>
                             <?php endif; ?>
@@ -408,13 +450,47 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                 alert('Link telah disalin!');
             }
         }
-
-        // Show all photos
-        function showAllPhotos() {
-            // TODO: Implement lightbox
-            alert('Fitur gallery akan segera hadir');
-        }
     </script>
+    <script>
+        const images = <?php echo json_encode(array_column($images, 'image_url')); ?>;
+        const basePath = '../../../../';
+        let currentIndex = 0;
+
+        function openLightbox(index) {
+            currentIndex = index;
+            document.getElementById("lightbox").style.display = "block";
+            updateLightboxImage();
+        }
+
+        function closeLightbox() {
+            document.getElementById("lightbox").style.display = "none";
+        }
+
+        function changeImage(step) {
+            currentIndex += step;
+            if (currentIndex < 0) currentIndex = images.length - 1;
+            if (currentIndex >= images.length) currentIndex = 0;
+            updateLightboxImage();
+        }
+
+        function updateLightboxImage() {
+            const img = document.getElementById("lightbox-img");
+            const caption = document.getElementById("lightbox-caption");
+            img.src = basePath + images[currentIndex];
+            caption.innerHTML = `Foto ${currentIndex + 1} dari ${images.length}`;
+        }
+
+        // Navigasi dengan keyboard
+        document.addEventListener("keydown", function(e) {
+            const lightbox = document.getElementById("lightbox");
+            if (lightbox.style.display === "block") {
+                if (e.key === "ArrowRight") changeImage(1);
+                if (e.key === "ArrowLeft") changeImage(-1);
+                if (e.key === "Escape") closeLightbox();
+            }
+        });
+    </script>
+
 </body>
 
 </html>
