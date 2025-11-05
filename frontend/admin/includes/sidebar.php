@@ -53,7 +53,7 @@ if (isset($_SESSION['user_id'])) {
         $transaction_pages = ['bookings.php', 'add_property_tax.php'];
         $is_transaction_active = in_array($current_page, $transaction_pages);
         ?>
-
+      
         <li class="has-submenu <?= $is_transaction_active ? 'active open' : '' ?>">
           <a href="#" class="menu-toggle">
             <i class="fas fa-dollar-sign"></i>

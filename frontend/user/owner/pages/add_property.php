@@ -81,7 +81,7 @@ if ($_SESSION['user_type'] !== 'owner') {
 
 
   <!-- Header -->
-  <div class="py-3 d-flex align-items-center justify-content-center position-relative">
+  <div class="header-bar py-3 d-flex align-items-center justify-content-center position-relative border-bottom mb-4">
     <!-- Tombol kembali -->
     <button type="button"
       class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
@@ -95,6 +95,7 @@ if ($_SESSION['user_type'] !== 'owner') {
       <h2 class="fw-bold m-0">KostHub</h2>
     </div>
   </div>
+
 
   <!-- Konten Form -->
   <div class="container mb-5" style="max-width: 850px;">

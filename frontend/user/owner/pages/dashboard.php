@@ -6,6 +6,7 @@
   <title>Dashboard Owner - KostHub</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- SweetAlert2 CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="../css/dashboard.css?v=<?php echo time(); ?>">
@@ -131,7 +132,7 @@
             <div class="alert alert-info mb-0">
               <small>
                 <i class="bi bi-info-circle"></i>
-                Anda hanya membayar biaya listing (pajak platform). Harga property untuk customer.
+                Anda hanya membayar biaya pajak dan peembayaran pajak hanya 1x setiap menambah property.
               </small>
             </div>
           </div>
@@ -333,7 +334,7 @@
               Swal.fire({
                 icon: 'success',
                 title: 'Pembayaran Berhasil!',
-                text: 'Property Anda akan segera ditinjau admin.',
+                text: 'Property Anda akan segera ditinjau admin dan untuk lebih lengkapnya bisa ke menu your property ',
                 confirmButtonColor: '#10b981'
               }).then(() => {
                 location.reload();

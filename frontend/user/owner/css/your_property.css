@@ -1,0 +1,294 @@
+/* Your Property Styles */
+body {
+    background-color: #ffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* Property Card */
+.property-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.property-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background: #e9ecef;
+}
+
+.property-body {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.property-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0.5rem 0 0.4rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.property-location {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.property-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #198754;
+    margin: 0.5rem 0;
+}
+
+.property-info {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    padding: 0.6rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    color: #495057;
+}
+
+.property-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-action {
+    flex: 1;
+    padding: 0.45rem 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.btn-edit {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+}
+
+.btn-edit:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-1px);
+}
+
+.btn-detail {
+    background-color: #198754;
+    color: white;
+    border: none;
+}
+
+.btn-detail:hover {
+    background-color: #157347;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    background-color: #bb2d3b;
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .property-actions {
+        flex-direction: column;
+    }
+    
+    .btn-action {
+        width: 100%;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.property-card {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Success Notification */
+.success-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    animation: slideInRight 0.3s ease;
+}
+
+.success-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 350px;
+    max-width: 500px;
+}
+
+.success-content i.bi-check-circle-fill {
+    font-size: 2rem;
+    color: #4ade80;
+}
+
+.success-text {
+    flex: 1;
+}
+
+.success-text strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.success-text p {
+    margin: 0;
+    font-size: 0.875rem;
+    opacity: 0.95;
+}
+
+.success-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.success-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.success-notification.fade-out {
+    animation: slideOutRight 0.3s ease;
+}
+
+@keyframes slideOutRight {
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .success-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .success-content {
+        min-width: auto;
+    }
+}
