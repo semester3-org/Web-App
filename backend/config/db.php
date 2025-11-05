@@ -25,7 +25,7 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8mb4");
 
 // auto commit yang masalah
-$conn->autocommit(FALSE);
+$conn->autocommit(TRUE);
 
 // Optional: Set timezone
 date_default_timezone_set('Asia/Jakarta');

@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
+    header("Location: /Web-App/frontend/auth/login.php");
+    exit;
+}
+?>
+
+
 <!doctype html>
 <html lang="id">
 <head>

@@ -1,3 +1,35 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+
+$isLoggedIn = isset($_SESSION['user_id']) && isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'user';
+
+$profilePic = '/Web-App/frontend/assets/default-avatar.png';
+$fullName = 'Guest';
+
+// Hanya ambil data user kalau benar-benar login
+if ($isLoggedIn) {
+    $userId = $_SESSION['user_id'];
+    $stmt = $conn->prepare("SELECT full_name, profile_picture FROM users WHERE id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+
+    if ($user) {
+        $profilePic = !empty($user['profile_picture']) && file_exists($_SERVER['DOCUMENT_ROOT'] . $user['profile_picture'])
+            ? $user['profile_picture']
+            : '/Web-App/frontend/assets/default-avatar.png';
+        $fullName = htmlspecialchars($user['full_name']);
+    }
+}
+?>
+
+
 <!doctype html>
 <html lang="id">
 <head>
