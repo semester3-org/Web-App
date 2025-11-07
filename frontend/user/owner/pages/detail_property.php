@@ -99,6 +99,8 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     <title>Detail Property - <?php echo htmlspecialchars($property['name']); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="../css/detail_property.css" rel="stylesheet">
 </head>
@@ -120,30 +122,38 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     <!-- Main Content -->
     <div class="container my-4">
         <!-- Image Gallery -->
-        <div class="row g-2 mb-4">
+        <div class="row g-3 mb-4">
             <?php if (count($images) > 0): ?>
                 <div class="col-md-8">
-                    <img src="../../../../<?php echo $images[0]['image_url']; ?>"
-                        class="img-fluid rounded main-image"
-                        alt="Main"
+                    <img
+                        src="../../../../<?php echo $images[0]['image_url']; ?>"
+                        class="img-fluid rounded main-image shadow-sm"
+                        alt="Main Image"
+                        onclick="openLightbox(0)"
                         onerror="this.src='../../../assets/default-kos.jpg'">
                 </div>
+
                 <div class="col-md-4">
                     <div class="row g-2">
                         <?php for ($i = 1; $i < min(4, count($images)); $i++): ?>
                             <div class="col-6">
-                                <img src="../../../../<?php echo $images[$i]['image_url']; ?>"
-                                    class="img-fluid rounded thumbnail-image"
+                                <img
+                                    src="../../../../<?php echo $images[$i]['image_url']; ?>"
+                                    class="img-fluid rounded thumbnail-image shadow-sm"
                                     alt="Thumbnail"
+                                    onclick="openLightbox(<?php echo $i; ?>)"
                                     onerror="this.src='../../../assets/default-kos.jpg'">
                             </div>
                         <?php endfor; ?>
+
                         <?php if (count($images) > 4): ?>
                             <div class="col-6 position-relative">
-                                <img src="../../../../<?php echo $images[4]['image_url']; ?>"
-                                    class="img-fluid rounded thumbnail-image"
-                                    alt="Thumbnail">
-                                <div class="overlay-more" onclick="showAllPhotos()">
+                                <img
+                                    src="../../../../<?php echo $images[4]['image_url']; ?>"
+                                    class="img-fluid rounded thumbnail-image shadow-sm"
+                                    alt="Thumbnail"
+                                    onclick="openLightbox(4)">
+                                <div class="overlay-more d-flex align-items-center justify-content-center" onclick="openLightbox(4)">
                                     <span>+<?php echo count($images) - 4; ?> Foto</span>
                                 </div>
                             </div>
@@ -151,6 +161,17 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Lightbox Modal -->
+        <div id="lightbox" class="lightbox">
+            <span class="close" onclick="closeLightbox()">&times;</span>
+            <img id="lightbox-img" class="lightbox-content" alt="Preview">
+            <div class="lightbox-controls">
+                <span class="prev" onclick="changeImage(-1)">&#10094;</span>
+                <span class="next" onclick="changeImage(1)">&#10095;</span>
+            </div>
+            <div id="lightbox-caption" class="caption"></div>
         </div>
 
         <div class="row">
@@ -215,19 +236,27 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div class="detail-card mb-4">
                         <h5 class="section-title"><i class="bi bi-star-fill"></i> Fasilitas</h5>
 
-                        <?php foreach ($grouped_facilities as $category => $items): ?>
-                            <div class="mb-3">
-                                <h6 class="facility-category"><?php echo ucfirst($category); ?></h6>
-                                <div class="facility-grid">
-                                    <?php foreach ($items as $facility): ?>
-                                        <div class="facility-item">
-                                            <i class="bi bi-check-circle-fill"></i>
-                                            <?php echo htmlspecialchars($facility['name']); ?>
+                        <?php if (!empty($grouped_facilities)): ?>
+                            <?php foreach ($grouped_facilities as $category => $items): ?>
+                                <?php if (!empty($items) && is_array($items)): ?>
+                                    <div class="mb-3">
+                                        <h6 class="facility-category"><?php echo ucfirst($category); ?></h6>
+                                        <div class="facility-grid">
+                                            <?php foreach ($items as $facility): ?>
+                                                <div class="facility-item">
+                                                    <?php if (!empty($facility['icon'])): ?>
+                                                        <i class="fa <?php echo htmlspecialchars($facility['icon']); ?>"></i>
+                                                    <?php else: ?>
+                                                        <i class="bi bi-check-circle-fill"></i>
+                                                    <?php endif; ?>
+                                                    <?php echo htmlspecialchars($facility['name']); ?>
+                                                </div>
+                                            <?php endforeach; ?>
                                         </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
@@ -274,106 +303,46 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
 
                 <!-- Reviews -->
-<div class="detail-card mb-4">
-    <h5 class="section-title mb-3">
-        <i class="bi bi-chat-left-quote-fill"></i> Ulasan & Penilaian
-    </h5>
+                <div class="detail-card mb-4">
+                    <h5 class="section-title">
+                        <i class="bi bi-chat-left-quote-fill"></i>
+                        Review (<?php echo count($reviews); ?>)
+                    </h5>
 
-    <?php
-    $avg_rating = $property['avg_rating'] ? number_format($property['avg_rating'], 1) : 0;
-    $rating_counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
-    foreach ($reviews as $r) {
-        $rating_counts[$r['rating']]++;
-    }
-    $total_reviews = array_sum($rating_counts);
-    ?>
-
-    <!-- Rating Summary -->
-    <div class="row align-items-center mb-4">
-        <div class="col-md-4 text-center">
-            <h1 class="display-4 fw-bold text-warning mb-0"><?php echo $avg_rating; ?></h1>
-            <div class="text-warning fs-5 mb-2">
-                <?php for ($i = 1; $i <= 5; $i++): ?>
-                    <i class="bi <?php echo ($i <= round($avg_rating)) ? 'bi-star-fill' : 'bi-star'; ?>"></i>
-                <?php endfor; ?>
-            </div>
-            <p class="text-muted"><?php echo $total_reviews; ?> total ulasan</p>
-        </div>
-        <div class="col-md-8">
-            <?php for ($i = 5; $i >= 1; $i--): 
-                $percentage = $total_reviews ? ($rating_counts[$i] / $total_reviews * 100) : 0;
-            ?>
-            <div class="d-flex align-items-center mb-1">
-                <div class="me-2" style="width: 40px;"><?php echo $i; ?> <i class="bi bi-star-fill text-warning"></i></div>
-                <div class="progress flex-grow-1" style="height: 10px;">
-                    <div class="progress-bar bg-warning" role="progressbar" style="width: <?php echo $percentage; ?>%"></div>
-                </div>
-                <div class="ms-2 text-muted" style="width: 40px;"><?php echo $rating_counts[$i]; ?></div>
-            </div>
-            <?php endfor; ?>
-        </div>
-    </div>
-
-    <!-- Filter -->
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        <button class="btn btn-outline-secondary btn-sm active" onclick="filterReviews(0)">Semua</button>
-        <?php for ($i = 5; $i >= 1; $i--): ?>
-            <button class="btn btn-outline-secondary btn-sm" onclick="filterReviews(<?php echo $i; ?>)">
-                <?php echo $i; ?> <i class="bi bi-star-fill text-warning"></i>
-            </button>
-        <?php endfor; ?>
-    </div>
-
-    <!-- Daftar Review -->
-    <div id="reviewList">
-        <?php if (count($reviews) > 0): ?>
-            <?php foreach ($reviews as $review): ?>
-                <div class="border-bottom py-3 review-item" data-rating="<?php echo $review['rating']; ?>">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1 fw-semibold"><?php echo htmlspecialchars($review['full_name']); ?></h6>
-                            <div class="text-warning small mb-1">
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <i class="bi <?php echo ($i <= $review['rating']) ? 'bi-star-fill' : 'bi-star'; ?>"></i>
-                                <?php endfor; ?>
-                            </div>
-                            <p class="mb-1"><?php echo htmlspecialchars($review['comment']); ?></p>
-                            <small class="text-muted"><?php echo date('d M Y', strtotime($review['created_at'])); ?></small>
+                    <?php if (count($reviews) > 0): ?>
+                        <div class="reviews-container">
+                            <?php foreach ($reviews as $review): ?>
+                                <div class="review-item" id="review-<?php echo $review['id']; ?>">
+                                    <div class="d-flex gap-3">
+                                        <img src="../../../../<?php echo $review['profile_picture'] ?? 'assets/default-avatar.png'; ?>"
+                                            class="review-avatar"
+                                            onerror="this.src='../../../assets/default-avatar.png'">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <strong><?php echo htmlspecialchars($review['full_name']); ?></strong>
+                                                    <div class="review-rating">
+                                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                            <i class="bi bi-star<?php echo $i <= $review['rating'] ? '-fill' : ''; ?>"></i>
+                                                        <?php endfor; ?>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                    onclick="deleteReview(<?php echo $review['id']; ?>)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            <p class="review-comment"><?php echo nl2br(htmlspecialchars($review['comment'])); ?></p>
+                                            <small class="text-muted"><?php echo date('d M Y', strtotime($review['created_at'])); ?></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $review['user_id']): ?>
-                            <form method="POST" action="../../backend/user/customer/classes/delete_my_review.php" onsubmit="return confirm('Hapus review Anda?')">
-                                <input type="hidden" name="review_id" value="<?php echo htmlspecialchars($review['review_id'] ?? $review['id'] ?? '', ENT_QUOTES); ?>">
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
+                    <?php else: ?>
+                        <p class="text-muted text-center py-4">Belum ada review untuk property ini</p>
+                    <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="text-muted">Belum ada review untuk kos ini.</p>
-        <?php endif; ?>
-    </div>
-
-    <!-- Form Tambah Review -->
-    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'customer'): ?>
-    <hr>
-    <h6 class="fw-bold mb-2">Tulis Review Anda</h6>
-    <form method="POST" action="../../backend/user/customer/classes/add_review.php">
-        <input type="hidden" name="property_id" value="<?php echo $property['id']; ?>">
-        <div class="mb-2">
-            <div class="rating d-flex flex-row-reverse justify-content-center justify-content-md-start">
-                <?php for ($i = 5; $i >= 1; $i--): ?>
-                    <input type="radio" name="rating" value="<?php echo $i; ?>" id="star<?php echo $i; ?>" required />
-                    <label for="star<?php echo $i; ?>"><i class="bi bi-star-fill"></i></label>
-                <?php endfor; ?>
-            </div>
-        </div>
-        <textarea name="comment" class="form-control mb-2" placeholder="Tulis komentar Anda..." rows="3" required></textarea>
-        <button type="submit" class="btn btn-success">Kirim Review</button>
-    </form>
-    <?php endif; ?>
-</div>
-
             </div>
 
             <!-- Right Column - Sidebar -->
@@ -401,13 +370,26 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                         <h6 class="mb-3">Disimpan Oleh</h6>
                         <div class="saved-users">
                             <?php foreach (array_slice($saved_by, 0, 5) as $user): ?>
+                                <?php
+                                // ✅ Ambil path foto profil
+                                $profilePath = $user['profile_picture'] ?? '';
+
+                                // Jika path belum mengandung 'Web-App', tambahkan prefix
+                                if (strpos($profilePath, 'Web-App/') === false) {
+                                    $profilePath = 'Web-App/' . $profilePath;
+                                }
+
+                                // Tambahkan slash depan supaya path absolut ke localhost
+                                $profilePath = '/' . ltrim($profilePath, '/');
+                                ?>
                                 <div class="saved-user-item">
-                                    <img src="../../../../<?php echo $user['profile_picture'] ?? 'assets/default-avatar.png'; ?>"
+                                    <img src="<?php echo $profilePath ?: '/Web-App/frontend/assets/default-avatar.png'; ?>"
                                         alt="User"
-                                        onerror="this.src='../../../assets/default-avatar.png'">
+                                        onerror="this.src='/Web-App/frontend/assets/default-avatar.png'">
                                     <small><?php echo htmlspecialchars($user['full_name']); ?></small>
                                 </div>
                             <?php endforeach; ?>
+
                             <?php if (count($saved_by) > 5): ?>
                                 <small class="text-muted">+<?php echo count($saved_by) - 5; ?> lainnya</small>
                             <?php endif; ?>
@@ -468,30 +450,46 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                 alert('Link telah disalin!');
             }
         }
-
-        // Show all photos
-        function showAllPhotos() {
-            // TODO: Implement lightbox
-            alert('Fitur gallery akan segera hadir');
-        }
     </script>
-
     <script>
-function filterReviews(star) {
-    const buttons = document.querySelectorAll('.btn-outline-secondary');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+        const images = <?php echo json_encode(array_column($images, 'image_url')); ?>;
+        const basePath = '../../../../';
+        let currentIndex = 0;
 
-    const reviews = document.querySelectorAll('.review-item');
-    reviews.forEach(r => {
-        if (star === 0 || r.dataset.rating == star) {
-            r.style.display = 'block';
-        } else {
-            r.style.display = 'none';
+        function openLightbox(index) {
+            currentIndex = index;
+            document.getElementById("lightbox").style.display = "block";
+            updateLightboxImage();
         }
-    });
-}
-</script>
+
+        function closeLightbox() {
+            document.getElementById("lightbox").style.display = "none";
+        }
+
+        function changeImage(step) {
+            currentIndex += step;
+            if (currentIndex < 0) currentIndex = images.length - 1;
+            if (currentIndex >= images.length) currentIndex = 0;
+            updateLightboxImage();
+        }
+
+        function updateLightboxImage() {
+            const img = document.getElementById("lightbox-img");
+            const caption = document.getElementById("lightbox-caption");
+            img.src = basePath + images[currentIndex];
+            caption.innerHTML = `Foto ${currentIndex + 1} dari ${images.length}`;
+        }
+
+        // Navigasi dengan keyboard
+        document.addEventListener("keydown", function(e) {
+            const lightbox = document.getElementById("lightbox");
+            if (lightbox.style.display === "block") {
+                if (e.key === "ArrowRight") changeImage(1);
+                if (e.key === "ArrowLeft") changeImage(-1);
+                if (e.key === "Escape") closeLightbox();
+            }
+        });
+    </script>
 
 </body>
 

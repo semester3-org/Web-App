@@ -7,7 +7,7 @@ require_once "../../../../backend/config/db.php";
 // Ambil data user dari DB
 // Ambil data user dari DB
 $user = null;
-$profilePicPath = ''; 
+$profilePicPath = '';
 
 if (isset($_SESSION['user_id'])) {
   $stmt = $conn->prepare("SELECT id, username, email, full_name, phone, user_type, profile_picture FROM users WHERE id = ?");
@@ -46,7 +46,7 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f6fa;
+      background: #ffff;
     }
 
     .profile-container {
@@ -384,38 +384,39 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
 <body>
 
   <main class="content">
-    <div class="py-3 d-flex align-items-center justify-content-center position-relative">
-
-    <button type="button" 
-              class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
-              onclick="window.history.back()">
+    <!-- Header -->
+    <div class="header-bar py-3 d-flex align-items-center justify-content-center position-relative border-bottom mb-4">
+      <!-- Tombol kembali -->
+      <button type="button"
+        class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
+        onclick="window.history.back()">
         <i class="bi bi-arrow-left"></i>
       </button>
 
-    <!-- Logo dan Judul -->
-   <div class="d-flex align-items-center text-center">
+      <!-- Logo dan Judul -->
+      <div class="d-flex align-items-center text-center">
         <img src="../../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
         <h2 class="fw-bold m-0">KostHub</h2>
       </div>
     </div>
 
     <div class="profile-container" style="position: relative;">
-  <!-- Judul Profile -->
-  <h1 style="text-align: center; margin-bottom: 30px;">Profile</h1>
+      <!-- Judul Profile -->
+      <h1 style="text-align: center; margin-bottom: 30px;">Profile</h1>
 
-  <!-- Tombol Edit di pojok kanan atas -->
-  <button class="edit-btn" id="editToggle" title="Edit Profile"
-          style="position: absolute; top: 10px; right: 10px;">
-    <i class="fas fa-pencil-alt"></i>
-  </button>
-  
-  <!-- Pesan -->
-  <div id="msgBox" class="message"></div>
-  
-  <!-- Header Profil -->
-  <div class="profile-header">
+      <!-- Tombol Edit di pojok kanan atas -->
+      <button class="edit-btn" id="editToggle" title="Edit Profile"
+        style="position: absolute; top: 10px; right: 10px;">
+        <i class="fas fa-pencil-alt"></i>
+      </button>
 
-    <!-- isi konten lain di sini -->
+      <!-- Pesan -->
+      <div id="msgBox" class="message"></div>
+
+      <!-- Header Profil -->
+      <div class="profile-header">
+
+        <!-- isi konten lain di sini -->
         <div class="profile-avatar-container">
           <div class="profile-avatar" id="avatarContainer">
             <?php if (!empty($profilePicPath)): ?>
@@ -907,9 +908,6 @@ echo "<!-- DEBUG Profile Pic Empty: " . (empty($profilePicPath) ? 'YES' : 'NO') 
         cancelImageUpload();
       }
     });
-
-
-    
   </script>
 
   <script>
