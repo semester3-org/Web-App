@@ -18,6 +18,10 @@ session_start();
 
       <!-- Header -->
       <div class="login-header text-center py-4 d-flex align-items-center justify-content-center">
+        <button type="button" class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
+            onclick="window.location.href='login.php'">
+            <i class="bi bi-arrow-left"></i>
+        </button>
         <img src="../assets/logo_kos.png" alt="logo" class="logo me-2">
         <h2 class="fw-bold m-0">KostHub</h2>
       </div>

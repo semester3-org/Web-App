@@ -126,7 +126,7 @@ while ($row = $result->fetch_assoc()) {
         $row['is_favorited'] = ($fav_check && $fav_check->num_rows > 0);
     }
 
-    // Ambil gambar
+    // Ambil HANYA gambar pertama
     $img_query = "SELECT image_url FROM kos_images WHERE kos_id = ? ORDER BY id ASC LIMIT 1";
     $img_stmt = $conn->prepare($img_query);
     $img_stmt->bind_param("i", $row['id']);
@@ -163,13 +163,38 @@ $stmt->close();
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <style>
     body { background-color: #f8f9fa; }
     .search-filter { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 20px; }
     .kost-card { border: none; border-radius: 12px; overflow: hidden; transition: 0.2s; height: 100%; display: flex; flex-direction: column; }
     .kost-card:hover { transform: translateY(-5px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
-    .kost-img { height: 200px; object-fit: cover; width: 100%; }
-    .no-image { height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; }
+    
+    /* PERBAIKAN: Image container dengan aspect ratio tetap */
+    .kost-img-container { 
+      width: 100%; 
+      height: 200px; 
+      overflow: hidden; 
+      position: relative;
+      background: #f0f0f0;
+    }
+    .kost-img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      display: block;
+    }
+    
+    .no-image { 
+      height: 200px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      flex-direction: column; 
+      color: white; 
+    }
     .no-image i { font-size: 3rem; margin-bottom: 10px; opacity: 0.7; }
     .kost-price { font-weight: bold; color: #28a745; font-size: 1.1rem; }
     .kost-type { font-size: 0.8rem; font-weight: bold; border-radius: 10px; padding: 3px 8px; margin-right: 5px; background: #e9f7ef; color: #28a745; display: inline-block; }
@@ -196,6 +221,24 @@ $stmt->close();
     .rooms-badge i { color: #28a745; }
     @keyframes fa-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .fa-spin { animation: fa-spin 1s infinite linear; }
+
+    /* Modal animations */
+    .modal-content { animation: fadeInUp 0.3s ease-in-out; }
+    @keyframes fadeInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Rating Stars */
+    .rating-stars { direction: rtl; display: inline-flex; gap: 6px; }
+    .rating-stars input { display: none; }
+    .rating-stars label { font-size: 2.2rem; color: #ddd; cursor: pointer; transition: transform 0.2s, color 0.2s; }
+    .rating-stars label:hover, .rating-stars label:hover ~ label { color: #ffc107; transform: scale(1.2); }
+    .rating-stars input:checked ~ label { color: #ffc107; }
+
+    #btnDeleteReview, #reviewForm button[type="submit"] { transition: all 0.2s ease; }
+    #btnDeleteReview:hover { background-color: #dc3545; color: #fff; }
+    #reviewForm button[type="submit"]:hover { background-color: #198754; color: #fff; }
   </style>
 </head>
 <body>
@@ -247,81 +290,95 @@ $stmt->close();
 
   <div class="row g-4">
     <?php if (empty($properties)): ?>
-      <div class="col-12">
-        <div class="empty-state">
-          <i class="bi bi-inbox"></i>
-          <h3>Tidak ada kos ditemukan</h3>
-          <p>Coba ubah filter pencarian Anda</p>
-          <a href="explore.php" class="btn btn-success mt-3"><i class="bi bi-arrow-clockwise"></i> Reset Filter</a>
-        </div>
-      </div>
-    <?php else: ?>
-      <?php foreach ($properties as $property): ?>
-        <div class="col-md-4">
-          <div class="card kost-card shadow-sm">
-            <?php if (!empty($property['image'])): ?>
-              <img src="<?php echo htmlspecialchars('/Web-App/' . $property['image']); ?>" 
-                   class="kost-img" alt="<?php echo htmlspecialchars($property['name']); ?>"
-                   onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-image\'><i class=\'bi bi-image\'></i><p>Gambar tidak tersedia</p></div>';">
-            <?php else: ?>
-              <div class="no-image"><i class="bi bi-building"></i><p>No Image Available</p></div>
-            <?php endif; ?>
-            
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <span class="kost-type <?php echo $property['kos_type']; ?>">
-                  <?php echo ucfirst($property['kos_type']); ?>
-                </span>
-                <div class="text-end">
-                  <div class="kost-price">Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?></div>
-                  <small class="text-muted">per bulan</small>
-                </div>
-              </div>
-              
-              <h6 class="mt-2 mb-1 fw-bold"><?php echo htmlspecialchars($property['name']); ?></h6>
-              <small class="text-muted">
-                <i class="bi bi-geo-alt-fill"></i> 
-                <?php echo htmlspecialchars($property['city'] . ', ' . $property['province']); ?>
-              </small>
-              
-              <?php if (!empty($property['description'])): ?>
-                <p class="property-description"><?php echo htmlspecialchars($property['description']); ?></p>
-              <?php endif; ?>
-              
-              <?php if (!empty($property['facilities'])): ?>
-                <div class="facilities-list">
-                  <?php foreach ($property['facilities'] as $facility): ?>
-                    <small class="me-2">
-                      <i class="fa <?php echo htmlspecialchars($facility['icon']); ?>"></i>
-                      <?php echo htmlspecialchars($facility['name']); ?>
-                    </small>
-                  <?php endforeach; ?>
-                </div>
-              <?php endif; ?>
-              
-              <div class="rooms-badge">
-                <i class="bi bi-door-open"></i> 
-                <strong><?php echo $property['available_rooms']; ?></strong> dari 
-                <strong><?php echo $property['total_rooms']; ?></strong> kamar tersedia
-              </div>
-              
-              <div class="d-flex justify-content-between mt-auto pt-3">
-                <button class="btn btn-detail btn-sm" onclick="viewDetail(<?php echo $property['id']; ?>)">
-                  <i class="bi bi-eye"></i> Detail
-                </button>
-                <button class="btn btn-fav btn-sm <?php echo $property['is_favorited'] ? 'favorited' : ''; ?>" 
-                        id="fav-btn-<?php echo $property['id']; ?>"
-                        onclick="toggleFavorite(<?php echo $property['id']; ?>, this)">
-                  <i class="bi <?php echo $property['is_favorited'] ? 'bi-heart-fill' : 'bi-heart'; ?>" 
-                     style="<?php echo $property['is_favorited'] ? 'color: #dc3545;' : ''; ?>"></i>
-                </button>
-              </div>
+        <div class="col-12">
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h3>Tidak ada kos ditemukan</h3>
+                <p>Coba ubah filter pencarian Anda</p>
+                <a href="explore.php" class="btn btn-success mt-3">
+                    <i class="bi bi-arrow-clockwise"></i> Reset Filter
+                </a>
             </div>
-          </div>
         </div>
-      <?php endforeach; ?>
+    <?php else: ?>
+        <?php foreach ($properties as $property): ?>
+            <div class="col-md-4">
+                <div class="card kost-card shadow-sm">
+                    <!-- PERBAIKAN: Tampilan gambar yang lebih baik -->
+                    <?php if (!empty($property['image'])): ?>
+                        <div class="kost-img-container">
+                            <img src="<?php echo htmlspecialchars('/Web-App/' . $property['image']); ?>" 
+                                 class="kost-img" 
+                                 alt="<?php echo htmlspecialchars($property['name']); ?>"
+                                 onerror="this.parentElement.innerHTML='<div class=\'no-image\'><i class=\'bi bi-image\'></i><p>Gambar tidak tersedia</p></div>';">
+                        </div>
+                    <?php else: ?>
+                        <div class="no-image">
+                            <i class="bi bi-building"></i>
+                            <p>No Image Available</p>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="kost-type <?php echo $property['kos_type']; ?>">
+                                <?php echo ucfirst($property['kos_type']); ?>
+                            </span>
+                            <div class="text-end">
+                                <div class="kost-price">Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?></div>
+                                <small class="text-muted">per bulan</small>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-2 mb-1 fw-bold"><?php echo htmlspecialchars($property['name']); ?></h6>
+                        <small class="text-muted">
+                            <i class="bi bi-geo-alt-fill"></i> 
+                            <?php echo htmlspecialchars($property['city'] . ', ' . $property['province']); ?>
+                        </small>
+
+                        <?php if (!empty($property['description'])): ?>
+                            <p class="property-description"><?php echo htmlspecialchars($property['description']); ?></p>
+                        <?php endif; ?>
+
+                        <?php if (!empty($property['facilities'])): ?>
+                            <div class="facilities-list">
+                                <?php foreach ($property['facilities'] as $facility): ?>
+                                    <small class="me-2">
+                                        <i class="fa <?php echo htmlspecialchars($facility['icon']); ?>"></i>
+                                        <?php echo htmlspecialchars($facility['name']); ?>
+                                    </small>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="rooms-badge">
+                            <i class="bi bi-door-open"></i> 
+                            <strong><?php echo $property['available_rooms']; ?></strong> dari 
+                            <strong><?php echo $property['total_rooms']; ?></strong> kamar tersedia
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-auto pt-3">
+                            <a href="detail_kos.php?id=<?php echo $property['id']; ?>" class="btn btn-detail btn-sm">
+                                <i class="bi bi-eye"></i> Detail
+                            </a>
+
+                            <button class="btn btn-outline-primary btn-sm" onclick="openReviewModal(<?php echo $property['id']; ?>)">
+                                <i class="bi bi-star"></i> Review
+                            </button>
+
+                            <button class="btn btn-fav btn-sm <?php echo $property['is_favorited'] ? 'favorited' : ''; ?>" 
+                                    id="fav-btn-<?php echo $property['id']; ?>"
+                                    onclick="toggleFavorite(<?php echo $property['id']; ?>, this)">
+                                <i class="bi <?php echo $property['is_favorited'] ? 'bi-heart-fill' : 'bi-heart'; ?>" 
+                                   style="<?php echo $property['is_favorited'] ? 'color: #dc3545;' : ''; ?>"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
     <?php endif; ?>
-  </div>
+</div>
 
   <?php if ($total_pages > 1): ?>
     <div class="pagination">
@@ -364,27 +421,56 @@ $stmt->close();
   <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Modal Detail -->
-<div id="detailModal" class="modal fade" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Detail Kos</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-0 bg-success text-white rounded-top-4">
+        <h5 class="modal-title fw-bold d-flex align-items-center">
+          <i class="bi bi-star-half me-2"></i> Tulis Review Kamu
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="detailContent">
-        <div class="text-center py-5">
-          <div class="spinner-border text-success" role="status">
-            <span class="visually-hidden">Loading...</span>
+
+      <div class="modal-body p-4">
+        <form id="reviewForm">
+          <input type="hidden" id="reviewKosId">
+
+          <div class="mb-4 text-center">
+            <label class="form-label fw-semibold fs-6 mb-3">Seberapa puas kamu?</label>
+            <div class="rating-stars">
+              <input type="radio" name="rating" value="5" id="star5" required><label for="star5" title="Sangat bagus"><i class="bi bi-star-fill"></i></label>
+              <input type="radio" name="rating" value="4" id="star4"><label for="star4" title="Bagus"><i class="bi bi-star-fill"></i></label>
+              <input type="radio" name="rating" value="3" id="star3"><label for="star3" title="Cukup"><i class="bi bi-star-fill"></i></label>
+              <input type="radio" name="rating" value="2" id="star2"><label for="star2" title="Kurang"><i class="bi bi-star-fill"></i></label>
+              <input type="radio" name="rating" value="1" id="star1"><label for="star1" title="Buruk"><i class="bi bi-star-fill"></i></label>
+            </div>
           </div>
-          <p class="mt-3">Memuat data...</p>
-        </div>
+
+          <div class="mb-4">
+            <label for="comment" class="form-label fw-semibold">Komentar kamu</label>
+            <textarea class="form-control shadow-sm" id="comment" rows="4" placeholder="Ceritakan pengalamanmu..." required></textarea>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-danger px-4" id="btnDeleteReview">
+              <i class="bi bi-trash3"></i> Hapus
+            </button>
+            <button type="submit" class="btn btn-success px-4">
+              <i class="bi bi-send"></i> Kirim
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer border-0 text-muted small text-center d-block">
+        <p class="mb-0">Review kamu akan membantu pengguna lain memilih kos dengan lebih bijak 💬</p>
       </div>
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 // ========================================
@@ -436,89 +522,131 @@ function toggleFavorite(kosId, btn) {
       icon.className = isFavorited ? 'bi bi-heart-fill' : 'bi bi-heart';
     });
   <?php else: ?>
-    if (confirm('Anda harus login untuk menambahkan ke wishlist. Login sekarang?')) {
-      window.location.href = '/Web-App/frontend/auth/login.php';
-    }
+    // Tampilkan modal login alert
+    const modal = new bootstrap.Modal(document.getElementById('loginAlertModal'));
+    modal.show();
   <?php endif; ?>
 }
 
 // ========================================
-// VIEW DETAIL
+// VIEW DETAIL - REDIRECT KE HALAMAN BARU
 // ========================================
 function viewDetail(kosId) {
-  const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-  const content = document.getElementById('detailContent');
-  
-  modal.show();
-  
-  // Loading state
-  content.innerHTML = `
-    <div class="text-center py-5">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-3">Memuat data kos...</p>
-    </div>
-  `;
-  
-  // Fetch detail kos
-  fetch(`/Web-App/backend/user/customer/classes/get_kos_detail.php?id=${kosId}`)
-    .then(res => res.text())
-    .then(html => {
-      content.innerHTML = html;
-      initImageSlider();
-    })
-    .catch(err => {
-      console.error(err);
-      content.innerHTML = `
-        <div class="alert alert-danger">
-          <i class="bi bi-exclamation-triangle"></i>
-          Gagal memuat detail kos. Silakan coba lagi.
-        </div>
-      `;
-    });
-}
-
-// ========================================
-// IMAGE SLIDER
-// ========================================
-function initImageSlider() {
-  const sliders = document.querySelectorAll('.image-slider');
-  
-  sliders.forEach(slider => {
-    const images = slider.querySelectorAll('.slider-image');
-    const prevBtn = slider.querySelector('.prev-btn');
-    const nextBtn = slider.querySelector('.next-btn');
-    const counter = slider.querySelector('.current-image');
-    let current = 0;
-    
-    if (images.length === 0) return;
-    
-    function updateSlider() {
-      images.forEach((img, i) => {
-        img.style.display = i === current ? 'block' : 'none';
-      });
-      if (counter) counter.textContent = current + 1;
-    }
-    
-    if (prevBtn && nextBtn) {
-      prevBtn.onclick = (e) => {
-        e.preventDefault();
-        current = current === 0 ? images.length - 1 : current - 1;
-        updateSlider();
-      };
-      
-      nextBtn.onclick = (e) => {
-        e.preventDefault();
-        current = current === images.length - 1 ? 0 : current + 1;
-        updateSlider();
-      };
-    }
-    
-    updateSlider();
-  });
+  // Redirect ke halaman detail kos
+  window.location.href = 'detail_kos.php?id=' + kosId;
 }
 </script>
+
+<script>
+// 🟢 Buka modal review
+function openReviewModal(kosId) {
+  document.getElementById('reviewKosId').value = kosId;
+  document.getElementById('reviewForm').reset();
+
+  document.querySelectorAll('.rating-stars input').forEach(star => star.checked = false);
+
+  const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+  modal.show();
+}
+
+// 🟢 Submit review
+document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const kosId = document.getElementById('reviewKosId').value;
+  const rating = document.querySelector('input[name="rating"]:checked')?.value;
+  const comment = document.getElementById('comment').value.trim();
+
+  if (!rating) {
+    Swal.fire('Oops!', 'Silakan pilih rating terlebih dahulu ⭐', 'warning');
+    return;
+  }
+
+  if (!comment) {
+    Swal.fire('Oops!', 'Komentar tidak boleh kosong.', 'warning');
+    return;
+  }
+
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengirim...';
+
+  try {
+    const response = await fetch('/Web-App/backend/user/customer/classes/add_review.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ kos_id: kosId, rating, comment })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: result.message,
+        showConfirmButton: false,
+        timer: 1800
+      }).then(() => {
+        bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+        location.reload();
+      });
+    } else {
+      Swal.fire('Gagal!', result.message, 'error');
+    }
+
+  } catch (error) {
+    console.error(error);
+    Swal.fire('Error', 'Terjadi kesalahan saat mengirim review.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send"></i> Kirim';
+  }
+});
+
+// 🔴 Hapus review
+document.getElementById('btnDeleteReview').addEventListener('click', async function() {
+  const kosId = document.getElementById('reviewKosId').value;
+
+  const confirm = await Swal.fire({
+    title: 'Hapus Review?',
+    text: 'Review yang dihapus tidak dapat dikembalikan.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal'
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  const response = await fetch('/Web-App/backend/user/customer/classes/delete_my_review.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ kos_id: kosId })
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Dihapus!',
+      text: result.message,
+      showConfirmButton: false,
+      timer: 1500
+    }).then(() => {
+      bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+      location.reload();
+    });
+  } else {
+    Swal.fire('Gagal!', result.message, 'error');
+  }
+});
+</script>
+
+
+
+
 
 
 </body>
