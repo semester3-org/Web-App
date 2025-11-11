@@ -299,8 +299,20 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                 <!-- Map -->
                 <div class="detail-card mb-4">
                     <h5 class="section-title"><i class="bi bi-map-fill"></i> Lokasi</h5>
-                    <div id="detailMap" style="height: 300px; border-radius: 10px;"></div>
+
+                    <div class="position-relative">
+                        <div id="detailMap" style="height: 300px; border-radius: 10px;"></div>
+
+                        <!-- Tombol Buka di Google Maps (melayang di atas peta) -->
+                        <button
+                            id="openGmapsBtn"
+                            class="btn btn-success btn-sm position-absolute"
+                            style="top: 10px; right: 10px; border-radius: 20px; z-index: 1000;">
+                            <i class="bi bi-geo-alt-fill"></i> Google Maps
+                        </button>
+                    </div>
                 </div>
+
 
                 <!-- Reviews -->
                 <div class="detail-card mb-4">
@@ -312,11 +324,32 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     <?php if (count($reviews) > 0): ?>
                         <div class="reviews-container">
                             <?php foreach ($reviews as $review): ?>
+                                <?php
+                                // Ambil path profile picture dari database
+                                $profilePath = $review['profile_picture'] ?? '';
+
+                                // Jika path kosong → gunakan default avatar
+                                if (empty($profilePath)) {
+                                    $profilePath = '/Web-App/frontend/assets/default-avatar.png';
+                                } else {
+                                    // Pastikan path diawali slash (agar absolut)
+                                    if ($profilePath[0] !== '/') {
+                                        $profilePath = '/' . ltrim($profilePath, '/');
+                                    }
+
+                                    // Jika belum mengandung 'Web-App', tambahkan prefix
+                                    if (strpos($profilePath, 'Web-App/') === false) {
+                                        $profilePath = '/Web-App/' . ltrim($profilePath, '/');
+                                    }
+                                }
+                                ?>
+
                                 <div class="review-item" id="review-<?php echo $review['id']; ?>">
                                     <div class="d-flex gap-3">
-                                        <img src="../../../../<?php echo $review['profile_picture'] ?? 'assets/default-avatar.png'; ?>"
+                                        <img src="<?php echo htmlspecialchars($profilePath); ?>"
                                             class="review-avatar"
-                                            onerror="this.src='../../../assets/default-avatar.png'">
+                                            alt="User"
+                                            onerror="this.src='/Web-App/frontend/assets/default-avatar.png'">
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
@@ -340,7 +373,7 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <p class="text-muted text-center py-4">Belum ada review untuk property ini</p>
+                        <p class="text-muted">Belum ada ulasan.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -349,12 +382,38 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
             <div class="col-lg-4">
                 <!-- Status Card -->
                 <div class="detail-card mb-3 sticky-top" style="top: 20px;">
-                    <h6 class="mb-3">Status Property</h6>
-                    <div class="status-badge status-<?php echo $property['status']; ?> mb-3">
-                        <?php echo ucfirst($property['status']); ?>
+                    <!-- Header: Status + Harga -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <!-- Kiri: Status -->
+                        <div>
+                            <h6 class="mb-1 fw-semibold">Status Property</h6>
+                            <div class="status-badge status-<?php echo $property['status']; ?>">
+                                <?php echo ucfirst($property['status']); ?>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Detail Harga -->
+                        <div class="text-end">
+                            <h6 class="fw-semibold mb-2" style="font-size: 1rem; color: #444;">Detail Harga</h6>
+
+                            <?php if (!empty($property['price_monthly'])): ?>
+                                <div class="fw-semibold text-success" style="font-size: 1.05rem; line-height: 1.2;">
+                                    Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?>
+                                    <small class="text-muted">/ bulan</small>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($property['price_daily'])): ?>
+                                <div class="fw-semibold text-success" style="font-size: 1.05rem; line-height: 1.2;">
+                                    Rp <?php echo number_format($property['price_daily'], 0, ',', '.'); ?>
+                                    <small class="text-muted">/ hari</small>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
-                    <div class="d-grid gap-2">
+                    <!-- Tombol -->
+                    <div class="d-grid gap-2 mt-2">
                         <a href="edit_property.php?id=<?php echo $property_id; ?>" class="btn btn-success">
                             <i class="bi bi-pencil-fill"></i> Edit Property
                         </a>
@@ -362,7 +421,6 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                             <i class="bi bi-share-fill"></i> Share
                         </button>
                     </div>
-
                     <hr>
 
                     <!-- Saved By Users -->
@@ -403,14 +461,23 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize map
-        const detailMap = L.map('detailMap').setView([<?php echo $property['latitude']; ?>, <?php echo $property['longitude']; ?>], 15);
+        // Inisialisasi map
+        const latitude = <?php echo $property['latitude']; ?>;
+        const longitude = <?php echo $property['longitude']; ?>;
+
+        const detailMap = L.map('detailMap').setView([latitude, longitude], 15);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(detailMap);
 
-        L.marker([<?php echo $property['latitude']; ?>, <?php echo $property['longitude']; ?>]).addTo(detailMap);
+        L.marker([latitude, longitude]).addTo(detailMap);
+
+        // Tombol buka Google Maps
+        document.getElementById('openGmapsBtn').addEventListener('click', function() {
+            const gmapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            window.open(gmapsUrl, '_blank');
+        });
 
         // Delete review
         function deleteReview(reviewId) {
