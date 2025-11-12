@@ -675,6 +675,9 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                             <button class="btn btn-success" onclick="contactOwner()">
                                 <i class="bi bi-whatsapp"></i> Hubungi Pemilik
                             </button>
+                            <button class="btn btn-primary" onclick="bookingNow()">
+                                <i class="bi bi-calendar-check"></i> Booking Now
+                            </button>
                             <button class="btn btn-outline-success btn-favorite <?php echo $is_favorited?'favorited':''; ?>" id="fav-btn-main"
                                     onclick="toggleFavorite(<?php echo $kos_id; ?>, this)">
                                 <i class="bi <?php echo $is_favorited?'bi-heart-fill':'bi-heart'; ?>"></i>
@@ -803,6 +806,25 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
             alert('Nomor pemilik tidak tersedia');
         <?php endif; ?>
     }
+
+function bookingNow() {
+    <?php if ($isLoggedIn && !$isOwner): ?>
+        <?php if ($property['available_rooms'] > 0): ?>
+            // Arahkan ke booking_form.php yang ADA DI FOLDER SAMA
+            window.location.href = `booking_form.php?kos_id=<?php echo $kos_id; ?>`;
+        <?php else: ?>
+            showNotif('Maaf, kamar sudah penuh!', 'error');
+        <?php endif; ?>
+    <?php else: ?>
+        if (!<?php echo $isLoggedIn ? 'true' : 'false'; ?>) {
+            if (confirm('Anda harus login untuk booking. Login sekarang?')) {
+                window.location.href = '../auth/login.php?redirect=' + encodeURIComponent(location.href);
+            }
+        } else {
+            showNotif('Pemilik tidak bisa booking properti sendiri.', 'error');
+        }
+    <?php endif; ?>
+}
 
     // Share
     function shareProperty(){
