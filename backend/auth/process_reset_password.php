@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $stmt->bind_param("ss", $hashed, $email);
 
   if ($stmt->execute()) {
+     $conn->commit(); 
     // Hapus session reset agar tidak bisa digunakan ulang
     unset($_SESSION['reset_email']);
     unset($_SESSION['reset_code']);
