@@ -10,7 +10,6 @@ $isLoggedIn = isset($_SESSION['user_id']) && isset($_SESSION['user_type']) && $_
 $profilePic = '/Web-App/frontend/assets/default-avatar.png';
 $fullName = 'Guest';
 
-// Hanya ambil data user kalau benar-benar login
 if ($isLoggedIn) {
     $userId = $_SESSION['user_id'];
     $stmt = $conn->prepare("SELECT full_name, profile_picture FROM users WHERE id = ?");
@@ -29,175 +28,186 @@ if ($isLoggedIn) {
 }
 ?>
 
-
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <title>Home - KostHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
   body {
-    background: #f5f6f8;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9fcfaff;
+    color: #222;
+    overflow-x: hidden;
   }
-  /* Kos Status */
-  .kos-status {
-    border-radius: 16px;
-    overflow: hidden;
+
+  /* HERO SECTION */
+  .hero {
+    position: relative;
+    height: 95vh;
+    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('/Web-App/frontend/assets/hero-bg.jpg') center/cover no-repeat;
     display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    background: #f8f9fa;
-  }
-  .kos-status .left {
-    background: #f8f9fa;
-    color: black;
-    padding: 20px;
-    flex: 1;
-  }
-  .kos-status .right {
-    background: #ffe5e5;
-    width: 150px;
-  }
-
-  /* Selection box */
-  .selection-box {
-    background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    padding: 20px 10px;
-    min-width: 100px;
-    cursor: pointer;
-    transition: 0.2s;
+    color: #fff;
   }
-  .selection-box.active {
-    border-color: #28a745;
-    background: #28a745;
-    color: white;
-    font-weight: bold;
+  .hero h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
   }
-
-  /* Location tags */
-  .location-tag {
-    background: #f1f3f5;
-    border-radius: 20px;
-    padding: 8px 16px;
-    margin: 5px;
-    display: inline-block;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  .location-tag.active {
-    background: #28a745;
-    color: white;
+  .hero p {
+    font-size: 1.2rem;
+    margin-top: 15px;
   }
 
-  /* Recommendation Cards */
-  .recommend-card {
-    border-radius: 12px;
+  /* PROMO SECTION */
+  .promo {
+    padding: 80px 0;
+  }
+  .promo h2 {
+    font-weight: 700;
+    margin-bottom: 50px;
+  }
+  .promo-card {
+    position: relative;
+    border-radius: 15px;
     overflow: hidden;
-    transform: translateY(20px);
-    opacity: 0;
-    animation: fadeInUp 0.8s ease forwards;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .promo-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  .promo-card img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    filter: brightness(85%);
+    transition: 0.4s ease;
+  }
+  .promo-card:hover img {
+    filter: brightness(100%);
+  }
+  .promo-text {
+    position: absolute;
+    bottom: 15px;
+    left: 20px;
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.4);
   }
 
-  .recommend-card img {
-    transition: transform 0.4s ease;
+  /* GALLERY SECTION */
+  .gallery {
+    background: #f5f6f8;
+    padding: 100px 0;
   }
-
-  .recommend-card:hover img {
-    transform: scale(1.08);
+  .gallery h2 {
+    font-weight: 700;
+    margin-bottom: 50px;
   }
-
-  .recommend-card:hover {
+  .gallery img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 15px;
+    transition: 0.3s;
+  }
+  .gallery img:hover {
+    transform: scale(1.05);
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* FOOTER */
+  footer {
+    background: #212529;
+    color: #ddd;
+    padding: 40px 0;
+    text-align: center;
   }
-</style>
 
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 2.2rem; }
+    .promo-card img, .gallery img { height: 180px; }
+  }
+  </style>
 </head>
 <body>
 
 <?php include("navbar.php"); ?>
 
-<div class="container my-4">
-  <h4 class="fw-bold">Welcome Back, Username!</h4><br><br>
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <h1>Temukan Kos Impianmu di KostHub</h1>
+    <p>Solusi cepat, mudah, dan modern untuk mencari tempat tinggal nyaman di sekitar kampus.</p>
+  </div>
+</section>
 
-  <!-- Kos Status -->
-     <h5 class="fw-bold mb-3">Kos Status</h5>
-  <div class="kos-status my-4 shadow-sm">
-    <div class="left">
-      <p class="mb-1">Room 7</p>
-      <h5 class="fw-bold mb-1">Kos The Raid</h5>
-      <small>Contract ends in 2 months</small>
+<!-- Promo Section -->
+<section class="promo container text-center">
+  <h2 class="fw-bold">Promosi Spesial</h2>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="promo-card">
+        <img src="/Web-App/frontend/assets/promo1.jpg" alt="Promo Kost Modern">
+        <div class="promo-text">Diskon 20% Kost Modern</div>
+      </div>
     </div>
-    <div class="right"></div>
-  </div>
-
-  <!-- Selection -->
-  <h5 class="fw-bold mb-3">Selection</h5>
-  <div class="d-flex gap-3 mb-4">
-    <div class="selection-box active">Putra</div>
-    <div class="selection-box">Putri</div>
-    <div class="selection-box">Outdoor bathroom</div>
-    <div class="selection-box">AC</div>
-    <div class="selection-box">Not AC</div>
-  </div>
-
-  <!-- Location -->
-<h5 class="fw-bold mb-3">Location</h5>
-<div class="mb-4 d-flex align-items-centerflex-wrap">
-  <span class="location-tag d-flex align-items-center">
-    <i class="bi bi-funnel me-1"></i>
-  </span>
-  <span class="location-tag active">Tegal Gede</span>
-  <span class="location-tag">Sumber Sari</span>
-  <span class="location-tag">Jl. Kalimantan</span>
-  <span class="location-tag">Jl. Jawa</span>
-  <span class="location-tag">Sumatra</span>
-</div>
-
-
-<!-- Recommendation -->
-<h5 class="fw-bold mb-3">Recommendation</h5>
-<div class="row g-3">
-  <div class="col-md-6">
-    <div class="card recommend-card shadow-sm border-0 rounded-3 overflow-hidden">
-      <!-- Gambar -->
-      <img src="../assets/favorite.jpg" class="card-img-top" alt="Favorite" style="height:180px; object-fit:cover;">
-      <!-- Isi teks -->
-      <div class="card-body text-left text-black">
-        <h6 class="m-0">Favorite</h6>
+    <div class="col-md-4">
+      <div class="promo-card">
+        <img src="/Web-App/frontend/assets/promo2.jpg" alt="Kost Dekat Kampus">
+        <div class="promo-text">Kost Dekat Kampus</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="promo-card">
+        <img src="/Web-App/frontend/assets/promo3.jpg" alt="Kost Nyaman & Aman">
+        <div class="promo-text">Kost Nyaman & Aman</div>
       </div>
     </div>
   </div>
+</section>
 
-  <div class="col-md-6">
-    <div class="card recommend-card shadow-sm border-0 rounded-3 overflow-hidden">
-      <!-- Gambar -->
-      <img src="../../assets/logo_login.svg" class="card-img-top" alt="Promo" style="height:180px; object-fit:contain; background:#f8f9fa;">
-      <!-- Isi teks -->
-      <div class="card-body text-left text-black">
-        <h6 class="m-0">Promo</h6>
+<!-- Gallery Section -->
+<section class="gallery">
+  <div class="container">
+    <h2 class="fw-bold text-center">Suasana Kost yang Nyaman</h2>
+    <div class="row g-4">
+      <div class="col-md-3 col-6">
+        <img src="/Web-App/frontend/assets/gal1.jpg" alt="Interior Kost">
+      </div>
+      <div class="col-md-3 col-6">
+        <img src="/Web-App/frontend/assets/gal2.jpg" alt="Fasilitas Bersih">
+      </div>
+      <div class="col-md-3 col-6">
+        <img src="/Web-App/frontend/assets/gal3.jpg" alt="Kamar Minimalis">
+      </div>
+      <div class="col-md-3 col-6">
+        <img src="/Web-App/frontend/assets/gal4.jpg" alt="Suasana Asri">
       </div>
     </div>
   </div>
-</div>
+</section>
 
-
-
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p>&copy; <?= date('Y') ?> KostHub. Semua hak dilindungi.</p>
+    <small>Dibangun dengan ❤️ oleh Tim KostHub</small>
+  </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
