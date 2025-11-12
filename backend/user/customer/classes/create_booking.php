@@ -31,13 +31,19 @@ if ($booking_type === 'monthly') {
         echo json_encode(['success' => false, 'message' => 'Durasi bulanan harus 1-12 bulan']);
         exit;
     }
-    $check_out_date = null; // Paksa null untuk bulanan
+
+    // HITUNG check_out_date = check_in_date + $duration_months bulan
+    $check_in = new DateTime($check_in_date);
+    $check_out = clone $check_in;
+    $check_out->modify("+$duration_months months");
+    $check_out_date = $check_out->format('Y-m-d'); // Format: 2025-06-05
+
 } elseif ($booking_type === 'daily') {
     if (empty($check_out_date)) {
         echo json_encode(['success' => false, 'message' => 'Tanggal check-out wajib diisi untuk harian']);
         exit;
     }
-    $duration_months = null; // Paksa null untuk harian
+    $duration_months = null;
 } else {
     echo json_encode(['success' => false, 'message' => 'Tipe booking tidak valid']);
     exit;
