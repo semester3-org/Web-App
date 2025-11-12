@@ -377,8 +377,14 @@ $bookings = $result->fetch_all(MYSQLI_ASSOC);
               <?php endif; ?>
 
               <div class="d-flex gap-2">
+                <?php if ($booking['status'] === 'confirmed'): ?>
+                  <a href="#" class="btn btn-sm btn-success flex-grow-1" onclick="alert('Fitur pembayaran sedang dikembangkan'); return false;">
+                    <i class="bi bi-credit-card"></i> Bayar Sekarang
+                  </a>
+                <?php endif; ?>
+
                 <a href="booking_detail.php?id=<?php echo $booking['id']; ?>" 
-                   class="btn btn-sm btn-outline-success flex-grow-1">
+                  class="btn btn-sm btn-outline-success <?php echo $booking['status'] === 'confirmed' ? '' : 'flex-grow-1'; ?>">
                   <i class="bi bi-eye"></i> Detail
                 </a>
                 

@@ -188,6 +188,14 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
 
+    // === FIX: Set check_out_date = null jika bulanan ===
+    if (data.booking_type === 'monthly') {
+        data.check_out_date = null;
+        data.duration_months = parseInt(data.duration_months);
+    } else {
+        data.duration_months = null;
+    }
+
     if (data.total_price == 0) {
         showNotif('Silakan pilih durasi dan tanggal terlebih dahulu', 'error');
         return;
@@ -206,6 +214,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         }
     } catch (err) {
         showNotif('Error server', 'error');
+        console.error(err);
     }
 });
 
