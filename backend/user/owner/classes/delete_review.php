@@ -47,8 +47,11 @@ try {
     $delete_sql = "DELETE FROM reviews WHERE id = ?";
     $delete_stmt = $conn->prepare($delete_sql);
     $delete_stmt->bind_param("i", $review_id);
+
+     
     
     if ($delete_stmt->execute()) {
+        $conn->commit();
         echo json_encode([
             'success' => true,
             'message' => 'Review berhasil dihapus'
