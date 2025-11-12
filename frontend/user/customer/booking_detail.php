@@ -53,18 +53,250 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
     <title>Detail Booking #<?php echo str_pad($booking['id'], 5, '0', STR_PAD_LEFT); ?> - KostHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; padding-top: 70px; }
-        .detail-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        .status-badge { padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; }
+        :root {
+            --success: #198754;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --gray: #6c757d;
+            --light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+            padding-top: 70px;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+
+        .status-badge {
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
         .status-pending { background: #fff3cd; color: #856404; }
         .status-confirmed { background: #d4edda; color: #155724; }
         .status-completed { background: #d1ecf1; color: #0c5460; }
         .status-rejected { background: #f8d7da; color: #721c24; }
         .status-cancelled { background: #e2e3e5; color: #383d41; }
-        .kos-image { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; }
-        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
+
+        .kos-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.4s ease;
+        }
+
+        .kos-image:hover {
+            transform: scale(1.02);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px dashed #e9ecef;
+            font-size: 0.95rem;
+        }
+
         .info-row:last-child { border-bottom: none; }
+
+        .info-label { color: var(--gray); font-weight: 500; }
+        .info-value { font-weight: 600; color: #212529; }
+
+        .btn-action {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        /* MODAL CANTIK */
+        .cancel-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.4s ease-out;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cancel-modal.show { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 440px;
+            overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 28px 28px 16px;
+            text-align: center;
+            border-bottom: none;
+        }
+
+        .modal-header h5 {
+            font-weight: 700;
+            color: #212529;
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .modal-header .icon {
+            width: 80px;
+            height: 80px;
+            background: #fee;
+            color: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            font-size: 2.2rem;
+            animation: shake 0.7s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .modal-body {
+            padding: 0 28px 22px;
+            text-align: center;
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            padding: 18px 28px 28px;
+            border-top: none;
+            display: flex;
+            gap: 14px;
+        }
+
+        .btn-cancel-confirm {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            flex: 1;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-cancel-confirm:hover {
+            background: #c82333;
+            transform: translateY(-3px);
+        }
+
+        .btn-cancel-close {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1.5px solid #dee2e6;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel-close:hover {
+            background: #e9ecef;
+            transform: translateY(-3px);
+        }
+
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid #fff;
+            border-top: 2.5px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* NOTIFIKASI */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 16px 26px;
+            border-radius: 14px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateX(120%);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--danger); }
+
+        .notification i { font-size: 1.3rem; }
     </style>
 </head>
 <body>
@@ -76,7 +308,7 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
         <div class="col-lg-8">
             <div class="detail-card">
                 <div class="d-flex align-items-center mb-4">
-                    <button class="btn btn-outline-success me-3" onclick="history.back()">
+                    <button class="btn btn-outline-success me-3 btn-action" onclick="history.back()">
                         <i class="bi bi-arrow-left"></i>
                     </button>
                     <div>
@@ -99,7 +331,7 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
 
                 <!-- Kos Information -->
                 <div class="mb-4">
-                    <h6 class="fw-bold mb-3">Informasi Kos</h6>
+                    <h6 class="fw-bold mb-3 text-success">Informasi Kos</h6>
                     <?php if ($kos_image): 
                         $imgPath = '/Web-App/' . $kos_image;
                         if (!file_exists($_SERVER['DOCUMENT_ROOT'] . $imgPath)) {
@@ -118,67 +350,67 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
                         <?php echo htmlspecialchars($booking['address'] . ', ' . $booking['city'] . ', ' . $booking['province']); ?>
                     </p>
                     <div>
-                        <span class="badge bg-primary"><?php echo ucfirst($booking['kos_type']); ?></span>
+                        <span class="badge bg-primary rounded-pill px-3 py-2"><?php echo ucfirst($booking['kos_type']); ?></span>
                         <a href="detail_kos.php?id=<?php echo $booking['kos_id']; ?>" 
-                           class="btn btn-sm btn-outline-success ms-2">
-                            <i class="bi bi-eye"></i> Lihat Detail Kos
+                           class="btn btn-sm btn-outline-success ms-2 btn-action">
+                            <i class="bi bi-eye"></i> Lihat Detail
                         </a>
                     </div>
                 </div>
 
                 <!-- Booking Details -->
                 <div class="mb-4">
-                    <h6 class="fw-bold mb-3">Detail Booking</h6>
+                    <h6 class="fw-bold mb-3 text-success">Detail Booking</h6>
                     <div class="info-row">
-                        <span class="text-muted">Tipe Booking:</span>
-                        <strong><?php echo $booking['booking_type'] === 'monthly' ? 'Bulanan' : 'Harian'; ?></strong>
+                        <span class="info-label">Tipe Booking:</span>
+                        <span class="info-value"><?php echo $booking['booking_type'] === 'monthly' ? 'Bulanan' : 'Harian'; ?></span>
                     </div>
                     <div class="info-row">
-                        <span class="text-muted">Tanggal Check-in:</span>
-                        <strong><?php echo date('d F Y', strtotime($booking['check_in_date'])); ?></strong>
+                        <span class="info-label">Check-in:</span>
+                        <span class="info-value"><?php echo date('d F Y', strtotime($booking['check_in_date'])); ?></span>
                     </div>
                     <?php if ($booking['booking_type'] === 'daily'): ?>
                         <div class="info-row">
-                            <span class="text-muted">Tanggal Check-out:</span>
-                            <strong><?php echo $booking['check_out_date'] ? date('d F Y', strtotime($booking['check_out_date'])) : '-'; ?></strong>
+                            <span class="info-label">Check-out:</span>
+                            <span class="info-value"><?php echo $booking['check_out_date'] ? date('d F Y', strtotime($booking['check_out_date'])) : '-'; ?></span>
                         </div>
                     <?php else: ?>
                         <div class="info-row">
-                            <span class="text-muted">Durasi:</span>
-                            <strong><?php echo $booking['duration_months']; ?> Bulan</strong>
+                            <span class="info-label">Durasi:</span>
+                            <span class="info-value"><?php echo $booking['duration_months']; ?> Bulan</span>
                         </div>
                     <?php endif; ?>
                     <div class="info-row">
-                        <span class="text-muted">Total Harga:</span>
-                        <strong class="text-success">Rp <?php echo number_format($booking['total_price'], 0, ',', '.'); ?></strong>
+                        <span class="info-label">Total Harga:</span>
+                        <span class="info-value text-success fw-bold">Rp <?php echo number_format($booking['total_price'], 0, ',', '.'); ?></span>
                     </div>
                     <?php if ($booking['notes']): ?>
                         <div class="info-row">
-                            <span class="text-muted">Catatan:</span>
-                            <span><?php echo nl2br(htmlspecialchars($booking['notes'])); ?></span>
+                            <span class="info-label">Catatan:</span>
+                            <span class="info-value"><?php echo nl2br(htmlspecialchars($booking['notes'])); ?></span>
                         </div>
                     <?php endif; ?>
                 </div>
 
                 <!-- Owner Information -->
                 <div class="mb-4">
-                    <h6 class="fw-bold mb-3">Informasi Pemilik</h6>
+                    <h6 class="fw-bold mb-3 text-success">Pemilik Kos</h6>
                     <div class="info-row">
-                        <span class="text-muted">Nama:</span>
-                        <strong><?php echo htmlspecialchars($booking['owner_name']); ?></strong>
+                        <span class="info-label">Nama:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($booking['owner_name']); ?></span>
                     </div>
                     <?php if ($booking['owner_phone']): ?>
                         <div class="info-row">
-                            <span class="text-muted">Telepon:</span>
-                            <a href="tel:<?php echo htmlspecialchars($booking['owner_phone']); ?>">
+                            <span class="info-label">Telepon:</span>
+                            <a href="tel:<?php echo htmlspecialchars($booking['owner_phone']); ?>" class="info-value text-primary">
                                 <?php echo htmlspecialchars($booking['owner_phone']); ?>
                             </a>
                         </div>
                     <?php endif; ?>
                     <?php if ($booking['owner_email']): ?>
                         <div class="info-row">
-                            <span class="text-muted">Email:</span>
-                            <a href="mailto:<?php echo htmlspecialchars($booking['owner_email']); ?>">
+                            <span class="info-label">Email:</span>
+                            <a href="mailto:<?php echo htmlspecialchars($booking['owner_email']); ?>" class="info-value text-primary">
                                 <?php echo htmlspecialchars($booking['owner_email']); ?>
                             </a>
                         </div>
@@ -187,34 +419,34 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
 
                 <!-- Timeline -->
                 <div class="mb-4">
-                    <h6 class="fw-bold mb-3">Timeline</h6>
+                    <h6 class="fw-bold mb-3 text-success">Timeline</h6>
                     <div class="info-row">
-                        <span class="text-muted">Dibuat:</span>
-                        <span><?php echo date('d F Y, H:i', strtotime($booking['created_at'])); ?></span>
+                        <span class="info-label">Dibuat:</span>
+                        <span class="info-value"><?php echo date('d F Y, H:i', strtotime($booking['created_at'])); ?></span>
                     </div>
                     <div class="info-row">
-                        <span class="text-muted">Terakhir Diupdate:</span>
-                        <span><?php echo date('d F Y, H:i', strtotime($booking['updated_at'])); ?></span>
+                        <span class="info-label">Diperbarui:</span>
+                        <span class="info-value"><?php echo date('d F Y, H:i', strtotime($booking['updated_at'])); ?></span>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-3 flex-wrap">
                     <?php if ($booking['status'] === 'pending'): ?>
-                        <button class="btn btn-danger" onclick="cancelBooking(<?php echo $booking['id']; ?>)">
+                        <button class="btn btn-danger btn-action" onclick="openCancelModal()">
                             <i class="bi bi-x-circle"></i> Batalkan Booking
                         </button>
                     <?php endif; ?>
                     
                     <?php if ($booking['status'] === 'confirmed'): ?>
                         <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $booking['owner_phone']); ?>?text=Halo,%20saya%20ingin%20konfirmasi%20booking%20#<?php echo $booking['id']; ?>" 
-                           class="btn btn-success" target="_blank">
+                           class="btn btn-success btn-action" target="_blank">
                             <i class="bi bi-whatsapp"></i> Hubungi Pemilik
                         </a>
                     <?php endif; ?>
                     
-                    <a href="booking.php" class="btn btn-outline-secondary ms-auto">
-                        <i class="bi bi-arrow-left"></i> Kembali ke Daftar Booking
+                    <a href="booking.php" class="btn btn-outline-secondary btn-action ms-auto">
+                        <i class="bi bi-arrow-left"></i> Kembali
                     </a>
                 </div>
             </div>
@@ -222,30 +454,97 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
     </div>
 </div>
 
+<!-- MODAL BATALKAN -->
+<div id="cancelModal" class="cancel-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h5>Batalkan Booking?</h5>
+        </div>
+        <div class="modal-body">
+            <p>Anda akan membatalkan booking untuk:</p>
+            <strong><?php echo htmlspecialchars($booking['kos_name']); ?></strong><br>
+            <small class="text-muted">ID: #<?php echo str_pad($booking['id'], 5, '0', STR_PAD_LEFT); ?></small>
+            <p class="mt-3 mb-0 text-danger"><strong>Tindakan ini tidak dapat dibatalkan.</strong></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel-close" onclick="closeCancelModal()">
+                Tutup
+            </button>
+            <button id="confirmCancelBtn" class="btn-cancel-confirm" onclick="confirmCancel()">
+                Ya, Batalkan
+                <span class="spinner" id="cancelSpinner"></span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFIKASI -->
+<div id="notification" class="notification">
+    <i id="notifIcon"></i>
+    <span id="notifText"></span>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function cancelBooking(bookingId) {
-  if (!confirm('Apakah Anda yakin ingin membatalkan booking ini?')) {
-    return;
-  }
-
-  fetch('/Web-App/backend/user/customer/classes/cancel_booking.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ booking_id: bookingId })
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert(data.message);
-    if (data.success) {
-      window.location.href = 'booking.php';
-    }
-  })
-  .catch(error => {
-    alert('Terjadi kesalahan');
-    console.error(error);
-  });
+function openCancelModal() {
+    document.getElementById('cancelModal').classList.add('show');
+    document.getElementById('confirmCancelBtn').disabled = false;
+    document.getElementById('cancelSpinner').style.display = 'none';
 }
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.remove('show');
+}
+
+async function confirmCancel() {
+    const btn = document.getElementById('confirmCancelBtn');
+    const spinner = document.getElementById('cancelSpinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+
+    try {
+        const res = await fetch('/Web-App/backend/user/customer/classes/cancel_booking.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: <?php echo $booking['id']; ?> })
+        });
+        const data = await res.json();
+
+        showNotif(data.message, data.success ? 'success' : 'error');
+        
+        if (data.success) {
+            setTimeout(() => location.href = 'booking.php', 1800);
+        } else {
+            btn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    } catch (err) {
+        showNotif('Koneksi gagal', 'error');
+        btn.disabled = false;
+        spinner.style.display = 'none';
+    }
+}
+
+function showNotif(msg, type = 'success') {
+    const notif = document.getElementById('notification');
+    const icon = document.getElementById('notifIcon');
+    const text = document.getElementById('notifText');
+
+    text.textContent = msg;
+    icon.className = type === 'success' ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill';
+    notif.className = 'notification ' + type;
+    notif.classList.add('show');
+
+    setTimeout(() => notif.classList.remove('show'), 3500);
+}
+
+// Tutup modal saat klik luar
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCancelModal();
+});
 </script>
 </body>
 </html>
