@@ -475,7 +475,7 @@ $stmt->close();
                 <small>/ bulan</small>
               </p>
               <div class="action-buttons">
-                <a href="/Web-App/frontend/user/customer/explore.php" class="btn-view">
+                <a href="/Web-App/frontend/user/customer/detail_kos.php?id=<?php echo $item['id']; ?>" class="btn-view">
                   <i class="bi bi-eye-fill"></i> Lihat Detail
                 </a>
                 <button class="btn-remove" onclick="removeFromWishlist(<?php echo $item['id']; ?>)">

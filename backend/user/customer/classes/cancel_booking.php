@@ -36,42 +36,33 @@ try {
     $booking = $result->fetch_assoc();
 
     if ($booking['status'] !== 'pending') {
-        throw new Exception('Hanya booking dengan status pending yang bisa dibatalkan');
+        throw new Exception('Hanya booking dengan status pending yang dapat dibatalkan');
     }
 
-    // Update status booking
+    // === UPDATE STATUS SAJA (TIDAK KEMBALIKAN KAMAR) ===
     $update_sql = "UPDATE bookings SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
     $update_stmt->bind_param("i", $booking_id);
     if (!$update_stmt->execute()) {
-        throw new Exception('Gagal update status booking');
+        throw new Exception('Gagal membatalkan booking');
     }
 
-    // Kembalikan kamar tersedia
-    $restore_sql = "UPDATE kos SET available_rooms = available_rooms + 1 WHERE id = ?";
-    $restore_stmt = $conn->prepare($restore_sql);
-    $restore_stmt->bind_param("i", $booking['kos_id']);
-    if (!$restore_stmt->execute()) {
-        throw new Exception('Gagal mengembalikan kamar');
-    }
-
-    // === COMMIT: Simpan semua perubahan ===
+    // === COMMIT: Simpan perubahan ===
     $conn->commit();
 
     echo json_encode([
         'success' => true,
-        'message' => 'Booking berhasil dibatalkan dan kamar dikembalikan.'
+        'message' => 'Booking berhasil dibatalkan.'
     ]);
 
 } catch (Exception $e) {
-    // === ROLLBACK: Batalkan semua jika error ===
+    // === ROLLBACK jika error ===
     $conn->rollback();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
 // Tutup statement
-if (isset($check_stmt)) $check_stmt->close();
-if (isset($update_stmt)) $update_stmt->close();
-if (isset($restore_stmt)) $restore_stmt->close();
+$check_stmt->close();
+$update_stmt->close();
 $conn->close();
 ?>

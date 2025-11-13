@@ -299,8 +299,9 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     <!-- Header -->
     <div class="header-bar py-3 d-flex align-items-center justify-content-center position-relative">
         <button type="button" class="btn btn-outline-success position-absolute start-0 ms-3 d-flex align-items-center"
-            onclick="window.location.href='<?php echo $isOwner ? 'your_property.php' : 'explore.php'; ?>'">
-            <i class="bi bi-arrow-left"></i>
+        onclick="<?php echo $isOwner ? "window.location.href='your_property.php'" : 'history.back()'; ?>">
+    <i class="bi bi-arrow-left"></i>
+</button>
         </button>
         <div class="d-flex align-items-center text-center">
             <img src="../../assets/logo_kos.png" alt="logo" style="height:40px;" class="me-2">
@@ -388,46 +389,57 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
     </div>
 
     <div class="row">
-        <!-- Left Column -->
-        <div class="col-lg-8">
-            <!-- Title & Stats -->
-            <div class="detail-card mb-4">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <div>
-                        <span class="kos-type <?php echo $property['kos_type']; ?> mb-2"><?php echo ucfirst($property['kos_type']); ?></span>
-                        <h2 class="property-name"><?php echo htmlspecialchars($property['name']); ?></h2>
-                        <p class="property-location">
-                            <i class="bi bi-geo-alt-fill text-success"></i>
-                            <?php echo htmlspecialchars($property['address'] . ', ' . $property['city'] . ', ' . $property['province']); ?>
-                        </p>
-                    </div>
-                    <div class="text-end">
-                        <div class="property-price">Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?></div>
-                        <small class="text-muted">per bulan</small>
-                    </div>
-                </div>
+       <!-- Left Column -->
+<div class="col-lg-8">
+    <!-- Title & Stats -->
+    <div class="detail-card mb-4">
+        <!-- Header: Nama, Alamat, Harga -->
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h2 class="property-name"><?php echo htmlspecialchars($property['name']); ?></h2>
+                <p class="property-location">
+                    <i class="bi bi-geo-alt-fill text-success"></i>
+                    <?php echo htmlspecialchars($property['address']); ?>
+                </p>
+            </div>
+            <div class="text-end">
+                <div class="property-price">Rp <?php echo number_format($property['price_monthly'], 0, ',', '.'); ?></div>
+                <small class="text-muted">/ bulan</small>
+            </div>
+        </div>
 
-                <div class="stats-row mt-3">
-                    <div class="stat-item">
-                        <i class="bi bi-door-closed-fill"></i>
-                        <div><strong><?php echo $property['available_rooms']; ?>/<?php echo $property['total_rooms']; ?></strong><small>Kamar</small></div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="bi bi-star-fill"></i>
-                        <div><strong><?php echo $property['avg_rating'] ? number_format($property['avg_rating'], 1) : 'N/A'; ?></strong><small><?php echo $property['total_reviews']; ?> Review</small></div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="bi bi-heart-fill"></i>
-                        <div><strong><?php echo $property['total_saved']; ?></strong><small>Disimpan</small></div>
-                    </div>
-                    <?php if ($isOwner): ?>
-                        <div class="stat-item">
-                            <i class="bi bi-gender-ambiguous"></i>
-                            <div><strong><?php echo ucfirst($property['kos_type']); ?></strong><small>Tipe Kos</small></div>
-                        </div>
-                    <?php endif; ?>
+        <!-- Stats Row -->
+        <div class="stats-row mt-3">
+            <div class="stat-item">
+                <i class="bi bi-door-closed-fill"></i>
+                <div>
+                    <strong><?php echo $property['available_rooms']; ?>/<?php echo $property['total_rooms']; ?></strong>
+                    <small>Kamar</small>
                 </div>
             </div>
+            <div class="stat-item">
+                <i class="bi bi-star-fill"></i>
+                <div>
+                    <strong><?php echo $property['avg_rating'] ? number_format($property['avg_rating'], 1) : 'N/A'; ?></strong>
+                    <small><?php echo $property['total_reviews']; ?> Review</small>
+                </div>
+            </div>
+            <div class="stat-item">
+                <i class="bi bi-heart-fill"></i>
+                <div>
+                    <strong><?php echo $property['total_saved']; ?></strong>
+                    <small>Disimpan</small>
+                </div>
+            </div>
+            <div class="stat-item">
+                <i class="bi bi-gender-ambiguous"></i>
+                <div>
+                    <strong><?php echo ucfirst($property['kos_type']); ?></strong>
+                    <small>Tipe Kos</small>
+                </div>
+            </div>
+        </div>
+    </div>
 
             <!-- Deskripsi -->
             <div class="detail-card mb-4">
@@ -487,11 +499,22 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
             <?php endif; ?>
 
-            <!-- Map -->
-            <div class="detail-card mb-4">
-                <h5 class="section-title"><i class="bi bi-map-fill"></i> Lokasi</h5>
-                <div id="detailMap" style="height: 300px; border-radius: 10px;"></div>
-            </div>
+           <!-- Map -->
+                <div class="detail-card mb-4">
+                    <h5 class="section-title"><i class="bi bi-map-fill"></i> Lokasi</h5>
+
+                    <div class="position-relative">
+                        <div id="detailMap" style="height: 300px; border-radius: 10px;"></div>
+
+                        <!-- Tombol Buka di Google Maps (melayang di atas peta) -->
+                        <button
+                            id="openGmapsBtn"
+                            class="btn btn-success btn-sm position-absolute"
+                            style="top: 10px; right: 10px; border-radius: 20px; z-index: 1000;">
+                            <i class="bi bi-geo-alt-fill"></i> Google Maps
+                        </button>
+                    </div>
+                </div>
 
             <!-- Reviews -->
             <div class="detail-card mb-4">
@@ -664,30 +687,54 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
                 <?php else: ?>
                     <div class="detail-card mb-3">
-                        <div class="contact-owner bg-light p-3 rounded mb-3">
-                            <h6><i class="bi bi-person-circle"></i> Pemilik Kos</h6>
-                            <p class="fw-bold mb-1"><?php echo htmlspecialchars($property['owner_name']); ?></p>
-                            <?php if (!empty($property['owner_phone'])): ?>
-                                <p class="mb-0 text-muted"><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($property['owner_phone']); ?></p>
-                            <?php endif; ?>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-success" onclick="contactOwner()">
-                                <i class="bi bi-whatsapp"></i> Hubungi Pemilik
-                            </button>
-                            <button class="btn btn-primary" onclick="bookingNow()">
-                                <i class="bi bi-calendar-check"></i> Booking Now
-                            </button>
-                            <button class="btn btn-outline-success btn-favorite <?php echo $is_favorited?'favorited':''; ?>" id="fav-btn-main"
-                                    onclick="toggleFavorite(<?php echo $kos_id; ?>, this)">
-                                <i class="bi <?php echo $is_favorited?'bi-heart-fill':'bi-heart'; ?>"></i>
-                                <?php echo $is_favorited?'Tersimpan':'Simpan'; ?>
-                            </button>
-                            <button class="btn btn-outline-secondary" onclick="shareProperty()">
-                                <i class="bi bi-share-fill"></i> Share
-                            </button>
-                        </div>
-                    </div>
+    <div class="contact-owner bg-light p-3 rounded mb-3">
+        <h6><i class="bi bi-person-circle"></i> Pemilik Kos</h6>
+        <p class="fw-bold mb-1"><?php echo htmlspecialchars($property['owner_name']); ?></p>
+
+        <?php 
+        // === UBAH +81 MENJADI +62 UNTUK TAMPILAN ===
+        $display_phone = $property['owner_phone'];
+        if (!empty($display_phone)) {
+            $clean = preg_replace('/\D/', '', $display_phone);
+            if (substr($clean, 0, 2) === '81') {
+                $clean = '62' . substr($clean, 2);
+                $display_phone = '+62 ' . substr($clean, 2, 3) . '-' . substr($clean, 5, 4) . '-' . substr($clean, 9);
+            } else {
+                // Format biasa jika sudah +62 atau lokal
+                if (substr($clean, 0, 2) === '62') {
+                    $display_phone = '+62 ' . substr($clean, 2, 3) . '-' . substr($clean, 5, 4) . '-' . substr($clean, 9);
+                } elseif (substr($clean, 0, 1) === '0') {
+                    $clean = '62' . substr($clean, 1);
+                    $display_phone = '+62 ' . substr($clean, 2, 3) . '-' . substr($clean, 5, 4) . '-' . substr($clean, 9);
+                }
+            }
+        }
+        ?>
+
+        <?php if (!empty($display_phone)): ?>
+            <p class="mb-0 text-muted">
+                <i class="bi bi-telephone"></i> <?php echo htmlspecialchars($display_phone); ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <div class="d-grid gap-2">
+        <button class="btn btn-success" onclick="contactOwner()">
+            <i class="bi bi-whatsapp"></i> Hubungi Pemilik
+        </button>
+        <button class="btn btn-primary" onclick="bookingNow()">
+            <i class="bi bi-calendar-check"></i> Booking Now
+        </button>
+        <button class="btn btn-outline-success btn-favorite <?php echo $is_favorited?'favorited':''; ?>" id="fav-btn-main"
+                onclick="toggleFavorite(<?php echo $kos_id; ?>, this)">
+            <i class="bi <?php echo $is_favorited?'bi-heart-fill':'bi-heart'; ?>"></i>
+            <?php echo $is_favorited?'Tersimpan':'Simpan'; ?>
+        </button>
+        <button class="btn btn-outline-secondary" onclick="shareProperty()">
+            <i class="bi bi-share-fill"></i> Share
+        </button>
+    </div>
+</div>
                 <?php endif; ?>
 
                 <div class="detail-card">
@@ -713,11 +760,23 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Map
-    const detailMap = L.map('detailMap').setView([<?php echo $property['latitude']; ?>, <?php echo $property['longitude']; ?>], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
-    L.marker([<?php echo $property['latitude']; ?>, <?php echo $property['longitude']; ?>]).addTo(detailMap);
+      // Inisialisasi map
+        const latitude = <?php echo $property['latitude']; ?>;
+        const longitude = <?php echo $property['longitude']; ?>;
 
+        const detailMap = L.map('detailMap').setView([latitude, longitude], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(detailMap);
+
+        L.marker([latitude, longitude]).addTo(detailMap);
+
+        // Tombol buka Google Maps
+        document.getElementById('openGmapsBtn').addEventListener('click', function() {
+            const gmapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            window.open(gmapsUrl, '_blank');
+        });
     // 🖼️ Lightbox
     const defaultImg = '/Web-App/frontend/assets/default-kos.jpg';
     const images = <?php echo json_encode(array_map(function($img) {
@@ -796,16 +855,32 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
         <?php endif; ?>
     }
 
-    // Contact Owner
-    function contactOwner(){
-        <?php if(!empty($property['owner_phone'])): ?>
-            const phone = '<?php echo preg_replace('/\D/','', $property['owner_phone']); ?>';
-            const msg = encodeURIComponent('Halo, saya tertarik dengan kos <?php echo addslashes($property['name']); ?>');
-            window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
-        <?php else: ?>
-            alert('Nomor pemilik tidak tersedia');
-        <?php endif; ?>
+   // Contact Owner
+function contactOwner(){
+    <?php 
+    // === NOMOR BERSIH UNTUK WHATSAPP ===
+    $wa_phone = '';
+    if (!empty($property['owner_phone'])) {
+        $clean = preg_replace('/\D/', '', $property['owner_phone']);
+        if (substr($clean, 0, 2) === '81') {
+            $wa_phone = '62' . substr($clean, 2);
+        } elseif (substr($clean, 0, 2) === '62') {
+            $wa_phone = $clean;
+        } elseif (substr($clean, 0, 1) === '0') {
+            $wa_phone = '62' . substr($clean, 1);
+        } else {
+            $wa_phone = $clean;
+        }
     }
+    ?>
+    <?php if (!empty($wa_phone)): ?>
+        const phone = '<?php echo $wa_phone; ?>';
+        const msg = encodeURIComponent('Halo, saya tertarik dengan kos <?php echo addslashes($property['name']); ?>');
+        window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    <?php else: ?>
+        alert('Nomor pemilik tidak tersedia');
+    <?php endif; ?>
+}
 
 function bookingNow() {
     <?php if ($isLoggedIn && !$isOwner): ?>
