@@ -63,6 +63,7 @@ if ($review_id > 0) {
 }
 
 if ($delete->execute()) {
+    $conn->commit();
     echo json_encode([
         'success' => true,
         'message' => 'Review berhasil dihapus!'

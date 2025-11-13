@@ -55,6 +55,7 @@ if ($existing_review->num_rows > 0) {
     $stmt->bind_param("isii", $rating, $comment, $user_id, $kos_id);
     
     if ($stmt->execute()) {
+        $conn->commit();
         echo json_encode([
             'success' => true, 
             'message' => 'Review berhasil diperbarui!',
@@ -69,6 +70,7 @@ if ($existing_review->num_rows > 0) {
     $stmt->bind_param("iiis", $user_id, $kos_id, $rating, $comment);
     
     if ($stmt->execute()) {
+        $conn->commit();
         echo json_encode([
             'success' => true, 
             'message' => 'Review berhasil ditambahkan!',

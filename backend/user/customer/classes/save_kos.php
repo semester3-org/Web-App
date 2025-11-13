@@ -30,6 +30,7 @@ if ($exists) {
     $delete = $conn->prepare("DELETE FROM saved_kos WHERE user_id = ? AND kos_id = ?");
     $delete->bind_param("ii", $user_id, $kos_id);
     $delete->execute();
+    $conn->commit();
     $delete->close();
 
     echo json_encode(['success' => true, 'favorited' => false, 'message' => 'Dihapus dari wishlist']);
