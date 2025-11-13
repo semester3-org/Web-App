@@ -1,4 +1,5 @@
 <?php
+// backend/user/auth/google_callback.php
 session_start();
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/db.php';
@@ -14,12 +15,10 @@ $client->setRedirectUri($redirectUri);
 $client->addScope(['email', 'profile']);
 
 try {
-    if (!isset($_GET['code'])) {
-        die("Code tidak diterima.");
-    }
+    if (!isset($_GET['code'])) throw new Exception("Code tidak diterima.");
 
     $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
-    if (isset($token['error'])) throw new Exception("Gagal mengambil token dari Google");
+    if (isset($token['error'])) throw new Exception("Gagal mengambil token");
 
     $client->setAccessToken($token['access_token']);
     $googleService = new Google_Service_Oauth2($client);
@@ -29,10 +28,9 @@ try {
     $name  = $googleUser->name ?? '';
     $picture = $googleUser->picture ?? null;
 
-    if (!$email) throw new Exception("Email tidak ditemukan di profil Google.");
+    if (!$email) throw new Exception("Email tidak ditemukan.");
 
-    // Cek user di DB
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, username, user_type FROM users WHERE email = ? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -43,25 +41,18 @@ try {
         $_SESSION['username']  = $user['username'];
         $_SESSION['user_type'] = $user['user_type'];
 
-        // Redirect otomatis sesuai role
-        switch($user['user_type']){
-            case 'owner':
-                header("Location: ../../../frontend/user/owner/pages/dashboard.php");
-                break;
-            case 'customer':
-                header("Location: ../../../frontend/user/customer/home.php");
-                break;
-            case 'admin':
-                header("Location: ../../../frontend/admin/dashboard.php");
-                break;
-            default:
-                header("Location: ../../../frontend/auth/login.php");
-                break;
-        }
+        $redirects = [
+            'owner'    => '../../../frontend/user/owner/pages/dashboard.php',
+            'customer' => '../../../frontend/user/customer/home.php',
+            'admin'    => '../../../frontend/admin/dashboard.php',
+            'user'     => '../../../frontend/user/customer/home.php' // untuk 'user'
+        ];
+        $target = $redirects[$user['user_type']] ?? '../../../frontend/auth/login.php';
+        header("Location: $target");
         exit;
     } else {
-        // Jika belum terdaftar, redirect ke register page
-        header("Location: ../../../frontend/auth/register_google.php?email=$email&name=$name&picture=$picture");
+        $params = http_build_query(['email' => $email, 'name' => $name, 'picture' => $picture]);
+        header("Location: ../../../frontend/auth/register_google.php?$params");
         exit;
     }
 

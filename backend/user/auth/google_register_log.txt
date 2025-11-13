@@ -2,3 +2,7 @@
 [2025-10-04 16:09:57] Akun baru dibuat: naufalzyram@gmail.com
 [2025-10-04 16:12:48] Akun baru dibuat: naufalzyram@gmail.com
 [2025-10-04 16:17:42] Akun baru dibuat: naufalzyram@gmail.com
+[2025-11-12 23:57:25] Akun baru dibuat: naufalzyram@gmail.com
+[2025-11-13 00:02:25] Insert gagal: Data truncated for column 'user_type' at row 1
+[2025-11-13 00:02:25] Exception: Data truncated for column 'user_type' at row 1
+[2025-11-13 00:11:06] Akun baru dibuat: naufalzyram@gmail.com

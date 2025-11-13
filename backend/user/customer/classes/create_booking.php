@@ -92,6 +92,26 @@ if ($booking_type === 'daily') {
     }
 }
 
+// === CEK APAKAH USER SUDAH PUNYA BOOKING PENDING ===
+$check_pending = $conn->prepare("
+    SELECT id FROM bookings 
+    WHERE user_id = ? AND status = 'pending' 
+    LIMIT 1
+");
+$check_pending->bind_param("i", $user_id);
+$check_pending->execute();
+$pending_result = $check_pending->get_result();
+
+if ($pending_result->num_rows > 0) {
+    $check_pending->close();
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Anda sudah memiliki booking yang belum dikonfirmasi. Silakan tunggu atau batalkan booking sebelumnya.'
+    ]);
+    exit;
+}
+$check_pending->close();
+
 // === MULAI TRANSAKSI ===
 $conn->begin_transaction();
 
@@ -102,15 +122,13 @@ try {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
 
     $stmt = $conn->prepare($sql);
-
-    // Tipe: i = int, s = string (bisa null jika diberi null)
     $stmt->bind_param("iisssiis",
         $kos_id,
         $user_id,
         $check_in_date,
-        $check_out_date,      // null untuk bulanan
+        $check_out_date,
         $booking_type,
-        $duration_months,     // null untuk harian
+        $duration_months,
         $total_price,
         $notes
     );
@@ -121,12 +139,16 @@ try {
 
     $booking_id = $stmt->insert_id;
 
+    // === HAPUS BAGIAN INI ===
+    /*
     // Kurangi kamar
     $update_rooms = $conn->prepare("UPDATE kos SET available_rooms = available_rooms - 1 WHERE id = ?");
     $update_rooms->bind_param("i", $kos_id);
     if (!$update_rooms->execute()) {
         throw new Exception("Gagal mengurangi kamar tersedia");
     }
+    */
+    // === END HAPUS ===
 
     // === COMMIT ===
     $conn->commit();

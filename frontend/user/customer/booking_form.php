@@ -135,11 +135,6 @@ if ($kos['available_rooms'] <= 0) {
                         <input type="hidden" name="total_price" id="totalPriceInput" value="0">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Catatan (opsional)</label>
-                        <textarea name="notes" class="form-control" rows="3" placeholder="Contoh: Saya mahasiswa, butuh kamar secepatnya..."></textarea>
-                    </div>
-
                     <button type="submit" class="btn btn-success w-100">
                         <i class="bi bi-check-circle"></i> Konfirmasi & Booking
                     </button>
@@ -187,7 +182,8 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
-
+    
+    delete data.notes; // Hapus notes dari data yang dikirim
     // === FIX: Set check_out_date = null jika bulanan ===
     if (data.booking_type === 'monthly') {
         data.check_out_date = null;
