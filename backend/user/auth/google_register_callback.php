@@ -1,4 +1,5 @@
 <?php
+// backend/user/auth/google_register_callback.php
 session_start();
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/db.php';
@@ -40,31 +41,43 @@ try {
 
     if (!$email) throw new Exception("Email tidak ditemukan di profil Google.");
 
-    // Cek apakah user sudah ada
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         gLog("User sudah terdaftar: $email");
-        header("Location: ../../../frontend/auth/login.php?message=Account%20already%20exists,%20please%20login");
+        header("Location: ../../../frontend/auth/login.php?message=Account%20already%20exists");
         exit;
     }
 
-    // Buat akun baru
-    $username = explode('@', $email)[0];
-    $user_type = 'user';
-    $insert = $conn->prepare("INSERT INTO users (username, email, password, full_name, profile_picture, user_type) VALUES (?, ?, '', ?, ?, ?)");
-    $insert->bind_param("sssss", $username, $email, $name, $profile_picture, $user_type);
-    $insert->execute();
+    // === MULAI TRANSAKSI ===
+    $conn->begin_transaction();
 
-    gLog("Akun baru dibuat: $email");
-    header("Location: ../../../frontend/auth/login.php?success=Registration%20successful,%20please%20login");
-    exit;
+    try {
+        $username = explode('@', $email)[0];
+        $user_type = 'user';
+
+        $insert = $conn->prepare("INSERT INTO users (username, email, password, full_name, profile_picture, user_type) VALUES (?, ?, '', ?, ?, ?)");
+        $insert->bind_param("sssss", $username, $email, $name, $profile_picture, $user_type);
+        $insert->execute();
+
+        // COMMIT WAJIB!
+        $conn->commit();
+
+        gLog("Akun baru dibuat: $email");
+        header("Location: ../../../frontend/auth/login.php?success=Registration%20successful");
+        exit;
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        gLog("Insert gagal: " . $e->getMessage());
+        throw $e;
+    }
 
 } catch (Exception $e) {
-    gLog("Exception: ".$e->getMessage());
+    gLog("Exception: " . $e->getMessage());
     header("Location: ../../../frontend/auth/register_customer.php?error=Google%20register%20failed");
     exit;
 }
