@@ -260,6 +260,19 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
                 <?php endif; ?>
 
+                <?php
+                $rules = $property['rules'] ?? '';
+
+                if (is_string($rules)) {
+                    $decoded = json_decode($rules, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $rules = $decoded;
+                    } else {
+                        $rules = [];
+                    }
+                }
+                ?>
+
                 <!-- Rules -->
                 <?php if (!empty($rules)): ?>
                     <div class="detail-card mb-4">
@@ -285,16 +298,17 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                             ];
 
                             foreach ($rules as $rule):
-                                $label = isset($rule_labels[$rule]) ? $rule_labels[$rule] : $rule;
+                                $label = $rule_labels[$rule] ?? $rule;
                             ?>
                                 <div class="rule-item">
                                     <i class="bi bi-check2-circle"></i>
-                                    <?php echo htmlspecialchars($label); ?>
+                                    <?= htmlspecialchars($label) ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>
+
 
                 <!-- Map -->
                 <div class="detail-card mb-4">

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ============================================
  * ADD PROPERTY WITH PAYMENT
@@ -95,15 +96,47 @@ try {
         status, payment_status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'unpaid')";
 
+    // Proses rules
+    $rules_json = null;
+
+    if (!empty($rules)) {
+        // Coba decode dulu untuk deteksi apakah $rules sudah JSON string
+        $decoded = json_decode($rules, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            // Jika $rules memang sudah JSON valid → pakai langsung
+            $rules_json = $rules;
+        } else {
+            // Jika $rules berupa array biasa → ubah ke JSON
+            if (is_array($rules)) {
+                $rules_json = json_encode($rules);
+            } else {
+                $rules_json = json_encode([$rules]);
+            }
+        }
+    }
+
+
     $stmt_kos = $conn->prepare($sql_kos);
-    $rules_json = !empty($rules) ? json_encode($rules) : null;
     $available_rooms = $total_rooms;
-    
+
     $stmt_kos->bind_param(
         'isssddssssiiiss',
-        $owner_id, $name, $description, $address, $latitude, $longitude,
-        $city, $province, $postal_code, $kos_type, $total_rooms,
-        $available_rooms, $price_monthly, $price_daily, $rules_json
+        $owner_id,
+        $name,
+        $description,
+        $address,
+        $latitude,
+        $longitude,
+        $city,
+        $province,
+        $postal_code,
+        $kos_type,
+        $total_rooms,
+        $available_rooms,
+        $price_monthly,
+        $price_daily,
+        $rules_json
     );
 
     if (!$stmt_kos->execute()) {
@@ -112,26 +145,26 @@ try {
 
     $kos_id = $conn->insert_id;
 
-// 2. INSERT FACILITIES
-// Decode JSON string menjadi array
-// Debug - hapus setelah berhasil
-error_log("Facilities raw: " . $_POST['facilities']);
-error_log("Facilities decoded: " . print_r($facilities, true));
-$facilities = isset($_POST['facilities']) ? json_decode($_POST['facilities'], true) : [];
+    // 2. INSERT FACILITIES
+    // Decode JSON string menjadi array
+    // Debug - hapus setelah berhasil
+    error_log("Facilities raw: " . $_POST['facilities']);
+    error_log("Facilities decoded: " . print_r($facilities, true));
+    $facilities = isset($_POST['facilities']) ? json_decode($_POST['facilities'], true) : [];
 
-if (!empty($facilities) && is_array($facilities)) {
-    $sql_facility = "INSERT INTO kos_facilities (kos_id, facility_id) VALUES (?, ?)";
-    $stmt_facility = $conn->prepare($sql_facility);
+    if (!empty($facilities) && is_array($facilities)) {
+        $sql_facility = "INSERT INTO kos_facilities (kos_id, facility_id) VALUES (?, ?)";
+        $stmt_facility = $conn->prepare($sql_facility);
 
-    foreach ($facilities as $facility_id) {
-        $facility_id = intval($facility_id);
-        if ($facility_id > 0) {
-            $stmt_facility->bind_param('ii', $kos_id, $facility_id);
-            $stmt_facility->execute();
+        foreach ($facilities as $facility_id) {
+            $facility_id = intval($facility_id);
+            if ($facility_id > 0) {
+                $stmt_facility->bind_param('ii', $kos_id, $facility_id);
+                $stmt_facility->execute();
+            }
         }
+        $stmt_facility->close();
     }
-    $stmt_facility->close();
-}
 
     // 3. UPLOAD IMAGES
     $uploaded_images = [];
@@ -203,7 +236,7 @@ if (!empty($facilities) && is_array($facilities)) {
     $tax_amount = calculateTax($price_monthly);
     $total_amount = $tax_amount; // HANYA PAJAK yang dibayar
     $expired_at = date('Y-m-d H:i:s', strtotime('+' . PAYMENT_EXPIRY_DURATION . ' hours'));
-    
+
     $tax_percentage = TAX_PERCENTAGE; // Convert constant to variable
 
     $sql_payment = "INSERT INTO property_payments (
@@ -215,8 +248,14 @@ if (!empty($facilities) && is_array($facilities)) {
     $stmt_payment = $conn->prepare($sql_payment);
     $stmt_payment->bind_param(
         'iisiiiis',
-        $kos_id, $owner_id, $order_id, $price_monthly,
-        $tax_percentage, $tax_amount, $total_amount, $expired_at
+        $kos_id,
+        $owner_id,
+        $order_id,
+        $price_monthly,
+        $tax_percentage,
+        $tax_amount,
+        $total_amount,
+        $expired_at
     );
 
     if (!$stmt_payment->execute()) {
@@ -246,11 +285,10 @@ if (!empty($facilities) && is_array($facilities)) {
     ];
 
     $_SESSION['success'] = 'Property berhasil ditambahkan! Silakan lakukan pembayaran.';
-    
+
     // Redirect ke dashboard (payment modal akan muncul)
     header('Location: ../../../../frontend/user/owner/pages/dashboard.php');
     exit();
-
 } catch (Exception $e) {
     // ROLLBACK
     $conn->rollback();
@@ -271,4 +309,3 @@ if (!empty($facilities) && is_array($facilities)) {
 
 if (isset($stmt_kos)) $stmt_kos->close();
 $conn->close();
-?>
