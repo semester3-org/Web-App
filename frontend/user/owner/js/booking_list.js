@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
 });
 
+
+
 /**
  * Load all bookings
  */
@@ -447,3 +449,4 @@ function showNotification(message, type) {
         alertDiv.remove();
     }, 3000);
 }
+

@@ -1,9 +1,10 @@
 <?php
 /**
  * ============================================
- * UPDATE BOOKING STATUS API
+ * UPDATE BOOKING STATUS HANDLER
  * File: backend/user/owner/classes/update_booking_status.php
  * ============================================
+ * Handle update status booking dan kirim notifikasi ke customer
  */
 
 session_start();
@@ -20,92 +21,173 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
 $owner_id = $_SESSION['user_id'];
 
 // Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
-$booking_id = isset($input['booking_id']) ? intval($input['booking_id']) : 0;
-$status = isset($input['status']) ? $input['status'] : '';
-$notes = isset($input['notes']) ? $input['notes'] : null;
+$json = file_get_contents('php://input');
+$data = json_decode($json, true);
 
-// Validate input
-if ($booking_id == 0 || empty($status)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid input']);
-    exit();
-}
+// Get POST data
+$booking_id = $data['booking_id'] ?? 0;
+$status = $data['status'] ?? '';
+$notes = $data['notes'] ?? '';
 
-// Validate status
-$allowed_statuses = ['confirmed', 'rejected', 'cancelled'];
-if (!in_array($status, $allowed_statuses)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid status']);
+if (!$booking_id || !$status) {
+    echo json_encode(['success' => false, 'message' => 'Booking ID and status required']);
     exit();
 }
 
 try {
-    // Start transaction
-    $conn->begin_transaction();
+    // Verify booking belongs to owner's property
+    $sql_verify = "SELECT b.*, k.name as property_name, k.owner_id, u.full_name as customer_name
+                   FROM bookings b
+                   JOIN kos k ON b.kos_id = k.id
+                   JOIN users u ON b.user_id = u.id
+                   WHERE b.id = ? AND k.owner_id = ?";
     
-    // Verify ownership - booking must be for owner's property
-    $check_sql = "SELECT b.id, b.kos_id, b.status as current_status, k.available_rooms 
-                  FROM bookings b 
-                  JOIN kos k ON b.kos_id = k.id 
-                  WHERE b.id = ? AND k.owner_id = ?";
+    $stmt_verify = $conn->prepare($sql_verify);
+    $stmt_verify->bind_param("ii", $booking_id, $owner_id);
+    $stmt_verify->execute();
+    $result = $stmt_verify->get_result();
+    $booking = $result->fetch_assoc();
+    $stmt_verify->close();
     
-    $check_stmt = $conn->prepare($check_sql);
-    $check_stmt->bind_param("ii", $booking_id, $owner_id);
-    $check_stmt->execute();
-    $result = $check_stmt->get_result();
-    
-    if ($result->num_rows == 0) {
-        throw new Exception('Booking tidak ditemukan atau Anda tidak memiliki akses');
+    if (!$booking) {
+        echo json_encode(['success' => false, 'message' => 'Booking not found or unauthorized']);
+        exit();
     }
     
-    $booking_data = $result->fetch_assoc();
-    $kos_id = $booking_data['kos_id'];
-    $current_status = $booking_data['current_status'];
-    $available_rooms = $booking_data['available_rooms'];
-    
-    // Check if status change is allowed
-    if ($current_status !== 'pending') {
-        throw new Exception('Hanya booking dengan status pending yang dapat diubah');
-    }
-    
-    // Update booking status
-    $update_sql = "UPDATE bookings SET 
-                   status = ?,
-                   notes = ?,
-                   updated_at = CURRENT_TIMESTAMP
-                   WHERE id = ?";
-    
-    $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("ssi", $status, $notes, $booking_id);
-    
-    if (!$update_stmt->execute()) {
-        throw new Exception('Gagal update status booking');
-    }
-    
-    // If confirmed, decrease available_rooms
+    // Process based on status
     if ($status === 'confirmed') {
+        confirmBooking($conn, $booking);
+    } elseif ($status === 'rejected') {
+        rejectBooking($conn, $booking, $notes);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Invalid status']);
     }
-    
-    // Tambah Logkia notif nang kene zu
-    // kazu jancok
-    
-
-    // Commit transaction
-    $conn->commit();
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Status booking berhasil diupdate'
-    ]);
     
 } catch (Exception $e) {
-    // Rollback on error
     $conn->rollback();
-    
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 
 $conn->close();
+
+/**
+ * Confirm booking and send notification
+ */
+function confirmBooking($conn, $booking) {
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // Update booking status
+        $sql_update = "UPDATE bookings SET status = 'confirmed', updated_at = NOW() WHERE id = ?";
+        $stmt_update = $conn->prepare($sql_update);
+        $stmt_update->bind_param("i", $booking['id']);
+        
+        if (!$stmt_update->execute()) {
+            throw new Exception('Failed to update booking status');
+        }
+        $stmt_update->close();
+        
+        // Create notification for customer
+        $notification_title = "Booking Disetujui! 🎉";
+        $notification_message = "Booking Anda untuk {$booking['property_name']} telah disetujui oleh owner. Silakan lakukan pembayaran untuk mengonfirmasi reservasi Anda.";
+        
+        $sql_notif = "INSERT INTO notifications 
+                      (user_id, type, title, message, kos_id, related_id, is_read, is_archived, created_at)
+                      VALUES (?, 'property_approved', ?, ?, ?, ?, 0, 0, NOW())";
+        
+        $stmt_notif = $conn->prepare($sql_notif);
+        $stmt_notif->bind_param(
+            "issii",
+            $booking['user_id'],
+            $notification_title,
+            $notification_message,
+            $booking['kos_id'],
+            $booking['id']
+        );
+        
+        if (!$stmt_notif->execute()) {
+            throw new Exception('Failed to create notification');
+        }
+        $stmt_notif->close();
+        
+        // Commit transaction
+        $conn->commit();
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Booking berhasil disetujui dan notifikasi telah dikirim',
+            'booking_id' => $booking['id'],
+            'status' => 'confirmed'
+        ]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
+    }
+}
+
+/**
+ * Reject booking and send notification
+ */
+function rejectBooking($conn, $booking, $notes) {
+    $reject_reason = !empty($notes) ? $notes : 'Tidak ada alasan yang diberikan';
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // Update booking status
+        $sql_update = "UPDATE bookings 
+                       SET status = 'rejected', 
+                           notes = CONCAT(IFNULL(notes, ''), '\n\nAlasan penolakan: ', ?),
+                           updated_at = NOW() 
+                       WHERE id = ?";
+        
+        $stmt_update = $conn->prepare($sql_update);
+        $stmt_update->bind_param("si", $reject_reason, $booking['id']);
+        
+        if (!$stmt_update->execute()) {
+            throw new Exception('Failed to update booking status');
+        }
+        $stmt_update->close();
+        
+        // Create notification for customer
+        $notification_title = "Booking Ditolak ❌";
+        $notification_message = "Maaf, booking Anda untuk {$booking['property_name']} telah ditolak oleh owner. Alasan: {$reject_reason}";
+        
+        $sql_notif = "INSERT INTO notifications 
+                      (user_id, type, title, message, kos_id, related_id, is_read, is_archived, created_at)
+                      VALUES (?, 'property_rejected', ?, ?, ?, ?, 0, 0, NOW())";
+        
+        $stmt_notif = $conn->prepare($sql_notif);
+        $stmt_notif->bind_param(
+            "issii",
+            $booking['user_id'],
+            $notification_title,
+            $notification_message,
+            $booking['kos_id'],
+            $booking['id']
+        );
+        
+        if (!$stmt_notif->execute()) {
+            throw new Exception('Failed to create notification');
+        }
+        $stmt_notif->close();
+        
+        // Commit transaction
+        $conn->commit();
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Booking berhasil ditolak dan notifikasi telah dikirim',
+            'booking_id' => $booking['id'],
+            'status' => 'rejected'
+        ]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
+    }
+}
 ?>

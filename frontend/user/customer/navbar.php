@@ -128,7 +128,7 @@ if ($isLoggedIn) {
 
               <!-- Footer -->
               <div class="notification-footer">
-                <a href="#" class="text-center d-block text-decoration-none">
+                <a href="/Web-App/frontend/user/customer/notifications.php" class="text-center d-block text-decoration-none">
                   <small class="text-success fw-semibold">Lihat Semua Notifikasi</small>
                 </a>
               </div>
