@@ -83,22 +83,12 @@ try {
     
     // If confirmed, decrease available_rooms
     if ($status === 'confirmed') {
-        if ($available_rooms <= 0) {
-            throw new Exception('Tidak ada kamar tersedia');
-        }
-        
-        $update_rooms_sql = "UPDATE kos SET available_rooms = available_rooms - 1 WHERE id = ?";
-        $update_rooms_stmt = $conn->prepare($update_rooms_sql);
-        $update_rooms_stmt->bind_param("i", $kos_id);
-        
-        if (!$update_rooms_stmt->execute()) {
-            throw new Exception('Gagal update jumlah kamar');
-        }
     }
     
-    // Insert notification (optional - if you have notifications table)
-    // You can add notification logic here
+    // Tambah Logkia notif nang kene zu
+    // kazu jancok
     
+
     // Commit transaction
     $conn->commit();
     
