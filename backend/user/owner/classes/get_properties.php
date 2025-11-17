@@ -1,10 +1,9 @@
 <?php
 /**
  * ============================================
- * GET PROPERTIES API
+ * GET PROPERTIES API (Merged Version)
  * File: backend/user/owner/classes/get_properties.php
  * ============================================
- * Fetch properties untuk filter di booking management
  */
 
 session_start();
@@ -12,7 +11,7 @@ require_once "../../../config/db.php";
 
 header('Content-Type: application/json');
 
-// Check authentication
+// Check auth
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit();
@@ -20,38 +19,62 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
 
 $owner_id = $_SESSION['user_id'];
 
+// status filter dari URL, jika kosong → default "approved"
+$status_filter = isset($_GET['status']) && !empty($_GET['status']) 
+    ? $_GET['status'] 
+    : 'approved';
+
 try {
-    // Ambil semua property milik owner yang sudah approved dan paid
-    // Untuk dropdown filter di booking management
+
+    // Base SQL (gabungan)
     $sql = "SELECT 
                 k.id,
                 k.name,
                 k.city,
-                k.status
+                k.province,
+                k.kos_type,
+                k.total_rooms,
+                k.available_rooms,
+                k.price_monthly,
+                k.price_daily,
+                k.status,
+                k.payment_status,
+                (SELECT image_url FROM kos_images WHERE kos_id = k.id LIMIT 1) AS image_url
             FROM kos k
-            WHERE k.owner_id = ? 
+            WHERE k.owner_id = ?
             AND k.payment_status = 'paid'
-            AND k.status = 'approved'
-            ORDER BY k.name ASC";
-    
+            AND k.status IN ('pending', 'approved', 'rejected')";
+
+    $params = [$owner_id];
+    $types = "i";
+
+    // Jika ingin filter status tertentu (default: approved)
+    if ($status_filter) {
+        $sql .= " AND k.status = ?";
+        $params[] = $status_filter;
+        $types .= "s";
+    }
+
+    // Urutkan alfabet seperti kode pertama (untuk dropdown)
+    $sql .= " ORDER BY k.name ASC";
+
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $owner_id);
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
+
     $result = $stmt->get_result();
-    
     $properties = [];
+
     while ($row = $result->fetch_assoc()) {
         $properties[] = $row;
     }
-    
-    $stmt->close();
-    
+
     echo json_encode([
         'success' => true,
         'properties' => $properties,
         'count' => count($properties)
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
