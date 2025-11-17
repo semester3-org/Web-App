@@ -20,9 +20,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
 $owner_id = $_SESSION['user_id'];
 
 // status filter dari URL, jika kosong → default "approved"
-$status_filter = isset($_GET['status']) && !empty($_GET['status']) 
-    ? $_GET['status'] 
-    : 'approved';
+$status_filter = isset($_GET['status']) ? $_GET['status'] : '';
+
 
 try {
 

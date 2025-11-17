@@ -24,9 +24,10 @@ define('MIDTRANS_SNAP_URL', MIDTRANS_IS_PRODUCTION ?
     'https://app.sandbox.midtrans.com/snap/snap.js'
 );
 
+// Midtrans API URL - FIXED: Menggunakan /snap/v1/transactions bukan /v2/snap/transactions
 define('MIDTRANS_API_URL', MIDTRANS_IS_PRODUCTION ? 
-    'https://api.midtrans.com/v2' : 
-    'https://api.sandbox.midtrans.com/v2'
+    'https://app.midtrans.com/snap/v1/transactions' : 
+    'https://app.sandbox.midtrans.com/snap/v1/transactions'
 );
 
 /**
