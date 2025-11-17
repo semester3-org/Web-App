@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   ");
   $stmt->bind_param("iss", $userId, $code, $expiresAt);
   $stmt->execute();
+  $conn->commit(); 
 
   // Simpan juga ke session agar bisa dicek di halaman berikutnya
   $_SESSION['reset_email']   = $email;

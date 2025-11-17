@@ -127,12 +127,16 @@ $stmt->close();
       background: #f8f9fa;
       overflow: hidden;
       position: relative;
+      min-width: 300px;
+      max-width: 400px;
+      height: 250px;
     }
 
     .wishlist-img img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
       transition: transform 0.4s ease;
     }
 
@@ -471,7 +475,7 @@ $stmt->close();
                 <small>/ bulan</small>
               </p>
               <div class="action-buttons">
-                <a href="/Web-App/frontend/user/customer/explore.php" class="btn-view">
+                <a href="/Web-App/frontend/user/customer/detail_kos.php?id=<?php echo $item['id']; ?>" class="btn-view">
                   <i class="bi bi-eye-fill"></i> Lihat Detail
                 </a>
                 <button class="btn-remove" onclick="removeFromWishlist(<?php echo $item['id']; ?>)">

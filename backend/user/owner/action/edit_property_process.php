@@ -50,6 +50,7 @@ try {
     $longitude = $_POST['longitude'] ?? null;
     $kos_type = $_POST['kos_type'];
     $total_rooms = intval($_POST['total_rooms']);
+    $available_rooms = intval($_POST['available_rooms']);
     $price_monthly = intval(str_replace('.', '', $_POST['price_monthly']));
     $price_daily = !empty($_POST['price_daily']) ? intval(str_replace('.', '', $_POST['price_daily'])) : null;
     $description = $_POST['description'] ?? null;
@@ -74,6 +75,7 @@ try {
             longitude = ?,
             kos_type = ?,
             total_rooms = ?,
+            available_rooms = ?,
             price_monthly = ?,
             price_daily = ?,
             description = ?,
@@ -84,7 +86,7 @@ try {
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param(
-        "sssssddsisissii",
+        "sssssddsiisissii",
         $name,
         $address,
         $city,
@@ -94,6 +96,7 @@ try {
         $longitude,
         $kos_type,
         $total_rooms,
+        $available_rooms,
         $price_monthly,
         $price_daily,
         $description,
@@ -208,10 +211,13 @@ try {
     header("Location: ../../../../frontend/user/owner/pages/your_property.php?success=1&message=" . $success_msg);
     exit();
 } catch (Exception $e) {
-    // Rollback on error
+    // Rollback transaksi jika terjadi error
     $conn->rollback();
     
+    // Simpan pesan error ke session
     $_SESSION['error_message'] = $e->getMessage();
+
+    // Redirect kembali ke halaman edit property
     header("Location: ../../../../frontend/user/owner/pages/edit_property.php?id=" . $property_id);
     exit();
 }

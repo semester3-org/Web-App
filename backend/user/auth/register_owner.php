@@ -1,6 +1,7 @@
 <?php
+// backend/user/auth/register_owner.php
 session_start();
-require_once("../../config/db.php"); // sesuaikan path ke config db.php
+require_once __DIR__ . '/../../config/db.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $full_name = trim($_POST['nama']);
@@ -9,52 +10,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone     = trim($_POST['no_hp']);
     $password  = $_POST['password'];
     $confirm   = $_POST['confirm_password'];
-    $user_type = "owner"; // role default owner
+    $user_type = "owner";
 
-    // Validasi field kosong
+    // Validasi
     if (empty($full_name) || empty($username) || empty($email) || empty($phone) || empty($password) || empty($confirm)) {
         header("Location: ../../../frontend/auth/register_owner.php?error=Semua field wajib diisi");
         exit;
     }
 
-    // Validasi konfirmasi password
     if ($password !== $confirm) {
         header("Location: ../../../frontend/auth/register_owner.php?error=Password tidak cocok");
         exit;
     }
 
-    // Cek username / email sudah ada
+    // Cek username / email
     $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
     $stmt->bind_param("ss", $username, $email);
     $stmt->execute();
-    $stmt->store_result();
+    $result = $stmt->get_result();
 
-    if ($stmt->num_rows > 0) {
-        $stmt->close();
+    if ($result->num_rows > 0) {
         header("Location: ../../../frontend/auth/register_owner.php?error=Username atau email sudah digunakan");
         exit;
     }
-    $stmt->close();
 
-    // Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Insert data ke tabel users
-    $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, phone, user_type, created_at) 
-                            VALUES (?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $phone, $user_type);
+    // === MULAI TRANSAKSI ===
+    $conn->begin_transaction();
 
-    if ($stmt->execute()) {
-        $conn->commit();
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO users (username, email, password, full_name, phone, user_type, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ");
+        $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $phone, $user_type);
+        $stmt->execute();
 
-        $stmt->close();
-        header("Location: ../../../frontend/auth/login.php?success=Registrasi owner berhasil, silakan login");
+        $conn->commit(); // WAJIB!
+
+        header("Location: ../../../frontend/auth/login.php?success=Registrasi owner berhasil");
         exit;
-    } else {
-        $stmt->close();
+
+    } catch (Exception $e) {
+        $conn->rollback();
         header("Location: ../../../frontend/auth/register_owner.php?error=Gagal mendaftarkan owner");
         exit;
     }
+
 } else {
     header("Location: ../../../frontend/auth/register_owner.php");
     exit;

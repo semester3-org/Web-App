@@ -133,6 +133,48 @@ function validateEditTotalRooms(input) {
   return true;
 }
 
+function validateEditAvailableRooms(input) {
+  const value = input.value.trim();
+
+  // Ambil total_rooms berdasarkan NAME, bukan ID
+  const totalRoomsInput = document.querySelector('input[name="total_rooms"]');
+  const totalRooms = totalRoomsInput
+    ? parseInt(totalRoomsInput.value.trim())
+    : null;
+
+  if (value === "") {
+    showEditError(input, "Kamar tersedia harus diisi");
+    return false;
+  }
+
+  const num = parseInt(value);
+
+  if (isNaN(num)) {
+    showEditError(input, "Kamar tersedia harus berupa angka");
+    return false;
+  }
+
+  if (num < 0) {
+    showEditError(input, "Kamar tersedia minimal 0");
+    return false;
+  }
+
+  if (num > 1000) {
+    showEditError(input, "Kamar tersedia maksimal 1000");
+    return false;
+  }
+
+  // 🔥 FIX PENTING — validasi ini sekarang akan bekerja
+  if (totalRooms !== null && num > totalRooms) {
+    showEditError(input, "Kamar tersedia tidak boleh melebihi total kamar");
+    return false;
+  }
+
+  clearEditError(input);
+  return true;
+}
+
+
 function validateEditKosType(select) {
   if (select.value === "") {
     showEditError(select, "Pilih jenis kos");
@@ -341,30 +383,34 @@ function populateEditSelect(selectId, facilities) {
 function loadExistingFacilities() {
   // Clear dulu untuk hindari duplikasi
   editSelectedFacilities = [];
-  
+
   const tagsContainer = document.getElementById("facility-tags"); // ✅ SAMAKAN dengan addEditFacility
   if (tagsContainer) {
-    tagsContainer.innerHTML = '<small class="text-muted">Fasilitas yang dipilih akan muncul di sini</small>';
+    tagsContainer.innerHTML =
+      '<small class="text-muted">Fasilitas yang dipilih akan muncul di sini</small>';
   }
-  
+
   // Cek apakah selectedFacilities ada dan valid
-  if (typeof selectedFacilities !== 'undefined' && Array.isArray(selectedFacilities) && selectedFacilities.length > 0) {
-    
-    console.log('Loading facilities:', selectedFacilities); // Debug
-    
+  if (
+    typeof selectedFacilities !== "undefined" &&
+    Array.isArray(selectedFacilities) &&
+    selectedFacilities.length > 0
+  ) {
+    console.log("Loading facilities:", selectedFacilities); // Debug
+
     // Tunggu sebentar untuk memastikan DOM dan data facility siap
     setTimeout(() => {
-      selectedFacilities.forEach(facilityId => {
+      selectedFacilities.forEach((facilityId) => {
         const facilityName = getFacilityName(facilityId);
-        
+
         if (facilityName) {
           addEditFacility(facilityId.toString(), facilityName);
         } else {
           console.warn(`⚠️ Facility ID ${facilityId} tidak ditemukan`);
         }
       });
-      
-      console.log('✅ Loaded facilities:', editSelectedFacilities);
+
+      console.log("✅ Loaded facilities:", editSelectedFacilities);
     }, 300); // Kurangi dari 500ms ke 300ms
   }
 }
@@ -385,10 +431,15 @@ function loadExistingRules() {
   // Bersihkan dulu
   const rulesContainer = document.getElementById("rule-tags");
   if (rulesContainer) {
-    rulesContainer.innerHTML = '<small class="text-muted">Aturan yang dipilih akan muncul di sini</small>';
+    rulesContainer.innerHTML =
+      '<small class="text-muted">Aturan yang dipilih akan muncul di sini</small>';
   }
 
-  if (typeof existingRules !== "undefined" && Array.isArray(existingRules) && existingRules.length > 0) {
+  if (
+    typeof existingRules !== "undefined" &&
+    Array.isArray(existingRules) &&
+    existingRules.length > 0
+  ) {
     console.log("Loading existing rules:", existingRules);
 
     setTimeout(() => {
@@ -407,7 +458,6 @@ function loadExistingRules() {
     }, 300);
   }
 }
-
 
 function loadExistingImages() {
   // Ambil gambar yang sudah ada dari preview container
@@ -706,6 +756,16 @@ function setupEditRealTimeValidation() {
     });
   }
 
+  // Available rooms
+  const availableRoomsInput = form.querySelector(
+    'input[name="available_rooms"]'
+  );
+  if (availableRoomsInput) {
+    availableRoomsInput.addEventListener("blur", function () {
+      validateEditAvailableRooms(this);
+    });
+  }
+
   // Jenis kos
   const kosTypeSelect = form.querySelector('select[name="kos_type"]');
   if (kosTypeSelect) {
@@ -878,6 +938,13 @@ function setupEditFormSubmission() {
     if (totalRoomsInput && !validateEditTotalRooms(totalRoomsInput)) {
       isValid = false;
       errors.push("Total kamar");
+    }
+
+    // Validate available rooms on submit
+    const availableRoomsInput = form.querySelector('input[name="available_rooms"]');
+    if (availableRoomsInput && !validateEditAvailableRooms(availableRoomsInput)) {
+      isValid = false;
+      errors.push("Kamar tersedia");
     }
 
     const kosTypeSelect = form.querySelector('select[name="kos_type"]');

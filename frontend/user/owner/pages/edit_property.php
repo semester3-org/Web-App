@@ -181,6 +181,15 @@ if (!empty($property['rules'])) {
                         <option value="putri" <?php echo $property['kos_type'] == 'putri' ? 'selected' : ''; ?>>Putri</option>
                     </select>
                 </div>
+                <!-- Row 2: Available Rooms di bawah Total Rooms -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Kamar Tersedia (Available Rooms)</label>
+                    <input type="number" name="available_rooms" class="form-control"
+                        value="<?php echo $property['available_rooms']; ?>" required>
+                </div>
+
+                <!-- Kolom kosong agar layout tetap rapi -->
+                <div class="col-md-6"></div>
 
                 <!-- Fasilitas -->
                 <div class="col-md-6">

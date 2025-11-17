@@ -4,6 +4,26 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.rating {
+  direction: rtl;
+  unicode-bidi: bidi-override;
+}
+.rating input {
+  display: none;
+}
+.rating label {
+  font-size: 2rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.rating input:checked ~ label,
+.rating label:hover,
+.rating label:hover ~ label {
+  color: #ffc107;
+}
+
+
 .header-bar {
     background: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);

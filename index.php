@@ -39,20 +39,6 @@ exit;
 <!-- Gunakan navbar customer -->
 <?php include __DIR__ . '/frontend/user/customer/navbar.php'; ?>
 
-<!-- HERO UNTUK PENGUNJUNG BELUM LOGIN -->
-<section class="hero text-center text-white"
-         style="background:linear-gradient(to right,#28a745,#007bff);
-                height:85vh;
-                display:flex;
-                align-items:center;
-                justify-content:center;">
-  <div>
-    <h1>Temukan Kost Impianmu Bersama KostHub</h1>
-    <p class="lead mt-3">Cari, bandingkan, dan pesan kost terbaik hanya dalam hitungan detik.</p>
-    <a href="/Web-App/frontend/auth/login.php" class="btn btn-light btn-lg mt-4">Mulai Sekarang</a>
-  </div>
-</section>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
