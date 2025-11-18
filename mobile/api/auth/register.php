@@ -1,68 +1,78 @@
 <?php
-/**
- * ============================================
- * API REGISTER (MOBILE)
- * File: mobile/api/auth/register.php
- * ============================================
- */
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *"); // biar bisa diakses dari Android
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Content-Type: application/json');
+include "../../config/db.php";
 
-require_once '../../config/db.php';
-require_once '../../utils/response.php';
+// Ambil data JSON dari request
+$data = json_decode(file_get_contents("php://input"), true);
 
-// Ambil input JSON dari body request
-$input = json_decode(file_get_contents("php://input"), true);
-
-// Validasi input JSON
-if (!$input) {
-    jsonResponse('error', 'Invalid JSON input');
+// Validasi input wajib
+if (
+    !isset($data["username"]) ||
+    !isset($data["email"]) ||
+    !isset($data["password"]) ||
+    !isset($data["full_name"]) ||
+    !isset($data["phone"])
+) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Semua field wajib diisi",
+        "data" => null
+    ]);
+    exit;
 }
 
-$username = trim($input['username'] ?? '');
-$email = trim($input['email'] ?? '');
-$password = trim($input['password'] ?? '');
-$full_name = trim($input['full_name'] ?? '');
-$phone = trim($input['phone'] ?? '');
+$username = $data["username"];
+$email = $data["email"];
+$password = $data["password"];
+$full_name = $data["full_name"];
+$phone = $data["phone"];
+$user_type = isset($data["user_type"]) ? $data["user_type"] : "user"; // default 'user'
 
-// Validasi field wajib
-if (empty($username) || empty($email) || empty($password) || empty($full_name)) {
-    jsonResponse('error', 'Field username, email, password, dan full_name wajib diisi');
-}
+// Cek apakah email sudah ada
+$check = $conn->prepare("SELECT id FROM users WHERE email = ?");
+$check->bind_param("s", $email);
+$check->execute();
+$check->store_result();
 
-// Cek apakah email atau username sudah digunakan
-$checkQuery = "SELECT id FROM users WHERE email = ? OR username = ?";
-$stmt = $conn->prepare($checkQuery);
-$stmt->bind_param('ss', $email, $username);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows > 0) {
-    jsonResponse('error', 'Email atau username sudah digunakan');
+if ($check->num_rows > 0) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Email sudah terdaftar",
+        "data" => null
+    ]);
+    exit;
 }
 
 // Hash password
-$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+$hashed = password_hash($password, PASSWORD_DEFAULT);
 
-// Masukkan data ke database
-$insertQuery = "INSERT INTO users (username, email, password, full_name, phone, user_type) VALUES (?, ?, ?, ?, ?, 'user')";
-$stmt = $conn->prepare($insertQuery);
-$stmt->bind_param('sssss', $username, $email, $hashedPassword, $full_name, $phone);
+// Simpan data user baru
+$stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, phone, user_type) VALUES (?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("ssssss", $username, $email, $hashed, $full_name, $phone, $user_type);
 
 if ($stmt->execute()) {
-    $user_id = $conn->insert_id;
-
-    jsonResponse('success', 'Registrasi berhasil', [
-        'id' => $user_id,
-        'username' => $username,
-        'email' => $email,
-        'full_name' => $full_name,
-        'phone' => $phone,
-        'user_type' => 'user'
+    echo json_encode([
+        "status" => "success",
+        "message" => "Registrasi berhasil",
+        "data" => [
+            "username" => $username,
+            "email" => $email,
+            "full_name" => $full_name,
+            "phone" => $phone,
+            "user_type" => $user_type
+        ]
     ]);
 } else {
-    jsonResponse('error', 'Terjadi kesalahan saat registrasi');
+    echo json_encode([
+        "status" => "error",
+        "message" => "Gagal menyimpan data ke database",
+        "data" => null
+    ]);
 }
+
+$conn->close();
 ?>
