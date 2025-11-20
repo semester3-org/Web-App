@@ -166,7 +166,7 @@ $stats_query = "
         COUNT(*) as total_bookings,
         SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_bookings,
         SUM(CASE WHEN payment_status = 'paid' THEN total_price ELSE 0 END) as total_revenue,
-        SUM(CASE WHEN payment_status = 'paid' AND COALESCE(disbursement_status, 'pending') = 'pending' THEN total_price ELSE 0 END) as pending_disbursement
+        SUM(CASE WHEN payment_status = 'paid' AND COALESCE(disbursement_status, 'pending') = 'pending' THEN total_price * 0.90 ELSE 0 END) as pending_disbursement
     FROM bookings
 ";
 $stats_result = $conn->query($stats_query);
