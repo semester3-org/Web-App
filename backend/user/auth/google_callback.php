@@ -53,6 +53,9 @@ try {
 
         // Redirect sesuai role
         switch ($user['user_type']) {
+            case 'superadmin':
+                header("Location: ../../../frontend/admin/pages/dashboard.php");
+                break;
             case 'admin':
                 header("Location: ../../../frontend/admin/pages/dashboard.php");
                 break;
