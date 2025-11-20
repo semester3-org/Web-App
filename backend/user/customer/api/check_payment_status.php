@@ -1,7 +1,7 @@
 <?php
 /**
  * ============================================
- * CHECK PAYMENT STATUS
+ * CHECK PAYMENT STATUS (UPDATED)
  * File: backend/user/customer/api/check_payment_status.php
  * ============================================
  */
@@ -26,10 +26,10 @@ if ($booking_id <= 0) {
 }
 
 try {
-    // Get booking data
-    $query = "SELECT id, order_id, payment_status, status 
-              FROM bookings 
-              WHERE id = ? AND user_id = ?";
+    // Get booking data with kos_id
+    $query = "SELECT b.id, b.kos_id, b.order_id, b.payment_status, b.status 
+              FROM bookings b
+              WHERE b.id = ? AND b.user_id = ?";
     
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $booking_id, $user_id);
@@ -43,6 +43,8 @@ try {
     
     $booking = $result->fetch_assoc();
     $order_id = $booking['order_id'];
+    $kos_id = $booking['kos_id'];
+    $old_payment_status = $booking['payment_status'];
     
     if (empty($order_id)) {
         echo json_encode(['success' => false, 'message' => 'Order ID not found']);
@@ -86,13 +88,28 @@ try {
         $payment_status = 'failed';
     }
     
-    // Update database
+    // Start transaction
     $conn->begin_transaction();
     
+    // Update booking payment status
     if ($payment_status === 'paid') {
         $update_query = "UPDATE bookings 
                         SET payment_status = ?, paid_at = NOW() 
                         WHERE id = ?";
+        
+        // PENTING: Kurangi available_rooms HANYA jika status berubah dari unpaid/pending ke paid
+        if ($old_payment_status !== 'paid') {
+            $update_rooms = $conn->prepare("UPDATE kos SET available_rooms = available_rooms - 1 WHERE id = ? AND available_rooms > 0");
+            $update_rooms->bind_param("i", $kos_id);
+            
+            if (!$update_rooms->execute()) {
+                throw new Exception("Gagal mengurangi kamar tersedia");
+            }
+            
+            if ($update_rooms->affected_rows === 0) {
+                throw new Exception("Kamar sudah tidak tersedia");
+            }
+        }
     } else {
         $update_query = "UPDATE bookings 
                         SET payment_status = ? 
@@ -101,7 +118,10 @@ try {
     
     $update_stmt = $conn->prepare($update_query);
     $update_stmt->bind_param("si", $payment_status, $booking_id);
-    $update_stmt->execute();
+    
+    if (!$update_stmt->execute()) {
+        throw new Exception('Failed to update booking');
+    }
     
     // Log to payment_logs
     $log_query = "INSERT INTO payment_logs 
@@ -152,6 +172,7 @@ try {
 } finally {
     if (isset($stmt)) $stmt->close();
     if (isset($update_stmt)) $update_stmt->close();
+    if (isset($update_rooms)) $update_rooms->close();
     if (isset($log_stmt)) $log_stmt->close();
     if (isset($conn)) $conn->close();
 }
