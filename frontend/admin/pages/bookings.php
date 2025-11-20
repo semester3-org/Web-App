@@ -1,6 +1,10 @@
 <?php
 session_start();
 require_once '../../../backend/config/db.php';
+// Debug - cek session user_id
+error_log("SESSION user_id: " . var_export($_SESSION['user_id'], true));
+error_log("SESSION user_id type: " . gettype($_SESSION['user_id']));
+error_log("SESSION user_id int: " . (int)$_SESSION['user_id']);
 
 // Check if user is logged in and is admin/superadmin
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
@@ -15,18 +19,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         switch ($_POST['action']) {
             case 'disburse':
-                // Mark as disbursed to owner
-                $stmt = $conn->prepare("
-                    UPDATE bookings 
-                    SET disbursement_status = 'disbursed', 
-                        disbursed_at = NOW(),
-                        disbursed_by = ?
-                    WHERE id = ? AND payment_status = 'paid'
-                ");
-                $stmt->bind_param("ii", $_SESSION['user_id'], $booking_id);
-                $stmt->execute();
-                $_SESSION['success_message'] = "Dana berhasil ditandai sebagai telah disalurkan ke owner!";
-                $stmt->close();
+                try {
+                    // Mark as disbursed to owner
+                    $stmt = $conn->prepare("
+                        UPDATE bookings 
+                        SET disbursement_status = 'disbursed', 
+                            disbursed_at = NOW(),
+                            disbursed_by = ?
+                        WHERE id = ? AND payment_status = 'paid'
+                    ");
+                    
+                    if (!$stmt) {
+                        throw new Exception("Prepare failed: " . $conn->error);
+                    }
+                    
+                    // Get user_id and ensure it's an integer
+                    $user_id = (int)$_SESSION['user_id'];
+                    
+                    // Bind parameters
+                    $stmt->bind_param("ii", $user_id, $booking_id);
+                    
+                    if (!$stmt->execute()) {
+                        throw new Exception("Execute failed: " . $stmt->error);
+                    }
+                    
+                    $stmt->close();
+                    $conn->commit();
+                    
+                    $_SESSION['success_message'] = "Dana berhasil ditandai sebagai telah disalurkan ke owner!";
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $_SESSION['error_message'] = "Error: " . $e->getMessage();
+                    error_log("Disburse Error - User ID: " . $_SESSION['user_id'] . " - " . $e->getMessage());
+                }
                 break;
                 
             case 'confirm':
@@ -209,6 +234,14 @@ $system_tax_rate = 0.10;
                 <?php unset($_SESSION['success_message']); ?>
             <?php endif; ?>
 
+            <?php if (isset($_SESSION['error_message'])): ?>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?= $_SESSION['error_message'] ?>
+                </div>
+                <?php unset($_SESSION['error_message']); ?>
+            <?php endif; ?>
+
             <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -389,7 +422,7 @@ $system_tax_rate = 0.10;
                                             </button>
                                             
                                             <?php if ($booking['payment_status'] === 'paid' && ($booking['disbursement_status'] ?? 'pending') === 'pending'): ?>
-                                                <button class="btn-action btn-success" onclick="showDisburseModal(<?= $booking['id'] ?>, '<?= htmlspecialchars($booking['kos_name']) ?>', <?= $booking['total_price'] ?>, <?= $current_page ?>)">
+                                                <button class="btn-action btn-success" onclick="showDisburseModal(<?= $booking['id'] ?>, '<?= htmlspecialchars($booking['kos_name']) ?>', <?= (int)$booking['total_price'] ?>, <?= (int)$current_page ?>)">
                                                     <i class="fas fa-money-bill-transfer"></i>
                                                 </button>
                                             <?php endif; ?>
