@@ -170,7 +170,7 @@ $stats = $transactionManager->getPropertyTaxStats();
                                     <span class="tax-value">Rp <?= number_format($property['price_monthly'] * 0.1) ?></span>
                                 </div>
                                 <div class="tax-row total-row">
-                                    <span class="tax-label">Pajak Yang Harus di Bayarkan</span>
+                                    <span class="tax-label">Pajak Yang Sudah di Bayar</span>
                                     <span class="tax-value">Rp <?= number_format($property['total_amount']) ?></span>
                                 </div>
                             </div>

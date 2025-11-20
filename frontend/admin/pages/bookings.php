@@ -47,10 +47,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $conn->commit();
-        header('Location: bookings.php');
+        header('Location: bookings.php?page=' . ($_POST['current_page'] ?? 1));
         exit();
     }
 }
+
+// Pagination
+$records_per_page = 10;
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($current_page - 1) * $records_per_page;
 
 // Get filter parameters
 $filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
@@ -58,7 +63,63 @@ $filter_payment = isset($_GET['payment']) ? $_GET['payment'] : 'all';
 $filter_disbursement = isset($_GET['disbursement']) ? $_GET['disbursement'] : 'all';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-// Build query with filters
+// Build WHERE clause for count and data query
+$where_conditions = "WHERE 1=1";
+$params = [];
+$types = "";
+
+if ($filter_status !== 'all') {
+    $where_conditions .= " AND b.status = ?";
+    $params[] = $filter_status;
+    $types .= "s";
+}
+
+if ($filter_payment !== 'all') {
+    $where_conditions .= " AND b.payment_status = ?";
+    $params[] = $filter_payment;
+    $types .= "s";
+}
+
+if ($filter_disbursement !== 'all') {
+    $where_conditions .= " AND COALESCE(b.disbursement_status, 'pending') = ?";
+    $params[] = $filter_disbursement;
+    $types .= "s";
+}
+
+if (!empty($search)) {
+    $where_conditions .= " AND (k.name LIKE ? OR u.full_name LIKE ? OR b.order_id LIKE ?)";
+    $search_param = "%$search%";
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $types .= "sss";
+}
+
+// Count total records
+$count_query = "
+    SELECT COUNT(DISTINCT b.id) as total
+    FROM bookings b
+    JOIN kos k ON b.kos_id = k.id
+    JOIN users u ON b.user_id = u.id
+    JOIN users o ON k.owner_id = o.id
+    $where_conditions
+";
+
+if (!empty($params)) {
+    $count_stmt = $conn->prepare($count_query);
+    $count_stmt->bind_param($types, ...$params);
+    $count_stmt->execute();
+    $count_result = $count_stmt->get_result();
+    $total_records = $count_result->fetch_assoc()['total'];
+    $count_stmt->close();
+} else {
+    $count_result = $conn->query($count_query);
+    $total_records = $count_result->fetch_assoc()['total'];
+}
+
+$total_pages = ceil($total_records / $records_per_page);
+
+// Build main query - FIXED: Use LEFT JOIN and get only one payment_type per booking
 $query = "
     SELECT 
         b.*,
@@ -71,49 +132,22 @@ $query = "
         o.full_name as owner_name,
         o.email as owner_email,
         o.phone as owner_phone,
-        pl.payment_type,
-        pl.gross_amount
+        (SELECT pl.payment_type FROM payment_logs pl WHERE pl.booking_id = b.id ORDER BY pl.created_at DESC LIMIT 1) as payment_type
     FROM bookings b
     JOIN kos k ON b.kos_id = k.id
     JOIN users u ON b.user_id = u.id
     JOIN users o ON k.owner_id = o.id
-    LEFT JOIN payment_logs pl ON b.id = pl.booking_id
-    WHERE 1=1
+    $where_conditions
+    ORDER BY b.created_at DESC
+    LIMIT ? OFFSET ?
 ";
 
-$params = [];
-$types = "";
+// Add pagination params
+$params[] = $records_per_page;
+$params[] = $offset;
+$types .= "ii";
 
-if ($filter_status !== 'all') {
-    $query .= " AND b.status = ?";
-    $params[] = $filter_status;
-    $types .= "s";
-}
-
-if ($filter_payment !== 'all') {
-    $query .= " AND b.payment_status = ?";
-    $params[] = $filter_payment;
-    $types .= "s";
-}
-
-if ($filter_disbursement !== 'all') {
-    $query .= " AND COALESCE(b.disbursement_status, 'pending') = ?";
-    $params[] = $filter_disbursement;
-    $types .= "s";
-}
-
-if (!empty($search)) {
-    $query .= " AND (k.name LIKE ? OR u.full_name LIKE ? OR b.order_id LIKE ?)";
-    $search_param = "%$search%";
-    $params[] = $search_param;
-    $params[] = $search_param;
-    $params[] = $search_param;
-    $types .= "sss";
-}
-
-$query .= " ORDER BY b.created_at DESC";
-
-// Execute query with prepared statement
+// Execute query
 if (!empty($params)) {
     $stmt = $conn->prepare($query);
     $stmt->bind_param($types, ...$params);
@@ -269,16 +303,16 @@ $system_tax_rate = 0.10;
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Kos</th>
-                            <th>Customer</th>
-                            <th>Owner</th>
-                            <th>Check In/Out</th>
-                            <th>Type</th>
-                            <th>Total Price</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Disbursement</th>
-                            <th>Actions</th>
+                            <th>KOS</th>
+                            <th>CUSTOMER</th>
+                            <th>OWNER</th>
+                            <th>CHECK IN/OUT</th>
+                            <th>TYPE</th>
+                            <th>TOTAL PRICE</th>
+                            <th>STATUS</th>
+                            <th>PAYMENT</th>
+                            <th>DISBURSEMENT</th>
+                            <th>ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -337,7 +371,7 @@ $system_tax_rate = 0.10;
                                             <?= ucfirst($booking['payment_status']) ?>
                                         </span>
                                         <?php if ($booking['paid_at']): ?>
-                                            <br><small><?= date('d M Y H:i', strtotime($booking['paid_at'])) ?></small>
+                                            <br><small><?= date('d M Y', strtotime($booking['paid_at'])) ?></small>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -355,7 +389,7 @@ $system_tax_rate = 0.10;
                                             </button>
                                             
                                             <?php if ($booking['payment_status'] === 'paid' && ($booking['disbursement_status'] ?? 'pending') === 'pending'): ?>
-                                                <button class="btn-action btn-success" onclick="disbursePayment(<?= $booking['id'] ?>)">
+                                                <button class="btn-action btn-success" onclick="showDisburseModal(<?= $booking['id'] ?>, '<?= htmlspecialchars($booking['kos_name']) ?>', <?= $booking['total_price'] ?>, <?= $current_page ?>)">
                                                     <i class="fas fa-money-bill-transfer"></i>
                                                 </button>
                                             <?php endif; ?>
@@ -366,6 +400,34 @@ $system_tax_rate = 0.10;
                         <?php endif; ?>
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <?php if ($total_pages > 1): ?>
+                <div class="pagination">
+                    <?php if ($current_page > 1): ?>
+                        <a href="?page=<?= $current_page - 1 ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-btn">
+                            <i class="fas fa-chevron-left"></i> Prev
+                        </a>
+                    <?php endif; ?>
+
+                    <?php
+                    $start_page = max(1, $current_page - 2);
+                    $end_page = min($total_pages, $current_page + 2);
+                    
+                    for ($i = $start_page; $i <= $end_page; $i++): ?>
+                        <a href="?page=<?= $i ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
+                           class="page-btn <?= $i === $current_page ? 'active' : '' ?>">
+                            <?= $i ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <?php if ($current_page < $total_pages): ?>
+                        <a href="?page=<?= $current_page + 1 ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-btn">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -373,14 +435,52 @@ $system_tax_rate = 0.10;
     <!-- Modal for Booking Details -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closeModal('detailModal')">&times;</span>
             <div id="modalBody"></div>
         </div>
     </div>
 
+    <!-- Disburse Confirmation Modal -->
+    <div id="disburseModal" class="modal">
+        <div class="modal-content modal-confirm">
+            <span class="close" onclick="closeModal('disburseModal')">&times;</span>
+            <div class="modal-header">
+                <i class="fas fa-money-bill-transfer modal-icon"></i>
+                <h2>Konfirmasi Penyaluran Dana</h2>
+            </div>
+            <div class="modal-body">
+                <p id="disburseText"></p>
+                <div class="disburse-info">
+                    <div class="info-row">
+                        <span class="info-label">Nama Kos:</span>
+                        <span class="info-value" id="disburseName"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Pembayaran:</span>
+                        <span class="info-value" id="disburseTotal"></span>
+                    </div>
+                    <div class="info-row highlight">
+                        <span class="info-label">Dana untuk Owner:</span>
+                        <span class="info-value" id="disburseAmount"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('disburseModal')">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button class="btn-confirm" onclick="confirmDisburse()">
+                    <i class="fas fa-check"></i> Ya, Sudah Disalurkan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let currentDisburseId = null;
+        let currentPage = 1;
+
         function viewDetails(bookingId) {
-            // Fetch booking details via AJAX
             fetch(`../../../backend/admin/classes/get_booking_details.php?id=${bookingId}`)
                 .then(response => response.text())
                 .then(data => {
@@ -393,28 +493,43 @@ $system_tax_rate = 0.10;
                 });
         }
 
-        function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
+        function showDisburseModal(bookingId, kosName, totalPrice, page) {
+            currentDisburseId = bookingId;
+            currentPage = page;
+            
+            const systemFee = totalPrice * 0.10;
+            const ownerAmount = totalPrice - systemFee;
+            
+            document.getElementById('disburseName').textContent = kosName;
+            document.getElementById('disburseTotal').textContent = 'Rp ' + totalPrice.toLocaleString('id-ID');
+            document.getElementById('disburseAmount').textContent = 'Rp ' + ownerAmount.toLocaleString('id-ID');
+            document.getElementById('disburseText').textContent = 'Apakah Anda yakin dana sudah disalurkan ke owner melalui email atau nomor telepon?';
+            
+            document.getElementById('disburseModal').style.display = 'block';
         }
 
-        function disbursePayment(bookingId) {
-            if (confirm('Apakah Anda yakin dana sudah disalurkan ke owner melalui email/nomor telepon?')) {
+        function confirmDisburse() {
+            if (currentDisburseId) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
                     <input type="hidden" name="action" value="disburse">
-                    <input type="hidden" name="booking_id" value="${bookingId}">
+                    <input type="hidden" name="booking_id" value="${currentDisburseId}">
+                    <input type="hidden" name="current_page" value="${currentPage}">
                 `;
                 document.body.appendChild(form);
                 form.submit();
             }
         }
 
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('detailModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
             }
         }
     </script>

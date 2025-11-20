@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 
 
 $booking_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// Get booking details
+// Get booking details with disbursed admin info
 $query = "
     SELECT 
         b.*,
@@ -25,15 +25,13 @@ $query = "
         o.full_name as owner_name,
         o.email as owner_email,
         o.phone as owner_phone,
-        pl.payment_type,
-        pl.gross_amount,
-        pl.transaction_status,
-        pl.created_at as payment_date
+        da.full_name as disbursed_admin_name,
+        (SELECT pl.payment_type FROM payment_logs pl WHERE pl.booking_id = b.id ORDER BY pl.created_at DESC LIMIT 1) as payment_type
     FROM bookings b
     JOIN kos k ON b.kos_id = k.id
     JOIN users u ON b.user_id = u.id
     JOIN users o ON k.owner_id = o.id
-    LEFT JOIN payment_logs pl ON b.id = pl.booking_id
+    LEFT JOIN users da ON b.disbursed_by = da.id
     WHERE b.id = ?
 ";
 
@@ -53,6 +51,12 @@ if (!$booking) {
 $system_tax_rate = 0.10;
 $system_fee = $booking['total_price'] * $system_tax_rate;
 $owner_payment = $booking['total_price'] - $system_fee;
+
+// Format phone for WhatsApp
+$whatsapp_phone = $booking['owner_phone'] ? preg_replace('/[^0-9]/', '', $booking['owner_phone']) : '';
+if (substr($whatsapp_phone, 0, 1) === '0') {
+    $whatsapp_phone = '62' . substr($whatsapp_phone, 1);
+}
 ?>
 
 <style>
@@ -190,9 +194,84 @@ $owner_payment = $booking['total_price'] - $system_fee;
         margin: 0;
     }
 
+    /* Contact Owner Buttons */
+    .contact-owner-section {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    .contact-title {
+        color: white;
+        font-size: 0.938rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .contact-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-contact {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 2px solid white;
+        border-radius: 8px;
+        background: white;
+        color: var(--primary-green);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .btn-contact:hover {
+        background: var(--primary-green-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-contact i {
+        font-size: 1.125rem;
+    }
+
+    .disbursed-info {
+        background: #d1fae5;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-green);
+        margin-top: 1rem;
+    }
+
+    .disbursed-info p {
+        margin: 0.25rem 0;
+        color: var(--text-dark);
+        font-size: 0.875rem;
+    }
+
+    .disbursed-info strong {
+        color: var(--primary-green-dark);
+    }
+
     @media (max-width: 768px) {
         .detail-grid {
             grid-template-columns: 1fr;
+        }
+
+        .contact-buttons {
+            flex-direction: column;
         }
     }
 </style>
@@ -245,7 +324,7 @@ $owner_payment = $booking['total_price'] - $system_fee;
         </div>
     </div>
 
-    <!-- Owner Information -->
+    <!-- Owner Information with Contact -->
     <div class="detail-section">
         <h3><i class="fas fa-user-tie"></i> Informasi Owner</h3>
         <div class="detail-grid">
@@ -260,6 +339,28 @@ $owner_payment = $booking['total_price'] - $system_fee;
             <div class="detail-item">
                 <div class="detail-label">Nomor Telepon Owner</div>
                 <div class="detail-value"><?= htmlspecialchars($booking['owner_phone'] ?? '-') ?></div>
+            </div>
+        </div>
+
+        <!-- Contact Owner Section -->
+        <div class="contact-owner-section">
+            <div class="contact-title">
+                <i class="fas fa-paper-plane"></i>
+                Hubungi Pemilik untuk Penyaluran Dana
+            </div>
+            <div class="contact-buttons">
+                <a href="mailto:<?= htmlspecialchars($booking['owner_email']) ?>?subject=Penyaluran Dana Booking #<?= $booking['id'] ?>&body=Yth. Bapak/Ibu <?= htmlspecialchars($booking['owner_name']) ?>,%0D%0A%0D%0AKami informasikan bahwa dana untuk booking #<?= $booking['id'] ?> telah siap disalurkan.%0D%0A%0D%0ADetail:%0D%0A- Nama Kos: <?= htmlspecialchars($booking['kos_name']) ?>%0D%0A- Total Pembayaran: Rp <?= number_format($booking['total_price'], 0, ',', '.') ?>%0D%0A- Pajak Sistem (10%%): Rp <?= number_format($system_fee, 0, ',', '.') ?>%0D%0A- Dana yang Anda Terima: Rp <?= number_format($owner_payment, 0, ',', '.') ?>%0D%0A%0D%0AMohon konfirmasi nomor rekening untuk transfer.%0D%0A%0D%0ATerima kasih,%0D%0AKostHub Admin" 
+                   class="btn-contact" target="_blank">
+                    <i class="fas fa-envelope"></i>
+                    Email
+                </a>
+                <?php if ($whatsapp_phone): ?>
+                <a href="https://wa.me/<?= $whatsapp_phone ?>?text=Yth.%20Bapak%2FIbu%20<?= urlencode($booking['owner_name']) ?>%2C%0A%0AKami%20informasikan%20bahwa%20dana%20untuk%20booking%20%23<?= $booking['id'] ?>%20telah%20siap%20disalurkan.%0A%0ADetail%3A%0A-%20Nama%20Kos%3A%20<?= urlencode($booking['kos_name']) ?>%0A-%20Total%20Pembayaran%3A%20Rp%20<?= number_format($booking['total_price'], 0, ',', '.') ?>%0A-%20Pajak%20Sistem%20(10%25)%3A%20Rp%20<?= number_format($system_fee, 0, ',', '.') ?>%0A-%20Dana%20yang%20Anda%20Terima%3A%20Rp%20<?= number_format($owner_payment, 0, ',', '.') ?>%0A%0AMohon%20konfirmasi%20nomor%20rekening%20untuk%20transfer.%0A%0ATerima%20kasih%2C%0AKostHub%20Admin" 
+                   class="btn-contact" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    WhatsApp
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -364,13 +465,10 @@ $owner_payment = $booking['total_price'] - $system_fee;
         </div>
 
         <?php if ($booking['disbursement_status'] === 'disbursed'): ?>
-            <div class="detail-grid" style="margin-top: 1rem;">
-                <div class="detail-item">
-                    <div class="detail-label">Tanggal Penyaluran</div>
-                    <div class="detail-value">
-                        <?= $booking['disbursed_at'] ? date('d F Y H:i', strtotime($booking['disbursed_at'])) : '-' ?>
-                    </div>
-                </div>
+            <div class="disbursed-info">
+                <p><strong><i class="fas fa-check-circle"></i> Informasi Penyaluran Dana</strong></p>
+                <p>Tanggal Penyaluran: <strong><?= $booking['disbursed_at'] ? date('d F Y H:i', strtotime($booking['disbursed_at'])) : '-' ?></strong></p>
+                <p>Disalurkan oleh: <strong><?= $booking['disbursed_admin_name'] ?? '-' ?></strong></p>
             </div>
         <?php endif; ?>
     </div>
