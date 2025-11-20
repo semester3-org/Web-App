@@ -1,5 +1,6 @@
 <?php
 // backend/user/auth/google_callback.php
+// SATU CALLBACK UNTUK SEMUA ROLE: customer, owner, dan admin
 session_start();
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/db.php';
@@ -15,48 +16,69 @@ $client->setRedirectUri($redirectUri);
 $client->addScope(['email', 'profile']);
 
 try {
-    if (!isset($_GET['code'])) throw new Exception("Code tidak diterima.");
+    if (!isset($_GET['code'])) {
+        throw new Exception("Authorization code tidak diterima.");
+    }
 
     $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
-    if (isset($token['error'])) throw new Exception("Gagal mengambil token");
+    if (isset($token['error'])) {
+        throw new Exception("Gagal mengambil token: " . ($token['error_description'] ?? 'Unknown'));
+    }
 
     $client->setAccessToken($token['access_token']);
-    $googleService = new Google_Service_Oauth2($client);
-    $googleUser = $googleService->userinfo->get();
+    $oauth2 = new Google_Service_Oauth2($client);
+    $googleUser = $oauth2->userinfo->get();
 
-    $email = $googleUser->email ?? null;
-    $name  = $googleUser->name ?? '';
+    $email   = $googleUser->email ?? null;
+    $name    = $googleUser->name ?? '';
     $picture = $googleUser->picture ?? null;
 
-    if (!$email) throw new Exception("Email tidak ditemukan.");
+    if (!$email) {
+        throw new Exception("Email tidak ditemukan dari Google.");
+    }
 
+    // Cek apakah email ini sudah terdaftar di database
     $stmt = $conn->prepare("SELECT id, username, user_type FROM users WHERE email = ? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
+    if ($result->num_rows === 1) {
+        // USER SUDAH ADA → LOGIN LANGSUNG SESUAI ROLE
         $user = $result->fetch_assoc();
+
         $_SESSION['user_id']   = $user['id'];
         $_SESSION['username']  = $user['username'];
         $_SESSION['user_type'] = $user['user_type'];
 
-        $redirects = [
-            'owner'    => '../../../frontend/user/owner/pages/dashboard.php',
-            'customer' => '../../../frontend/user/customer/home.php',
-            'admin'    => '../../../frontend/admin/dashboard.php',
-            'user'     => '../../../frontend/user/customer/home.php' // untuk 'user'
-        ];
-        $target = $redirects[$user['user_type']] ?? '../../../frontend/auth/login.php';
-        header("Location: $target");
+        // Redirect sesuai role
+        switch ($user['user_type']) {
+            case 'admin':
+                header("Location: ../../../frontend/admin/pages/dashboard.php");
+                break;
+            case 'owner':
+                header("Location: ../../../frontend/user/owner/pages/dashboard.php");
+                break;
+            case 'customer':
+            default:
+                header("Location: ../../../frontend/user/customer/home.php");
+                break;
+        }
         exit;
+
     } else {
-        $params = http_build_query(['email' => $email, 'name' => $name, 'picture' => $picture]);
+        // USER BELUM TERDAFTAR → arahkan ke registrasi Google
+        $params = http_build_query([
+            'email'   => $email,
+            'name'    => $name,
+            'picture' => $picture
+        ]);
         header("Location: ../../../frontend/auth/register_google.php?$params");
         exit;
     }
 
-} catch(Exception $e) {
-    header("Location: ../../../frontend/auth/login.php?error=Google%20login%20failed");
+} catch (Exception $e) {
+    $error = urlencode("Login dengan Google gagal: " . $e->getMessage());
+    header("Location: ../../../frontend/auth/login.php?error=$error");
     exit;
 }
