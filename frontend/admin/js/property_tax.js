@@ -165,7 +165,7 @@ function displayPropertyDetail(property) {
                     <strong>Rp ${formatNumber(Math.round(taxAmount))}</strong>
                 </div>
                     <div class="payment-row total">
-                    <span>Pajak yang Harus Dibayarkan:</span>
+                    <span>Pajak yang Sudah Dibayar:</span>
                     <span>Rp ${formatNumber(Math.round(totalAmount))}</span>
                     </div>
                 </div>

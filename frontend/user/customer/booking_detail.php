@@ -43,6 +43,16 @@ $img_stmt->bind_param("i", $booking['kos_id']);
 $img_stmt->execute();
 $img_result = $img_stmt->get_result();
 $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url'] : null;
+
+// Get payment logs count
+$sql_logs = "SELECT COUNT(*) as log_count FROM payment_logs WHERE booking_id = ?";
+$stmt_logs = $conn->prepare($sql_logs);
+$stmt_logs->bind_param("i", $booking_id);
+$stmt_logs->execute();
+$result_logs = $stmt_logs->get_result();
+$log_data = $result_logs->fetch_assoc();
+$has_logs = $log_data['log_count'] > 0;
+$stmt_logs->close();
 ?>
 
 <!DOCTYPE html>
@@ -59,6 +69,7 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
             --success: #198754;
             --danger: #dc3545;
             --warning: #ffc107;
+            --info: #0dcaf0;
             --gray: #6c757d;
             --light: #f8f9fa;
         }
@@ -97,6 +108,20 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
         .status-rejected { background: #f8d7da; color: #721c24; }
         .status-cancelled { background: #e2e3e5; color: #383d41; }
 
+        .payment-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .payment-unpaid { background: #fff3cd; color: #856404; }
+        .payment-pending { background: #cfe2ff; color: #084298; }
+        .payment-paid { background: #d4edda; color: #155724; }
+        .payment-failed { background: #f8d7da; color: #721c24; }
+        .payment-expired { background: #e2e3e5; color: #383d41; }
+
         .kos-image {
             width: 100%;
             height: 220px;
@@ -133,6 +158,24 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
         .btn-action:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .log-count-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--info);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
         /* MODAL CANTIK */
@@ -315,18 +358,34 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
                         <h4 class="mb-1 fw-bold">Detail Booking</h4>
                         <span class="text-muted">ID: #<?php echo str_pad($booking['id'], 5, '0', STR_PAD_LEFT); ?></span>
                     </div>
-                    <span class="status-badge status-<?php echo $booking['status']; ?> ms-auto">
-                        <?php 
-                          $status_labels = [
-                            'pending' => 'Menunggu Konfirmasi',
-                            'confirmed' => 'Dikonfirmasi',
-                            'completed' => 'Selesai',
-                            'rejected' => 'Ditolak',
-                            'cancelled' => 'Dibatalkan'
-                          ];
-                          echo $status_labels[$booking['status']] ?? ucfirst($booking['status']);
-                        ?>
-                    </span>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <span class="status-badge status-<?php echo $booking['status']; ?>">
+                            <?php 
+                              $status_labels = [
+                                'pending' => 'Menunggu Konfirmasi',
+                                'confirmed' => 'Dikonfirmasi',
+                                'completed' => 'Selesai',
+                                'rejected' => 'Ditolak',
+                                'cancelled' => 'Dibatalkan'
+                              ];
+                              echo $status_labels[$booking['status']] ?? ucfirst($booking['status']);
+                            ?>
+                        </span>
+                        <?php if (isset($booking['payment_status'])): ?>
+                            <span class="payment-badge payment-<?php echo $booking['payment_status']; ?>">
+                                <?php
+                                $payment_labels = [
+                                    'unpaid' => 'Belum Bayar',
+                                    'pending' => 'Pending',
+                                    'paid' => 'Lunas',
+                                    'failed' => 'Gagal',
+                                    'expired' => 'Kadaluarsa'
+                                ];
+                                echo $payment_labels[$booking['payment_status']] ?? ucfirst($booking['payment_status']);
+                                ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Kos Information -->
@@ -392,6 +451,29 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
                     <?php endif; ?>
                 </div>
 
+                <!-- Payment Information -->
+                <?php if (isset($booking['payment_status']) && $booking['payment_status'] !== 'unpaid'): ?>
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3 text-success">Informasi Pembayaran</h6>
+                    <?php if ($booking['order_id']): ?>
+                        <div class="info-row">
+                            <span class="info-label">Order ID:</span>
+                            <span class="info-value">
+                                <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">
+                                    <?php echo htmlspecialchars($booking['order_id']); ?>
+                                </code>
+                            </span>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($booking['paid_at']): ?>
+                        <div class="info-row">
+                            <span class="info-label">Dibayar Pada:</span>
+                            <span class="info-value"><?php echo date('d F Y, H:i', strtotime($booking['paid_at'])); ?></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
                 <!-- Owner Information -->
                 <div class="mb-4">
                     <h6 class="fw-bold mb-3 text-success">Pemilik Kos</h6>
@@ -432,13 +514,21 @@ $kos_image = $img_result->num_rows > 0 ? $img_result->fetch_assoc()['image_url']
 
                 <!-- Actions -->
                 <div class="d-flex gap-3 flex-wrap">
+                    <?php if ($has_logs): ?>
+                        <a href="payment_logs.php?booking_id=<?php echo $booking_id; ?>" 
+                           class="btn btn-info btn-action position-relative">
+                            <i class="bi bi-receipt"></i> Lihat Payment Logs
+                            <span class="log-count-badge"><?php echo $log_data['log_count']; ?></span>
+                        </a>
+                    <?php endif; ?>
+                    
                     <?php if ($booking['status'] === 'pending'): ?>
                         <button class="btn btn-danger btn-action" onclick="openCancelModal()">
                             <i class="bi bi-x-circle"></i> Batalkan Booking
                         </button>
                     <?php endif; ?>
                     
-                    <?php if ($booking['status'] === 'confirmed'): ?>
+                    <?php if ($booking['status'] === 'confirmed' && $booking['owner_phone']): ?>
                         <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $booking['owner_phone']); ?>?text=Halo,%20saya%20ingin%20konfirmasi%20booking%20#<?php echo $booking['id']; ?>" 
                            class="btn btn-success btn-action" target="_blank">
                             <i class="bi bi-whatsapp"></i> Hubungi Pemilik
