@@ -17,9 +17,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $booking_id = (int)$_POST['booking_id'];
         
+        // Validate booking_id
+        if ($booking_id <= 0) {
+            $_SESSION['error_message'] = "Invalid booking ID";
+            header('Location: bookings.php?page=' . ($_POST['current_page'] ?? 1));
+            exit();
+        }
+        
         switch ($_POST['action']) {
             case 'disburse':
                 try {
+                    // Start transaction
+                    $conn->begin_transaction();
+                    
+                    // Get user_id and ensure it's an integer
+                    $user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+                    
+                    // Validate user_id
+                    if ($user_id === null || $user_id <= 0) {
+                        throw new Exception("Invalid user session");
+                    }
+                    
+                    // Validate user_id range for INT type
+                    if ($user_id > 2147483647) {
+                        throw new Exception("User ID exceeds INT maximum value");
+                    }
+                    
+                    // Check if booking exists and is paid
+                    $check_stmt = $conn->prepare("
+                        SELECT id, payment_status, disbursement_status 
+                        FROM bookings 
+                        WHERE id = ? AND payment_status = 'paid'
+                    ");
+                    $check_stmt->bind_param("i", $booking_id);
+                    $check_stmt->execute();
+                    $check_result = $check_stmt->get_result();
+                    
+                    if ($check_result->num_rows === 0) {
+                        throw new Exception("Booking tidak ditemukan atau belum dibayar");
+                    }
+                    
+                    $booking_data = $check_result->fetch_assoc();
+                    if ($booking_data['disbursement_status'] === 'disbursed') {
+                        throw new Exception("Dana sudah pernah disalurkan sebelumnya");
+                    }
+                    
+                    $check_stmt->close();
+                    
                     // Mark as disbursed to owner
                     $stmt = $conn->prepare("
                         UPDATE bookings 
@@ -33,45 +77,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Prepare failed: " . $conn->error);
                     }
                     
-                    // Get user_id and ensure it's an integer
-                    $user_id = (int)$_SESSION['user_id'];
-                    
-                    // Bind parameters
+                    // Bind parameters: i = integer
                     $stmt->bind_param("ii", $user_id, $booking_id);
                     
                     if (!$stmt->execute()) {
                         throw new Exception("Execute failed: " . $stmt->error);
                     }
                     
+                    if ($stmt->affected_rows === 0) {
+                        throw new Exception("Tidak ada data yang diupdate");
+                    }
+                    
                     $stmt->close();
                     $conn->commit();
                     
                     $_SESSION['success_message'] = "Dana berhasil ditandai sebagai telah disalurkan ke owner!";
+                    
                 } catch (Exception $e) {
                     $conn->rollback();
                     $_SESSION['error_message'] = "Error: " . $e->getMessage();
-                    error_log("Disburse Error - User ID: " . $_SESSION['user_id'] . " - " . $e->getMessage());
+                    error_log("Disburse Error - User ID: " . ($_SESSION['user_id'] ?? 'null') . " - " . $e->getMessage());
                 }
                 break;
                 
             case 'confirm':
-                $stmt = $conn->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
-                $stmt->bind_param("i", $booking_id);
-                $stmt->execute();
-                $_SESSION['success_message'] = "Booking berhasil dikonfirmasi!";
-                $stmt->close();
+                try {
+                    $conn->begin_transaction();
+                    
+                    $stmt = $conn->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
+                    $stmt->bind_param("i", $booking_id);
+                    $stmt->execute();
+                    
+                    if ($stmt->affected_rows > 0) {
+                        $_SESSION['success_message'] = "Booking berhasil dikonfirmasi!";
+                    } else {
+                        $_SESSION['error_message'] = "Booking tidak ditemukan";
+                    }
+                    
+                    $stmt->close();
+                    $conn->commit();
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $_SESSION['error_message'] = "Error: " . $e->getMessage();
+                }
                 break;
                 
             case 'reject':
-                $stmt = $conn->prepare("UPDATE bookings SET status = 'rejected' WHERE id = ?");
-                $stmt->bind_param("i", $booking_id);
-                $stmt->execute();
-                $_SESSION['success_message'] = "Booking berhasil ditolak!";
-                $stmt->close();
+                try {
+                    $conn->begin_transaction();
+                    
+                    $stmt = $conn->prepare("UPDATE bookings SET status = 'rejected' WHERE id = ?");
+                    $stmt->bind_param("i", $booking_id);
+                    $stmt->execute();
+                    
+                    if ($stmt->affected_rows > 0) {
+                        $_SESSION['success_message'] = "Booking berhasil ditolak!";
+                    } else {
+                        $_SESSION['error_message'] = "Booking tidak ditemukan";
+                    }
+                    
+                    $stmt->close();
+                    $conn->commit();
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $_SESSION['error_message'] = "Error: " . $e->getMessage();
+                }
                 break;
         }
         
-        $conn->commit();
         header('Location: bookings.php?page=' . ($_POST['current_page'] ?? 1));
         exit();
     }
@@ -80,13 +153,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Pagination
 $records_per_page = 10;
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($current_page < 1) $current_page = 1;
 $offset = ($current_page - 1) * $records_per_page;
 
 // Get filter parameters
 $filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 $filter_payment = isset($_GET['payment']) ? $_GET['payment'] : 'all';
 $filter_disbursement = isset($_GET['disbursement']) ? $_GET['disbursement'] : 'all';
-$search = isset($_GET['search']) ? $_GET['search'] : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Build WHERE clause for count and data query
 $where_conditions = "WHERE 1=1";
@@ -130,21 +204,32 @@ $count_query = "
     $where_conditions
 ";
 
-if (!empty($params)) {
-    $count_stmt = $conn->prepare($count_query);
-    $count_stmt->bind_param($types, ...$params);
-    $count_stmt->execute();
-    $count_result = $count_stmt->get_result();
-    $total_records = $count_result->fetch_assoc()['total'];
-    $count_stmt->close();
-} else {
-    $count_result = $conn->query($count_query);
-    $total_records = $count_result->fetch_assoc()['total'];
+try {
+    if (!empty($params)) {
+        $count_stmt = $conn->prepare($count_query);
+        if (!$count_stmt) {
+            throw new Exception("Count prepare failed: " . $conn->error);
+        }
+        $count_stmt->bind_param($types, ...$params);
+        $count_stmt->execute();
+        $count_result = $count_stmt->get_result();
+        $total_records = $count_result->fetch_assoc()['total'];
+        $count_stmt->close();
+    } else {
+        $count_result = $conn->query($count_query);
+        if (!$count_result) {
+            throw new Exception("Count query failed: " . $conn->error);
+        }
+        $total_records = $count_result->fetch_assoc()['total'];
+    }
+} catch (Exception $e) {
+    error_log("Count query error: " . $e->getMessage());
+    $total_records = 0;
 }
 
-$total_pages = ceil($total_records / $records_per_page);
+$total_pages = $total_records > 0 ? ceil($total_records / $records_per_page) : 1;
 
-// Build main query - FIXED: Use LEFT JOIN and get only one payment_type per booking
+// Build main query
 $query = "
     SELECT 
         b.*,
@@ -157,11 +242,17 @@ $query = "
         o.full_name as owner_name,
         o.email as owner_email,
         o.phone as owner_phone,
-        (SELECT pl.payment_type FROM payment_logs pl WHERE pl.booking_id = b.id ORDER BY pl.created_at DESC LIMIT 1) as payment_type
+        admin.full_name as disbursed_by_name,
+        (SELECT pl.payment_type 
+         FROM payment_logs pl 
+         WHERE pl.booking_id = b.id 
+         ORDER BY pl.created_at DESC 
+         LIMIT 1) as payment_type
     FROM bookings b
     JOIN kos k ON b.kos_id = k.id
     JOIN users u ON b.user_id = u.id
     JOIN users o ON k.owner_id = o.id
+    LEFT JOIN users admin ON b.disbursed_by = admin.id
     $where_conditions
     ORDER BY b.created_at DESC
     LIMIT ? OFFSET ?
@@ -173,16 +264,27 @@ $params[] = $offset;
 $types .= "ii";
 
 // Execute query
-if (!empty($params)) {
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $bookings = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-} else {
-    $result = $conn->query($query);
-    $bookings = $result->fetch_all(MYSQLI_ASSOC);
+try {
+    if (!empty($params)) {
+        $stmt = $conn->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Main query prepare failed: " . $conn->error);
+        }
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $bookings = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+    } else {
+        $result = $conn->query($query);
+        if (!$result) {
+            throw new Exception("Main query failed: " . $conn->error);
+        }
+        $bookings = $result->fetch_all(MYSQLI_ASSOC);
+    }
+} catch (Exception $e) {
+    error_log("Main query error: " . $e->getMessage());
+    $bookings = [];
 }
 
 // Calculate statistics
@@ -191,11 +293,27 @@ $stats_query = "
         COUNT(*) as total_bookings,
         SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_bookings,
         SUM(CASE WHEN payment_status = 'paid' THEN total_price ELSE 0 END) as total_revenue,
-        SUM(CASE WHEN payment_status = 'paid' AND COALESCE(disbursement_status, 'pending') = 'pending' THEN total_price * 0.90 ELSE 0 END) as pending_disbursement
+        SUM(CASE WHEN payment_status = 'paid' AND COALESCE(disbursement_status, 'pending') = 'pending' THEN total_price * 0.90 ELSE 0 END) as pending_disbursement,
+        SUM(CASE WHEN COALESCE(disbursement_status, 'pending') = 'disbursed' THEN total_price * 0.90 ELSE 0 END) as total_disbursed
     FROM bookings
 ";
-$stats_result = $conn->query($stats_query);
-$stats = $stats_result->fetch_assoc();
+
+try {
+    $stats_result = $conn->query($stats_query);
+    if (!$stats_result) {
+        throw new Exception("Stats query failed: " . $conn->error);
+    }
+    $stats = $stats_result->fetch_assoc();
+} catch (Exception $e) {
+    error_log("Stats query error: " . $e->getMessage());
+    $stats = [
+        'total_bookings' => 0,
+        'paid_bookings' => 0,
+        'total_revenue' => 0,
+        'pending_disbursement' => 0,
+        'total_disbursed' => 0
+    ];
+}
 
 // System tax rate (10%)
 $system_tax_rate = 0.10;
