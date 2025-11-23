@@ -38,8 +38,7 @@ if ($isLoggedIn) {
   <!-- Bootstrap & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -71,41 +70,27 @@ if ($isLoggedIn) {
     /* ==================== HERO ==================== */
     .hero {
       position: relative;
-      height: 100vh;
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%), 
-                  url('/Web-App/frontend/assets/hero-bg.jpg') center/cover no-repeat;
+      height: 90vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), #e2e8f0; /* Placeholder: abu-abu + overlay gelap */
       display: flex;
       align-items: center;
-      overflow: hidden;
-      padding-top: 65px; /* Tinggi navbar */
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 70% 30%, rgba(37, 99, 235, 0.1) 0%, transparent 60%);
-      z-index: 1;
+      justify-content: center;
+      text-align: center;
+      padding-top: 65px;
+      color: white;
     }
     .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 650px;
-      padding: 0 2rem;
+      max-width: 700px;
+      padding: 0 1.5rem;
     }
     .hero h1 {
-      font-size: 4rem;
+      font-size: 3.5rem;
       font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-      color: var(--dark);
+      margin-bottom: 1.2rem;
       animation: fadeInUp 1s ease-out;
     }
     .hero p {
       font-size: 1.3rem;
-      color: #475569;
       margin-bottom: 2rem;
       font-weight: 400;
       animation: fadeInUp 1s ease-out 0.2s both;
@@ -114,6 +99,28 @@ if ($isLoggedIn) {
       animation: fadeInUp 1s ease-out 0.4s both;
       padding: 0.75rem 2rem;
       font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* ==================== THUMBNAIL GALLERY ==================== */
+    .hero-thumbnails {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .thumbnail-item {
+      width: 100px;
+      height: 80px;
+      background-color: #cbd5e1; /* Placeholder abu-abu muda */
+      border: 2px solid white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      font-size: 0.75rem;
       font-weight: 600;
     }
 
@@ -130,15 +137,14 @@ if ($isLoggedIn) {
 
     /* ==================== FEATURES ==================== */
     .features {
-      padding: 120px 0;
-      position: relative;
+      padding: 100px 0;
     }
     .section-title {
       text-align: center;
-      margin-bottom: 80px;
+      margin-bottom: 60px;
     }
     .section-title h2 {
-      font-size: 2.8rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: var(--dark);
       position: relative;
@@ -147,157 +153,113 @@ if ($isLoggedIn) {
     .section-title h2::after {
       content: '';
       position: absolute;
-      bottom: -12px;
+      bottom: -10px;
       left: 50%;
       transform: translateX(-50%);
-      width: 80px;
+      width: 70px;
       height: 4px;
       background: var(--secondary);
       border-radius: 2px;
     }
+
     .feature-card {
       background: white;
-      border-radius: 20px;
-      padding: 50px 30px;
+      border-radius: 16px;
+      padding: 40px 25px;
       text-align: center;
       box-shadow: var(--shadow);
       transition: var(--transition);
       height: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(37, 99, 235, 0.05), transparent);
-      transform: rotate(45deg);
-      transition: var(--transition);
-      z-index: -1;
-    }
-    .feature-card:hover::before {
-      top: -10%;
-      left: -10%;
     }
     .feature-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.08);
     }
     .feature-icon {
-      width: 80px;
-      height: 80px;
+      width: 70px;
+      height: 70px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 25px;
+      margin: 0 auto 20px;
       color: white;
-      font-size: 2rem;
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+      font-size: 1.8rem;
     }
     .feature-card h3 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: var(--dark);
+      font-size: 1.5rem;
+      margin-bottom: 12px;
     }
     .feature-card p {
       color: #64748b;
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
 
     /* ==================== CTA ==================== */
     .cta {
       background: linear-gradient(135deg, #2563eb, #1e40af);
       color: white;
-      padding: 100px 0;
+      padding: 80px 0;
       text-align: center;
       position: relative;
-      overflow: hidden;
-    }
-    .cta::before {
-      content: '';
-      position: absolute;
-      top: -100px;
-      right: -100px;
-      width: 300px;
-      height: 300px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 50%;
     }
     .cta h2 {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      position: relative;
-      z-index: 2;
+      font-size: 2.4rem;
+      margin-bottom: 15px;
     }
     .cta p {
-      font-size: 1.4rem;
-      color: rgba(255,255,255,0.9);
-      max-width: 700px;
-      margin: 0 auto 40px;
-      position: relative;
-      z-index: 2;
+      max-width: 600px;
+      margin: 0 auto 30px;
+      color: rgba(255,255,255,0.95);
     }
     .cta .btn {
       background: white;
       color: var(--primary);
       font-weight: 700;
-      padding: 14px 40px;
+      padding: 12px 36px;
       border-radius: 50px;
       font-size: 1.1rem;
       border: none;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: var(--transition);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
     }
     .cta .btn:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
     }
 
     /* ==================== FOOTER ==================== */
     footer {
       background: #1e293b;
       color: #cbd5e1;
-      padding: 50px 0 20px;
+      padding: 40px 0 20px;
       text-align: center;
     }
     footer p {
-      margin: 10px 0;
-    }
-    footer .social {
-      margin-top: 20px;
+      margin: 8px 0;
+      font-size: 0.95rem;
     }
     footer .social a {
       color: #cbd5e1;
       margin: 0 10px;
-      font-size: 1.5rem;
-      transition: var(--transition);
+      font-size: 1.3rem;
+      text-decoration: none;
     }
     footer .social a:hover {
       color: var(--secondary);
-      transform: translateY(-3px);
     }
 
     /* Responsive */
     @media (max-width: 992px) {
-      .hero h1 { font-size: 3rem; }
-      .hero p { font-size: 1.2rem; }
-      .section-title h2 { font-size: 2.4rem; }
-      .feature-card { padding: 40px 25px; }
+      .hero h1 { font-size: 2.8rem; }
+      .hero p { font-size: 1.15rem; }
     }
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2.5rem; }
-      .hero p { font-size: 1.1rem; }
-      .hero-content { padding: 0 1rem; }
-      .features, .cta { padding: 80px 0; }
-      .cta h2 { font-size: 2.2rem; }
-      .cta p { font-size: 1.2rem; }
+      .hero { height: 80vh; }
+      .hero h1 { font-size: 2.2rem; }
+      .hero p { font-size: 1rem; }
+      .thumbnail-item { width: 80px; height: 60px; font-size: 0.7rem; }
+      .section-title h2 { font-size: 2rem; }
     }
   </style>
 </head>
@@ -306,13 +268,18 @@ if ($isLoggedIn) {
 <!-- Navbar -->
 <?php include("navbar.php"); ?>
 
-<!-- Hero Section -->
+<!-- Hero Section with Thumbnail Gallery -->
 <section class="hero">
-  <div class="container">
-    <div class="hero-content">
-      <h1>Kost Impianmu, Hanya Satu Klik Lagi</h1>
-      <p>Temukan tempat tinggal nyaman, aman, dan terjangkau di sekitar kampus — tanpa ribet, tanpa penipuan, tanpa stres.</p>
-      <a href="/Web-App/frontend/user/customer/explore.php" class="btn btn-lg btn-success">Jelajahi Kost Sekarang</a>
+  <div class="hero-content">
+    <h1>Kost Impianmu, Hanya Satu Klik Lagi</h1>
+    <p>Temukan tempat tinggal nyaman, aman, dan terjangkau di sekitar kampus — tanpa ribet, tanpa penipuan.</p>
+    <a href="/Web-App/frontend/user/customer/explore.php" class="btn btn-light btn-lg">Jelajahi Kost Sekarang</a>
+
+    <!-- Thumbnail Gallery (Placeholder) -->
+    <div class="hero-thumbnails">
+      <div class="thumbnail-item">Kost A</div>
+      <div class="thumbnail-item">Kost B</div>
+      <div class="thumbnail-item">Kost C</div>
     </div>
   </div>
 </section>
@@ -323,14 +290,14 @@ if ($isLoggedIn) {
     <div class="section-title">
       <h2>Kenapa KostHub Berbeda?</h2>
     </div>
-    <div class="row g-5">
+    <div class="row g-4">
       <div class="col-md-4">
         <div class="feature-card">
           <div class="feature-icon">
             <i class="bi bi-shield-check"></i>
           </div>
           <h3>Aman & Terverifikasi</h3>
-          <p>Semua kost telah diverifikasi oleh tim KostHub. Tidak ada penipuan, tidak ada foto palsu — hanya yang asli.</p>
+          <p>Semua kost telah diverifikasi oleh tim KostHub. Tidak ada penipuan, tidak ada foto palsu.</p>
         </div>
       </div>
       <div class="col-md-4">
@@ -339,7 +306,7 @@ if ($isLoggedIn) {
             <i class="bi bi-geo-alt-fill"></i>
           </div>
           <h3>Lokasi Strategis</h3>
-          <p>Dekat kampus, transportasi umum, warung makan, dan pusat belanja — semua ada dalam jangkauan kaki.</p>
+          <p>Dekat kampus, transportasi umum, warung makan, dan pusat belanja — semua dalam jangkauan kaki.</p>
         </div>
       </div>
       <div class="col-md-4">
@@ -352,15 +319,6 @@ if ($isLoggedIn) {
         </div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- CTA Section -->
-<section class="cta">
-  <div class="container">
-    <h2>Siap Pindah ke Kost Impianmu?</h2>
-    <p>Lebih dari 12.000 mahasiswa sudah menemukan rumah mereka di KostHub. Kamu siap jadi yang berikutnya?</p>
-    <a href="/Web-App/frontend/user/customer/explore.php" class="btn">Jelajahi Sekarang</a>
   </div>
 </section>
 
@@ -378,27 +336,17 @@ if ($isLoggedIn) {
   </div>
 </footer>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Navbar scroll effect
   window.addEventListener('scroll', function() {
     const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
+    if (window.scrollY > 50 && navbar) {
       navbar.classList.add('scrolled');
-    } else {
+    } else if (navbar) {
       navbar.classList.remove('scrolled');
     }
   });
-
-  // Login alert
-  function showLoginAlert(e) {
-    e.preventDefault();
-    const modal = new bootstrap.Modal(document.getElementById('loginAlertModal'));
-    modal.show();
-  }
 </script>
 
 </body>
 </html>
-
