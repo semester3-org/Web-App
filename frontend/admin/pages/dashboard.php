@@ -16,13 +16,22 @@ $q_owner = $conn->query("SELECT COUNT(*) AS total FROM users WHERE user_type = '
 $total_owner = $q_owner->fetch_assoc()['total'];
 
 // Total property
-$q_property = $conn->query("SELECT COUNT(*) AS total FROM kos");
+$q_property = $conn->query("
+    SELECT COUNT(*) AS total 
+    FROM kos
+    WHERE payment_status = 'paid'
+");
+
 $total_property = $q_property->fetch_assoc()['total'];
+
 
 // Grafik property per bulan
 $q_chart = $conn->query("
-    SELECT MONTH(created_at) AS bulan, COUNT(*) AS total 
-    FROM kos 
+    SELECT 
+        MONTH(created_at) AS bulan, 
+        COUNT(*) AS total
+    FROM kos
+    WHERE payment_status = 'paid'
     GROUP BY MONTH(created_at)
     ORDER BY bulan
 ");

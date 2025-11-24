@@ -16,33 +16,33 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $booking_id = (int)$_POST['booking_id'];
-        
+
         // Validate booking_id
         if ($booking_id <= 0) {
             $_SESSION['error_message'] = "Invalid booking ID";
             header('Location: bookings.php?page=' . ($_POST['current_page'] ?? 1));
             exit();
         }
-        
+
         switch ($_POST['action']) {
             case 'disburse':
                 try {
                     // Start transaction
                     $conn->begin_transaction();
-                    
+
                     // Get user_id and ensure it's an integer
                     $user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
-                    
+
                     // Validate user_id
                     if ($user_id === null || $user_id <= 0) {
                         throw new Exception("Invalid user session");
                     }
-                    
+
                     // Validate user_id range for INT type
                     if ($user_id > 2147483647) {
                         throw new Exception("User ID exceeds INT maximum value");
                     }
-                    
+
                     // Check if booking exists and is paid
                     $check_stmt = $conn->prepare("
                         SELECT id, payment_status, disbursement_status 
@@ -52,18 +52,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $check_stmt->bind_param("i", $booking_id);
                     $check_stmt->execute();
                     $check_result = $check_stmt->get_result();
-                    
+
                     if ($check_result->num_rows === 0) {
                         throw new Exception("Booking tidak ditemukan atau belum dibayar");
                     }
-                    
+
                     $booking_data = $check_result->fetch_assoc();
                     if ($booking_data['disbursement_status'] === 'disbursed') {
                         throw new Exception("Dana sudah pernah disalurkan sebelumnya");
                     }
-                    
+
                     $check_stmt->close();
-                    
+
                     // Mark as disbursed to owner
                     $stmt = $conn->prepare("
                         UPDATE bookings 
@@ -72,48 +72,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             disbursed_by = ?
                         WHERE id = ? AND payment_status = 'paid'
                     ");
-                    
+
                     if (!$stmt) {
                         throw new Exception("Prepare failed: " . $conn->error);
                     }
-                    
+
                     // Bind parameters: i = integer
                     $stmt->bind_param("ii", $user_id, $booking_id);
-                    
+
                     if (!$stmt->execute()) {
                         throw new Exception("Execute failed: " . $stmt->error);
                     }
-                    
+
                     if ($stmt->affected_rows === 0) {
                         throw new Exception("Tidak ada data yang diupdate");
                     }
-                    
+
                     $stmt->close();
                     $conn->commit();
-                    
+
                     $_SESSION['success_message'] = "Dana berhasil ditandai sebagai telah disalurkan ke owner!";
-                    
                 } catch (Exception $e) {
                     $conn->rollback();
                     $_SESSION['error_message'] = "Error: " . $e->getMessage();
                     error_log("Disburse Error - User ID: " . ($_SESSION['user_id'] ?? 'null') . " - " . $e->getMessage());
                 }
                 break;
-                
+
             case 'confirm':
                 try {
                     $conn->begin_transaction();
-                    
+
                     $stmt = $conn->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
                     $stmt->bind_param("i", $booking_id);
                     $stmt->execute();
-                    
+
                     if ($stmt->affected_rows > 0) {
                         $_SESSION['success_message'] = "Booking berhasil dikonfirmasi!";
                     } else {
                         $_SESSION['error_message'] = "Booking tidak ditemukan";
                     }
-                    
+
                     $stmt->close();
                     $conn->commit();
                 } catch (Exception $e) {
@@ -121,21 +120,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['error_message'] = "Error: " . $e->getMessage();
                 }
                 break;
-                
+
             case 'reject':
                 try {
                     $conn->begin_transaction();
-                    
+
                     $stmt = $conn->prepare("UPDATE bookings SET status = 'rejected' WHERE id = ?");
                     $stmt->bind_param("i", $booking_id);
                     $stmt->execute();
-                    
+
                     if ($stmt->affected_rows > 0) {
                         $_SESSION['success_message'] = "Booking berhasil ditolak!";
                     } else {
                         $_SESSION['error_message'] = "Booking tidak ditemukan";
                     }
-                    
+
                     $stmt->close();
                     $conn->commit();
                 } catch (Exception $e) {
@@ -144,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 break;
         }
-        
+
         header('Location: bookings.php?page=' . ($_POST['current_page'] ?? 1));
         exit();
     }
@@ -292,9 +291,8 @@ $stats_query = "
     SELECT 
         COUNT(*) as total_bookings,
         SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_bookings,
-        SUM(CASE WHEN payment_status = 'paid' THEN total_price ELSE 0 END) as total_revenue,
-        SUM(CASE WHEN payment_status = 'paid' AND COALESCE(disbursement_status, 'pending') = 'pending' THEN total_price * 0.90 ELSE 0 END) as pending_disbursement,
-        SUM(CASE WHEN COALESCE(disbursement_status, 'pending') = 'disbursed' THEN total_price * 0.90 ELSE 0 END) as total_disbursed
+        SUM(CASE WHEN payment_status = 'paid' THEN total_price * 0.10 ELSE 0 END) as total_revenue,
+        SUM(CASE WHEN payment_status = 'paid' AND COALESCE(disbursement_status, 'pending') = 'pending' THEN total_price * 0.90 ELSE 0 END) as pending_disbursement
     FROM bookings
 ";
 
@@ -388,7 +386,7 @@ $system_tax_rate = 0.10;
                     </div>
                     <div class="stat-details">
                         <h3>Rp <?= number_format($stats['total_revenue'], 0, ',', '.') ?></h3>
-                        <p>Total Revenue</p>
+                        <p>Total Profit</p>
                     </div>
                 </div>
 
@@ -407,8 +405,8 @@ $system_tax_rate = 0.10;
             <div class="filter-section">
                 <form method="GET" action="" class="filter-form">
                     <div class="filter-group">
-                        <input type="text" name="search" placeholder="Cari kos, customer, order ID..." 
-                               value="<?= htmlspecialchars($search) ?>">
+                        <input type="text" name="search" placeholder="Cari kos, customer, order ID..."
+                            value="<?= htmlspecialchars($search) ?>">
                     </div>
 
                     <div class="filter-group">
@@ -507,18 +505,16 @@ $system_tax_rate = 0.10;
                                         <strong>Rp <?= number_format($booking['total_price'], 0, ',', '.') ?></strong>
                                     </td>
                                     <td>
-                                        <span class="badge badge-<?= 
-                                            $booking['status'] === 'confirmed' ? 'success' : 
-                                            ($booking['status'] === 'pending' ? 'warning' : 'danger') 
-                                        ?>">
+                                        <span class="badge badge-<?=
+                                                                    $booking['status'] === 'confirmed' ? 'success' : ($booking['status'] === 'pending' ? 'warning' : 'danger')
+                                                                    ?>">
                                             <?= ucfirst($booking['status']) ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge badge-<?= 
-                                            $booking['payment_status'] === 'paid' ? 'success' : 
-                                            ($booking['payment_status'] === 'pending' ? 'warning' : 'danger') 
-                                        ?>">
+                                        <span class="badge badge-<?=
+                                                                    $booking['payment_status'] === 'paid' ? 'success' : ($booking['payment_status'] === 'pending' ? 'warning' : 'danger')
+                                                                    ?>">
                                             <?= ucfirst($booking['payment_status']) ?>
                                         </span>
                                         <?php if ($booking['paid_at']): ?>
@@ -526,7 +522,7 @@ $system_tax_rate = 0.10;
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php 
+                                        <?php
                                         $disbursement_status = $booking['disbursement_status'] ?? 'pending';
                                         ?>
                                         <span class="badge badge-<?= $disbursement_status === 'disbursed' ? 'success' : 'warning' ?>">
@@ -538,7 +534,7 @@ $system_tax_rate = 0.10;
                                             <button class="btn-action btn-info" onclick="viewDetails(<?= $booking['id'] ?>)">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            
+
                                             <?php if ($booking['payment_status'] === 'paid' && ($booking['disbursement_status'] ?? 'pending') === 'pending'): ?>
                                                 <button class="btn-action btn-success" onclick="showDisburseModal(<?= $booking['id'] ?>, '<?= htmlspecialchars($booking['kos_name']) ?>', <?= (int)$booking['total_price'] ?>, <?= (int)$current_page ?>)">
                                                     <i class="fas fa-money-bill-transfer"></i>
@@ -554,30 +550,30 @@ $system_tax_rate = 0.10;
 
                 <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>
-                <div class="pagination">
-                    <?php if ($current_page > 1): ?>
-                        <a href="?page=<?= $current_page - 1 ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-btn">
-                            <i class="fas fa-chevron-left"></i> Prev
-                        </a>
-                    <?php endif; ?>
+                    <div class="pagination">
+                        <?php if ($current_page > 1): ?>
+                            <a href="?page=<?= $current_page - 1 ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-btn">
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </a>
+                        <?php endif; ?>
 
-                    <?php
-                    $start_page = max(1, $current_page - 2);
-                    $end_page = min($total_pages, $current_page + 2);
-                    
-                    for ($i = $start_page; $i <= $end_page; $i++): ?>
-                        <a href="?page=<?= $i ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
-                           class="page-btn <?= $i === $current_page ? 'active' : '' ?>">
-                            <?= $i ?>
-                        </a>
-                    <?php endfor; ?>
+                        <?php
+                        $start_page = max(1, $current_page - 2);
+                        $end_page = min($total_pages, $current_page + 2);
 
-                    <?php if ($current_page < $total_pages): ?>
-                        <a href="?page=<?= $current_page + 1 ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-btn">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </a>
-                    <?php endif; ?>
-                </div>
+                        for ($i = $start_page; $i <= $end_page; $i++): ?>
+                            <a href="?page=<?= $i ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"
+                                class="page-btn <?= $i === $current_page ? 'active' : '' ?>">
+                                <?= $i ?>
+                            </a>
+                        <?php endfor; ?>
+
+                        <?php if ($current_page < $total_pages): ?>
+                            <a href="?page=<?= $current_page + 1 ?><?= $filter_status !== 'all' ? '&status=' . $filter_status : '' ?><?= $filter_payment !== 'all' ? '&payment=' . $filter_payment : '' ?><?= $filter_disbursement !== 'all' ? '&disbursement=' . $filter_disbursement : '' ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-btn">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -647,15 +643,15 @@ $system_tax_rate = 0.10;
         function showDisburseModal(bookingId, kosName, totalPrice, page) {
             currentDisburseId = bookingId;
             currentPage = page;
-            
+
             const systemFee = totalPrice * 0.10;
             const ownerAmount = totalPrice - systemFee;
-            
+
             document.getElementById('disburseName').textContent = kosName;
             document.getElementById('disburseTotal').textContent = 'Rp ' + totalPrice.toLocaleString('id-ID');
             document.getElementById('disburseAmount').textContent = 'Rp ' + ownerAmount.toLocaleString('id-ID');
             document.getElementById('disburseText').textContent = 'Apakah Anda yakin dana sudah disalurkan ke owner melalui email atau nomor telepon?';
-            
+
             document.getElementById('disburseModal').style.display = 'block';
         }
 
@@ -683,6 +679,18 @@ $system_tax_rate = 0.10;
                 event.target.style.display = 'none';
             }
         }
+    </script>
+    <!-- Script dropdown user -->
+    <script>
+        function toggleDropdown() {
+            const menu = document.getElementById("dropdownMenu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+        window.addEventListener("click", function(e) {
+            if (!e.target.closest(".user-menu")) {
+                document.getElementById("dropdownMenu").style.display = "none";
+            }
+        });
     </script>
 </body>
 
