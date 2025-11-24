@@ -35,25 +35,21 @@
 
   <?php include "../includes/navbar.php"; ?>
 
-  <div class="container mt-5">
-    <h3 class="fw-bold mb-4 text-center">Dashboard Owner</h3>
-
-    <div class="d-flex justify-content-center">
-      <div class="card shadow-sm border-0 p-4 text-center" style="width: 300px; border-radius: 15px;">
-        <h5 class="fw-bold mb-3">Add Your Property</h5>
-        <a href="add_property.php" class="btn btn-success px-4 py-3 w-100 fw-semibold" style="border-radius: 10px;">
-          <i class="bi bi-plus-circle me-2"></i> Add Property
-        </a>
-      </div>
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">My Properties</h1>
+      <button class="btn-add-property" onclick="window.location.href='add_property.php'">
+        <i class="bi bi-plus-lg"></i>
+      </button>
     </div>
 
-    <!-- Property List (Optional - jika ingin tampilkan list property) -->
+    <!-- Property Grid -->
     <?php
     $sql = "SELECT k.*, pp.payment_status as payment_detail_status, pp.total_amount
-            FROM kos k
-            LEFT JOIN property_payments pp ON k.payment_id = pp.id
-            WHERE k.owner_id = ?
-            ORDER BY k.created_at DESC";
+          FROM kos k
+          LEFT JOIN property_payments pp ON k.payment_id = pp.id
+          WHERE k.owner_id = ?
+          ORDER BY k.created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('i', $owner_id);
     $stmt->execute();
@@ -61,95 +57,107 @@
 
     if ($properties->num_rows > 0):
     ?>
-      <div class="container mt-5">
-        <h5 class="fw-bold mb-3">My Properties Payment list</h5>
-        <div class="row">
-          <?php while ($property = $properties->fetch_assoc()): ?>
-            <div class="col-md-4 mb-3">
-              <div class="card">
-                <div class="card-body">
-                  <h5><?php echo htmlspecialchars($property['name']); ?></h5>
-                  <p class="text-muted"><?php echo htmlspecialchars($property['city']); ?></p>
-
-                 
-
-                  <p class="mb-2">
-                    <strong>Status Bayar:</strong>
-                    <span class="badge bg-<?php echo $property['payment_status'] === 'paid' ? 'success' : 'warning'; ?>">
-                      <?php echo strtoupper($property['payment_status']); ?>
-                    </span>
-                  </p>
-
-                  <?php if ($property['payment_status'] === 'unpaid'): ?>
-                    <button class="btn btn-sm btn-success mt-2" onclick="showPaymentModal(<?php echo $property['id']; ?>)">
-                      <i class="bi bi-credit-card"></i> Bayar Sekarang
-                    </button>
-                  <?php endif; ?>
-                </div>
-              </div>
+      <div class="property-grid">
+        <?php while ($property = $properties->fetch_assoc()): ?>
+          <div class="property-card">
+            <div class="property-card-header">
+              <h3 class="property-name"><?php echo htmlspecialchars($property['name']); ?></h3>
+              <span class="property-location">
+                <i class="bi bi-geo-alt"></i>
+                <?php echo htmlspecialchars($property['city']); ?>
+              </span>
             </div>
-          <?php endwhile; ?>
+
+            <div class="property-card-body">
+              <div class="payment-info">
+                <span class="payment-label">Payment Status</span>
+                <span class="badge badge-<?php echo $property['payment_status'] === 'paid' ? 'success' : 'warning'; ?>">
+                  <?php echo $property['payment_status'] === 'paid' ? 'Paid' : 'Unpaid'; ?>
+                </span>
+              </div>
+
+              <?php if ($property['payment_status'] === 'unpaid'): ?>
+                <button class="btn-pay" onclick="showPaymentModal(<?php echo $property['id']; ?>)">
+                  <i class="bi bi-credit-card"></i>
+                  Pay Now
+                </button>
+              <?php else: ?>
+                <div class="paid-check">
+                  <i class="bi bi-check-circle-fill"></i>
+                  Payment Complete
+                </div>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endwhile; ?>
+      </div>
+    <?php else: ?>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="bi bi-house"></i>
         </div>
+        <h3>No Properties Yet</h3>
+        <p>Start by adding your first property</p>
+        <button class="btn-primary" onclick="window.location.href='add_property.php'">
+          <i class="bi bi-plus-circle"></i>
+          Add Property
+        </button>
       </div>
     <?php endif; ?>
   </div>
 
   <!-- Payment Modal -->
-  <div class="modal fade payment-modal" id="paymentModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-          <h5 class="modal-title">
-            <i class="bi bi-credit-card"></i> Pembayaran Property
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      <div class="modal-content payment-modal">
+        <div class="modal-header">
+          <h5 class="modal-title">Property Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="payment-warning">
-            <i class="bi bi-exclamation-triangle"></i>
-            <strong>Perhatian:</strong> Property Anda akan ditinjau admin setelah pembayaran selesai.
+          <div class="alert-info">
+            <i class="bi bi-info-circle"></i>
+            <span>Your property will be reviewed by admin after payment completion</span>
           </div>
 
-          <h6><strong>Detail Property:</strong></h6>
-          <p id="property-name" class="mb-3"></p>
+          <div class="payment-detail">
+            <h6>Property Details</h6>
+            <p id="property-name" class="property-detail-name"></p>
+          </div>
 
-          <div class="payment-summary">
-            <table>
-              <tr>
-                <td>Harga Property/Bulan:</td>
-                <td class="text-end text-muted" id="price-monthly">Rp 0</td>
-              </tr>
-              <tr>
-                <td><strong>Biaya Listing (Pajak <?php echo TAX_PERCENTAGE; ?>%):</strong></td>
-                <td class="text-end" id="tax-amount" style="font-size: 1.1rem;"><strong>Rp 0</strong></td>
-              </tr>
-              <tr class="total-row">
-                <td>Total Pembayaran:</td>
-                <td class="text-end" id="total-amount">Rp 0</td>
-              </tr>
-            </table>
-
-            <div class="alert alert-info mb-0">
-              <small>
-                <i class="bi bi-info-circle"></i>
-                Anda hanya membayar biaya pajak dan peembayaran pajak hanya 1x setiap menambah property.
-              </small>
+          <div class="payment-breakdown">
+            <div class="breakdown-row">
+              <span class="breakdown-label">Monthly Price</span>
+              <span class="breakdown-value" id="price-monthly">Rp 0</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-label">Listing Fee (Tax <?php echo TAX_PERCENTAGE; ?>%)</span>
+              <span class="breakdown-value breakdown-highlight" id="tax-amount">Rp 0</span>
+            </div>
+            <div class="breakdown-row breakdown-total">
+              <span class="breakdown-label">Total Payment</span>
+              <span class="breakdown-value" id="total-amount">Rp 0</span>
             </div>
           </div>
 
-          <div class="d-flex gap-2 justify-content-end">
-            <button type="button" class="btn btn-pay-later" onclick="payLater()">
-              <i class="bi bi-clock"></i> Bayar Nanti
+          <div class="payment-note">
+            <i class="bi bi-check-circle"></i>
+            <small>One-time tax payment per property listing</small>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="payLater()">
+              Pay Later
             </button>
-            <button type="button" class="btn btn-pay-now" id="payNowBtn" onclick="payNow()">
-              <i class="bi bi-credit-card"></i> Bayar Sekarang
+            <button type="button" class="btn-primary" id="payNowBtn" onclick="payNow()">
+              <i class="bi bi-credit-card"></i>
+              Pay Now
             </button>
           </div>
         </div>
       </div>
     </div>
   </div>
-
   <!-- Load Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
