@@ -117,4 +117,4 @@ if ($userId) {
       <li><a class="dropdown-item text-danger" href="../../../../logout.php"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a></li>
     </ul>
   </div>
-</nav>
+</nav> 
