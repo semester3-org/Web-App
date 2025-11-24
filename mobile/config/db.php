@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $pass = "";
-$dbname = "db_koshub"; // ganti sesuai nama database kamu
+$dbname = "db_koshub"; 
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 
