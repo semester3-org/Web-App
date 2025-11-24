@@ -39,7 +39,7 @@ try {
     $result = $stmt->get_result();
 
     $kosData = [];
-    $base_url = "http://10.64.187.61/Web-App/"; // Ganti dengan base URL yang sesuai
+    $base_url = "http://10.169.123.171/Web-App/"; // Ganti dengan base URL yang sesuai
 
     while ($row = $result->fetch_assoc()) {
         // Ambil semua gambar
