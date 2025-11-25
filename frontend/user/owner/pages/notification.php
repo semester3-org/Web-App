@@ -1,5 +1,5 @@
 <?php
-// frontend/user/owner/pages/notification.php
+// C:\laragon\www\Web-App\frontend\user\owner\pages\notification.php
 
 session_start();
 require_once '../../../../backend/config/db.php';
@@ -10,410 +10,282 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
     exit;
 }
 
-
 $notification = new Notification($conn);
 $owner_id = $_SESSION['user_id'];
-
-// Get filter
 $filter = $_GET['filter'] ?? 'all';
-
-// Get notifications
 $unread_only = ($filter === 'unread');
+
 $result = $notification->getOwnerNotifications($owner_id, null, $unread_only);
 $notifications = [];
-while ($row = $result->fetch_assoc()) {
-    $notifications[] = $row;
-}
+while ($row = $result->fetch_assoc()) $notifications[] = $row;
 
-// Get statistics
 $stats = $notification->getNotificationStats($owner_id);
 
-$page_title = "Notifikasi";
-include '../includes/header.php';
-include '../includes/navbar.php';
+// Gunakan fungsi yang sama dari navbar.php
+if (!function_exists('format_time_ago')) {
+    function format_time_ago($datetime) {
+        $now = new DateTime; $ago = new DateTime($datetime); $diff = $now->diff($ago);
+        if ($diff->d == 0) {
+            if ($diff->h == 0) return $diff->i == 0 ? 'Baru saja' : $diff->i . ' menit lalu';
+            return $diff->h . ' jam lalu';
+        }
+        if ($diff->d == 1) return 'Kemarin';
+        if ($diff->d < 7) return $diff->d . ' hari lalu';
+        return date('d M Y', strtotime($datetime));
+    }
+}
+
+$page_title = "Notifikasi - KostHub Owner";
+include __DIR__ . '/../includes/header.php';
 ?>
+
+<!-- Ganti warna primer jadi hijau -->
+<style>
+    :root{--bs-primary:#28a745;--bs-primary-rgb:40,167,69}
+    .btn-primary,.bg-primary,.text-primary,.badge.bg-primary{background-color:var(--bs-primary)!important;border-color:var(--bs-primary)!important;color:#fff!important}
+    .navbar.fixed-top{display:none!important}
+    body{padding-top:20px}
+</style>
 
 <div class="container-fluid px-4 py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1 fw-bold">Notifikasi</h2>
-                    <p class="text-muted mb-0">Kelola semua notifikasi properti Anda</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-sm" onclick="markAllAsRead()">
-                        <i class="bi bi-check-all me-1"></i> Tandai Semua Dibaca
-                    </button>
-                </div>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-success mb-1">Notifikasi</h2>
+            <p class="text-muted">Kelola semua notifikasi properti Anda</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="history.back()">
+                <i class="bi bi-arrow-left"></i> Kembali
+            </button>
+            <button class="btn btn-success btn-sm" onclick="showMarkAllModal()">
+                <i class="bi bi-check-all"></i> Tandai Semua Dibaca
+            </button>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
-                                <i class="bi bi-bell fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Total Notifikasi</h6>
-                            <h3 class="mb-0 fw-bold"><?= $stats['total'] ?></h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
-                                <i class="bi bi-envelope-exclamation fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Belum Dibaca</h6>
-                            <h3 class="mb-0 fw-bold"><?= $stats['unread'] ?></h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
-                                <i class="bi bi-star fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Review Baru</h6>
-                            <h3 class="mb-0 fw-bold"><?= $stats['reviews'] ?></h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
-                                <i class="bi bi-heart fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Wishlist Baru</h6>
-                            <h3 class="mb-0 fw-bold"><?= $stats['wishlists'] ?></h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notifications List -->
-    <div class="row">
-        <div class="col-12">
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <?php $cards = [
+            ['Total', $stats['total'], 'bell', 'primary'],
+            ['Belum Dibaca', $stats['unread'], 'envelope-exclamation', 'warning'],
+            ['Review', $stats['reviews'], 'star', 'success'],
+            ['Wishlist', $stats['wishlists'], 'heart', 'info']
+        ]; foreach($cards as $c): ?>
+        <div class="col-md-3 col-6">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-semibold">Daftar Notifikasi</h5>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a href="?filter=all" class="btn btn-<?= $filter === 'all' ? 'primary' : 'outline-secondary' ?>">
-                                Semua
-                            </a>
-                            <a href="?filter=unread" class="btn btn-<?= $filter === 'unread' ? 'primary' : 'outline-secondary' ?>">
-                                Belum Dibaca
-                            </a>
-                        </div>
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="bg-<?= $c[3] ?> bg-opacity-10 text-<?= $c[3] ?> rounded-3 p-3 me-3">
+                        <i class="bi bi-<?= $c[2] ?> fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted"><?= $c[0] ?></small>
+                        <h4 class="mb-0 fw-bold"><?= $c[1] ?></h4>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <?php if (empty($notifications)): ?>
-                        <div class="text-center py-5">
-                            <i class="bi bi-bell-slash text-muted" style="font-size: 4rem;"></i>
-                            <p class="text-muted mt-3 mb-0">Belum ada notifikasi</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="list-group list-group-flush">
-                            <?php foreach ($notifications as $notif): ?>
-                                <?php
-                                // Icon and color based on type
-                                $icon_config = [
-                                    'property_approved' => ['icon' => 'check-circle-fill', 'color' => 'success'],
-                                    'property_rejected' => ['icon' => 'x-circle-fill', 'color' => 'danger'],
-                                    'new_review' => ['icon' => 'star-fill', 'color' => 'warning'],
-                                    'new_wishlist' => ['icon' => 'heart-fill', 'color' => 'danger'],
-                                    'new_booking' => ['icon' => 'calendar-check-fill', 'color' => 'info']
-                                ];
-                                $config = $icon_config[$notif['type']] ?? ['icon' => 'bell-fill', 'color' => 'secondary'];
-                                
-                                $time_ago = time_elapsed_string($notif['created_at']);
-                                ?>
-                                <div class="list-group-item list-group-item-action <?= $notif['is_read'] == 0 ? 'bg-light' : '' ?>" 
-                                     style="cursor: pointer;" 
-                                     onclick="viewNotification(<?= $notif['id'] ?>)">
-                                    <div class="d-flex w-100">
-                                        <div class="flex-shrink-0">
-                                            <div class="bg-<?= $config['color'] ?> bg-opacity-10 text-<?= $config['color'] ?> rounded-circle p-2" 
-                                                 style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="bi bi-<?= $config['icon'] ?> fs-5"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div>
-                                                    <h6 class="mb-1 fw-semibold">
-                                                        <?= htmlspecialchars($notif['title']) ?>
-                                                        <?php if ($notif['is_read'] == 0): ?>
-                                                            <span class="badge bg-primary rounded-pill ms-2" style="font-size: 0.65rem;">Baru</span>
-                                                        <?php endif; ?>
-                                                    </h6>
-                                                    <p class="mb-1 text-muted small"><?= htmlspecialchars($notif['message']) ?></p>
-                                                    <?php if ($notif['kos_name']): ?>
-                                                        <p class="mb-0 small">
-                                                            <i class="bi bi-building me-1"></i>
-                                                            <span class="fw-medium"><?= htmlspecialchars($notif['kos_name']) ?></span>
-                                                            <?php if ($notif['city']): ?>
-                                                                <span class="text-muted"> • <?= htmlspecialchars($notif['city']) ?></span>
-                                                            <?php endif; ?>
-                                                        </p>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="text-end">
-                                                    <small class="text-muted"><?= $time_ago ?></small>
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-sm btn-link text-muted p-0 ms-2" 
-                                                                type="button" 
-                                                                data-bs-toggle="dropdown" 
-                                                                onclick="event.stopPropagation()">
-                                                            <i class="bi bi-three-dots-vertical"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                            <?php if ($notif['is_read'] == 0): ?>
-                                                                <li>
-                                                                    <a class="dropdown-item small" href="#" onclick="event.preventDefault(); event.stopPropagation(); markAsRead(<?= $notif['id'] ?>)">
-                                                                        <i class="bi bi-check2 me-2"></i>Tandai Dibaca
-                                                                    </a>
-                                                                </li>
-                                                            <?php endif; ?>
-                                                            <li>
-                                                                <a class="dropdown-item small" href="#" onclick="event.preventDefault(); event.stopPropagation(); archiveNotification(<?= $notif['id'] ?>)">
-                                                                    <i class="bi bi-archive me-2"></i>Arsipkan
-                                                                </a>
-                                                            </li>
-                                                            <li><hr class="dropdown-divider"></li>
-                                                            <li>
-                                                                <a class="dropdown-item small text-danger" href="#" onclick="event.preventDefault(); event.stopPropagation(); deleteNotification(<?= $notif['id'] ?>)">
-                                                                    <i class="bi bi-trash me-2"></i>Hapus
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
             </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Daftar Notifikasi</h5>
+            <div class="btn-group btn-group-sm">
+                <a href="?filter=all" class="btn btn-<?= $filter==='all'?'success':'outline-secondary' ?>">Semua</a>
+                <a href="?filter=unread" class="btn btn-<?= $filter==='unread'?'success':'outline-secondary' ?>">Belum Dibaca</a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <?php if(empty($notifications)): ?>
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-bell-slash fs-1"></i>
+                    <p class="mt-3">Belum ada notifikasi</p>
+                </div>
+            <?php else: ?>
+                <div class="list-group list-group-flush">
+                    <?php foreach($notifications as $n):
+                        $icon = ['property_approved'=>'success','property_rejected'=>'danger','new_review'=>'warning','new_wishlist'=>'danger','new_booking'=>'info'][$n['type']] ?? 'secondary';
+                    ?>
+                    <div class="list-group-item list-group-item-action <?= $n['is_read']==0?'bg-light':'' ?>" style="cursor:pointer" onclick="viewNotif(<?= $n['id'] ?>)">
+                        <div class="d-flex">
+                            <div class="bg-<?= $icon ?> bg-opacity-10 text-<?= $icon ?> rounded-circle p-2 d-flex align-items-center justify-content-center" style="width:45px;height:45px">
+                                <i class="bi bi-bell-fill"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong><?= htmlspecialchars($n['title']) ?> <?= $n['is_read']==0?'<span class="badge bg-success ms-2">Baru</span>':'' ?></strong>
+                                        <p class="small text-muted mb-1"><?= htmlspecialchars($n['message']) ?></p>
+                                        <?php if($n['kos_name']): ?>
+                                            <small class="text-muted"><i class="bi bi-building"></i> <?= htmlspecialchars($n['kos_name']) ?></small>
+                                        <?php endif; ?>
+                                    </div>
+                                    <small class="text-muted"><?= format_time_ago($n['created_at']) ?></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
-<!-- Notification Detail Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1">
+<!-- Modal Detail -->
+<div class="modal fade" id="notifModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold" id="notificationModalTitle">Detail Notifikasi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="notificationModalBody">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
+            <div class="modal-header border-0"><h5 class="modal-title fw-bold">Detail Notifikasi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="notifBody"><div class="text-center py-5"><div class="spinner-border text-success"></div></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirm Mark All -->
+<div class="modal fade" id="markAllModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content text-center p-4">
+            <i class="bi bi-check-all text-success mb-3" style="font-size:3rem"></i>
+            <h5>Tandai Semua Dibaca?</h5>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-success" onclick="markAllRead()">Ya, Tandai</button>
             </div>
         </div>
     </div>
 </div>
 
-<?php
-function time_elapsed_string($datetime) {
-    $now = new DateTime;
-    $ago = new DateTime($datetime);
-    $diff = $now->diff($ago);
-
-    if ($diff->d == 0) {
-        if ($diff->h == 0) {
-            if ($diff->i == 0) {
-                return 'Baru saja';
-            }
-            return $diff->i . ' menit lalu';
-        }
-        return $diff->h . ' jam lalu';
-    } elseif ($diff->d == 1) {
-        return 'Kemarin';
-    } elseif ($diff->d < 7) {
-        return $diff->d . ' hari lalu';
-    } elseif ($diff->d < 30) {
-        return floor($diff->d / 7) . ' minggu lalu';
-    } elseif ($diff->m < 12) {
-        return $diff->m . ' bulan lalu';
-    }
-    return $diff->y . ' tahun lalu';
-}
-?>
-
 <script>
-// Mark single notification as read
-function markAsRead(notificationId) {
-    fetch('../../../../backend/user/owner/api/notification_api.php?action=mark_as_read', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'notification_id=' + notificationId
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-// Mark all notifications as read
-function markAllAsRead() {
-    if (!confirm('Tandai semua notifikasi sebagai dibaca?')) return;
-    
-    fetch('../../../../backend/user/owner/api/notification_api.php?action=mark_all_read', {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-// Archive notification
-function archiveNotification(notificationId) {
-    if (!confirm('Arsipkan notifikasi ini?')) return;
-    
-    fetch('../../../../backend/user/owner/api/notification_api.php?action=archive', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'notification_id=' + notificationId
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-// Delete notification
-function deleteNotification(notificationId) {
-    if (!confirm('Hapus notifikasi ini secara permanen?')) return;
-    
-    fetch('../../../../backend/user/owner/api/notification_api.php?action=delete', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'notification_id=' + notificationId
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-// View notification detail
-function viewNotification(notificationId) {
-    const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+// API BASE — biar gak capek nulis panjang
+const API = '/Web-App/backend/user/owner/api/notification_api.php';
+// ====================================================================
+// 1. Buka detail notifikasi + otomatis tandai dibaca
+// ====================================================================
+function viewNotif(id) {
+    const modal = new bootstrap.Modal('#notifModal');
     modal.show();
-    
-    fetch('../../../../backend/user/owner/api/notification_api.php?action=get_detail&id=' + notificationId)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            displayNotificationDetail(data.data);
+
+    fetch(`${API}?action=get_detail&id=${id}`)
+        .then(r => r.json())
+        .then(d => {
+            if (!d.success) return;
+
+            let html = `
+                <h6 class="fw-bold mb-2">${d.data.title}</h6>
+                <p class="text-muted mb-3">${d.data.message}</p>
+            `;
+
+            if (d.data.kos_name) {
+                html += `<div class="alert alert-light py-2 px-3 small mb-3"><strong>${d.data.kos_name}</strong></div>`;
+            }
+
+            if (d.data.type === 'new_review' && d.data.rating) {
+                const stars = '★★★★★'.substring(0, d.data.rating) + '☆☆☆☆☆'.substring(d.data.rating);
+                html += `
+                    <div class="alert alert-warning py-2 px-3 small mb-3">
+                        <strong>Rating: ${d.data.rating}/5</strong> ${stars}<br>
+                        "${d.data.review_comment || '-'}"
+                    </div>
+                `;
+            }
+
+            html += `<small class="text-muted d-block"><i class="bi bi-clock"></i> ${new Date(d.data.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</small>`;
+
+            document.getElementById('notifBody').innerHTML = html;
+
+            // Update UI item di list (hilangkan badge + background)
+            const item = document.querySelector(`[onclick="viewNotif(${id})"]`);
+            if (item) {
+                item.classList.remove('bg-light');
+                const badge = item.querySelector('.badge.bg-success');
+                if (badge) badge.remove();
+            }
+
+            // Update badge navbar
+            refreshBadge();
+        })
+        .catch(() => {
+            document.getElementById('notifBody').innerHTML = '<p class="text-danger">Gagal memuat detail notifikasi.</p>';
+        });
+}
+
+// ====================================================================
+// 2. Tandai SEMUA sebagai dibaca → TANPA RELOAD!
+// ====================================================================
+function markAllRead() {
+    fetch(`${API}?action=mark_all_read`, {
+        method: 'POST',
+        credentials: 'include'
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            // 1. Hilangkan semua badge "Baru"
+            document.querySelectorAll('.badge.bg-success').forEach(b => b.remove());
+
+            // 2. Hilangkan background light di semua item
+            document.querySelectorAll('.list-group-item.bg-light').forEach(item => {
+                item.classList.remove('bg-light');
+            });
+
+            // 3. Update kartu "Belum Dibaca" jadi 0
+            const unreadStat = Array.from(document.querySelectorAll('small.text-muted'))
+                .find(el => el.textContent.includes('Belum Dibaca'));
+            if (unreadStat) {
+                unreadStat.closest('.card-body').querySelector('h4').textContent = '0';
+            }
+
+            // 4. Update badge navbar
+            refreshBadge();
+
+            // 5. Tutup modal
+            bootstrap.Modal.getInstance('#markAllModal').hide();
+
+            // 6. Optional toast (jika ada fungsi showToast)
+            if (typeof showToast === 'function') {
+                showToast('Semua notifikasi telah ditandai sebagai dibaca', 'success');
+            }
+        } else {
+            alert('Gagal menandai semua sebagai dibaca.');
         }
+    })
+    .catch(() => {
+        alert('Terjadi kesalahan jaringan.');
     });
 }
 
-// Display notification detail in modal
-function displayNotificationDetail(notif) {
-    let content = `
-        <div class="mb-3">
-            <h6 class="fw-semibold mb-2">${notif.title}</h6>
-            <p class="text-muted mb-0">${notif.message}</p>
-        </div>
-    `;
-    
-    if (notif.kos_name) {
-        content += `
-            <div class="alert alert-light border mb-3">
-                <h6 class="small fw-semibold mb-1">Properti</h6>
-                <p class="mb-0"><strong>${notif.kos_name}</strong></p>
-                ${notif.address ? `<p class="small text-muted mb-0">${notif.address}</p>` : ''}
-            </div>
-        `;
-    }
-    
-    if (notif.type === 'property_rejected' && notif.rejection_reason) {
-        content += `
-            <div class="alert alert-danger">
-                <h6 class="small fw-semibold mb-1">Alasan Penolakan</h6>
-                <p class="mb-0">${notif.rejection_reason}</p>
-            </div>
-        `;
-    }
-    
-    if (notif.type === 'new_review') {
-        const stars = '⭐'.repeat(notif.rating || 0);
-        content += `
-            <div class="alert alert-warning">
-                <h6 class="small fw-semibold mb-1">Review</h6>
-                <p class="mb-1">${stars} (${notif.rating}/5)</p>
-                ${notif.review_comment ? `<p class="mb-0 small">"${notif.review_comment}"</p>` : ''}
-                ${notif.reviewer_name ? `<p class="mb-0 small text-muted mt-1">- ${notif.reviewer_name}</p>` : ''}
-            </div>
-        `;
-    }
-    
-    content += `
-        <div class="text-muted small">
-            <i class="bi bi-clock me-1"></i>${new Date(notif.created_at).toLocaleString('id-ID')}
-        </div>
-    `;
-    
-    document.getElementById('notificationModalBody').innerHTML = content;
+// ====================================================================
+// 3. Modal konfirmasi
+// ====================================================================
+function showMarkAllModal() {
+    new bootstrap.Modal('#markAllModal').show();
 }
+
+// ====================================================================
+// 4. Refresh badge di navbar (real-time)
+// ====================================================================
+function refreshBadge() {
+    fetch(`${API}?action=get_unread_count`)
+        .then(r => r.json())
+        .then(d => {
+            const badge = document.getElementById('notifBadge');
+            if (!badge) return;
+
+            if (d.success && d.count > 0) {
+                badge.textContent = d.count > 99 ? '99+' : d.count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(() => {});
+}
+
+// Jalankan saat halaman dimuat
+refreshBadge();
+setInterval(refreshBadge, 15000); // Update tiap 15 detik
 </script>
 
-<?php include '../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

@@ -31,6 +31,8 @@ $owner_id = $_SESSION['user_id'];
   <!-- Header -->
   <?php include "../includes/navbar.php"; ?>
 
+  <br><br>
+
 
   <!-- Main Content -->
   <div class="container my-5">

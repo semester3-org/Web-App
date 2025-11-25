@@ -43,6 +43,8 @@ $stats = $stmt_stats->get_result()->fetch_assoc();
   <!-- Header -->
   <?php include "../includes/navbar.php"; ?>
 
+  <br><br>
+
   <!-- Main Content -->
   <div class="container my-5">
     <!-- Header Section -->

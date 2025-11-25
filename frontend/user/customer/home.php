@@ -75,7 +75,7 @@ if ($isLoggedIn) {
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding-top: 65px;
+    padding-top: 205px;
     color: white;
     /* ❌ HAPUS background dari sini — overlay yang handle */
   }
@@ -146,7 +146,7 @@ if ($isLoggedIn) {
   grid-template-columns: repeat(4, 160px); /* Lebar tiap thumbnail: 160px */
   justify-content: center;
   gap: 20px; /* Sedikit lebih rapat */
-  margin-top: 155px;
+  margin-top: 85px;
 }
 
 .thumbnail-item {
@@ -331,6 +331,7 @@ if ($isLoggedIn) {
 
 <!-- Navbar -->
 <?php include("navbar.php"); ?>
+<br>
 
 <!-- Hero Section with Thumbnail Gallery -->
 <section class="hero">

@@ -34,6 +34,7 @@
   ?>
 
   <?php include "../includes/navbar.php"; ?>
+  <br><br>
 
   <div class="dashboard-container">
     <div class="dashboard-header">

@@ -225,6 +225,8 @@ $stmt->close();
 
 <?php include("navbar.php"); ?>
 
+<br><br><br>
+
 <div class="container my-4">
   <h4 class="fw-bold mb-4"><i class="bi bi-compass"></i> Explore Kost</h4>
 
@@ -396,62 +398,84 @@ $stmt->close();
   <?php endif; ?>
 </div>
 
+<!-- Modal Login Alert (sama kayak di navbar.php kamu) -->
+<div class="modal fade" id="loginAlertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white border-0">
+                <h5 class="modal-title">Login Diperlukan</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <i class="bi bi-lock-fill text-success" style="font-size:3.5rem"></i>
+                <p class="mt-3 fs-5">Silakan login untuk menambahkan ke wishlist</p>
+                <a href="/Web-App/frontend/auth/login.php" class="btn btn-success px-5 py-3">Login Sekarang</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 // ========================================
-// TOGGLE FAVORITE
+// TOGGLE FAVORITE + CEK LOGIN DULU
 // ========================================
 function toggleFavorite(kosId, btn) {
-  <?php if ($isLoggedIn): ?>
-    const icon = btn.querySelector('i');
-    const isFavorited = icon.classList.contains('bi-heart-fill');
+    <?php if ($isLoggedIn): ?>
+        // SUDAH LOGIN → langsung proses favorit
+        const icon = btn.querySelector('i');
+        const wasFavorited = icon.classList.contains('bi-heart-fill');
 
-    icon.className = 'bi bi-arrow-repeat fa-spin';
-    btn.disabled = true;
+        // Animasi loading
+        icon.className = 'bi bi-arrow-repeat fa-spin';
+        btn.disabled = true;
 
-    fetch('/Web-App/backend/user/customer/classes/save_kos.php', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ kos_id: kosId })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        if (data.favorited) {
-          icon.className = 'bi bi-heart-fill';
-          icon.style.color = '#dc3545';
-          btn.classList.add('favorited');
-        } else {
-          icon.className = 'bi bi-heart';
-          icon.style.color = '';
-          btn.classList.remove('favorited');
-        }
-        
-        // Notifikasi simple
-        const toast = document.createElement('div');
-        toast.className = 'alert alert-success position-fixed top-0 end-0 m-3';
-        toast.style.zIndex = '9999';
-        toast.textContent = data.message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-      } else {
-        alert(data.message || 'Gagal memperbarui wishlist');
-        icon.className = isFavorited ? 'bi bi-heart-fill' : 'bi bi-heart';
-      }
-      btn.disabled = false;
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Terjadi kesalahan koneksi');
-      btn.disabled = false;
-      icon.className = isFavorited ? 'bi bi-heart-fill' : 'bi bi-heart';
-    });
-  <?php else: ?>
-    // Tampilkan modal login alert
-    const modal = new bootstrap.Modal(document.getElementById('loginAlertModal'));
-    modal.show();
-  <?php endif; ?>
+        fetch('/Web-App/backend/user/customer/classes/save_kos.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kos_id: kosId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (data.favorited) {
+                    icon.className = 'bi bi-heart-fill';
+                    icon.style.color = '#dc3545';
+                    btn.classList.add('favorited');
+                } else {
+                    icon.className = 'bi bi-heart';
+                    icon.style.color = '';
+                    btn.classList.remove('favorited');
+                }
+
+                // Toast notifikasi
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed top-0 end-0 p-3';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show mb-0">
+                        <i class="bi bi-check-circle"></i> ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } else {
+                alert(data.message || 'Gagal memperbarui wishlist');
+                icon.className = wasFavorited ? 'bi bi-heart-fill' : 'bi bi-heart';
+            }
+        })
+        .catch(() => {
+            alert('Koneksi gagal!');
+            icon.className = wasFavorited ? 'bi bi-heart-fill' : 'bi bi-heart';
+        })
+        .finally(() => btn.disabled = false);
+
+    <?php else: ?>
+        // BELUM LOGIN → munculin modal login
+        const modal = new bootstrap.Modal(document.getElementById('loginAlertModal') || document.querySelector('#loginAlertModal'));
+        if (modal) modal.show();
+    <?php endif; ?>
 }
 </script>
 
