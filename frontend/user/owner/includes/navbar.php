@@ -344,4 +344,4 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBadge();
     setInterval(updateBadge, 10000);
 });
-</script>
+</script> 
