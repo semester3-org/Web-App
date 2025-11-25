@@ -1,5 +1,4 @@
 <?php
-// File: /Web-App/backend/user/customer/classes/delete_my_review.php
 session_start();
 header('Content-Type: application/json');
 
@@ -32,14 +31,12 @@ if ($kos_id <= 0 && $review_id <= 0) {
     exit();
 }
 
-// Tentukan query berdasarkan input
+// Ambil data review terlebih dahulu untuk mendapatkan kos_id dan owner_id
 if ($review_id > 0) {
-    // Hapus berdasarkan ID review
-    $check = $conn->prepare("SELECT id FROM reviews WHERE id = ? AND user_id = ?");
+    $check = $conn->prepare("SELECT r.id, r.kos_id, k.owner_id FROM reviews r JOIN kos k ON r.kos_id = k.id WHERE r.id = ? AND r.user_id = ?");
     $check->bind_param("ii", $review_id, $user_id);
 } else {
-    // Hapus berdasarkan user_id dan kos_id
-    $check = $conn->prepare("SELECT id FROM reviews WHERE user_id = ? AND kos_id = ?");
+    $check = $conn->prepare("SELECT r.id, r.kos_id, k.owner_id FROM reviews r JOIN kos k ON r.kos_id = k.id WHERE r.user_id = ? AND r.kos_id = ?");
     $check->bind_param("ii", $user_id, $kos_id);
 }
 
@@ -53,6 +50,11 @@ if ($result->num_rows === 0) {
     exit();
 }
 
+$review_data = $result->fetch_assoc();
+$kos_id_from_db = $review_data['kos_id'];
+$owner_id = $review_data['owner_id'];
+$check->close();
+
 // Hapus review sesuai kondisi
 if ($review_id > 0) {
     $delete = $conn->prepare("DELETE FROM reviews WHERE id = ? AND user_id = ?");
@@ -63,6 +65,11 @@ if ($review_id > 0) {
 }
 
 if ($delete->execute()) {
+    // UPDATE REVIEW SUMMARY NOTIFICATION SETELAH HAPUS
+    require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+    $notif = new Notification($conn);
+    $notif->updateOrCreateReviewSummaryNotification($kos_id_from_db, $owner_id);
+    
     $conn->commit();
     echo json_encode([
         'success' => true,
@@ -75,7 +82,6 @@ if ($delete->execute()) {
     ]);
 }
 
-$check->close();
 $delete->close();
 $conn->close();
 ?>

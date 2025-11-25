@@ -2,7 +2,6 @@
 session_start();
 header('Content-Type: application/json');
 
-// Load db.php (yang kamu punya $conn->autocommit(false))
 require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
 
 // Pastikan koneksi aktif
@@ -41,10 +40,10 @@ try {
     }
 
     $kos = $result->fetch_assoc();
-    $owner_id = $kos['owner_id'];
+    $owner_id = (int)$kos['owner_id'];
     $stmt->close();
 
-    // Cek apakah sudah di-save
+    // Cek apakah sudah di-save (pakai unique_user_kos)
     $stmt = $conn->prepare("SELECT 1 FROM saved_kos WHERE user_id = ? AND kos_id = ?");
     $stmt->bind_param("ii", $user_id, $kos_id);
     $stmt->execute();
@@ -58,6 +57,14 @@ try {
         $stmt->execute();
         $stmt->close();
 
+        // ✅ UPDATE NOTIFIKASI SUMMARY SETELAH HAPUS
+        // Summary akan otomatis terhapus jika count = 0
+        if ($owner_id != $user_id) {
+            require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+            $notif = new Notification($conn);
+            $notif->updateOrCreateWishlistSummaryNotification($kos_id, $owner_id);
+        }
+
         $conn->commit(); // COMMIT TRANSAKSI
 
         echo json_encode([
@@ -70,22 +77,14 @@ try {
         $stmt = $conn->prepare("INSERT INTO saved_kos (user_id, kos_id) VALUES (?, ?)");
         $stmt->bind_param("ii", $user_id, $kos_id);
         $stmt->execute();
-        $saved_id = $stmt->insert_id;
         $stmt->close();
 
-        // KIRIM NOTIFIKASI KE OWNER (hanya kalau bukan owner sendiri)
+        // ✅ UPDATE NOTIFIKASI SUMMARY SETELAH TAMBAH
+        // Summary akan dibuat atau di-update countnya
         if ($owner_id != $user_id) {
-            $notif_file = $_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php";
-            if (file_exists($notif_file)) {
-                require_once $notif_file;
-                if (class_exists('Notification')) {
-                    $notif = new Notification($conn);
-                    if (method_exists($notif, 'createNewWishlistNotification')) {
-                        // Ini juga harus di dalam transaksi kalau mau aman, tapi boleh di luar juga
-                        $notif->createNewWishlistNotification($kos_id, $owner_id, $saved_id);
-                    }
-                }
-            }
+            require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+            $notif = new Notification($conn);
+            $notif->updateOrCreateWishlistSummaryNotification($kos_id, $owner_id);
         }
 
         $conn->commit(); // COMMIT TRANSAKSI

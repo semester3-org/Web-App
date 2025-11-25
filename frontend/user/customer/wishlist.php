@@ -49,9 +49,6 @@ if (!$stmt->execute()) {
 $result = $stmt->get_result();
 $wishlist = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
-
-// Debug (hapus setelah selesai debugging)
-// echo "<!-- User ID: $userId, Total wishlist: " . count($wishlist) . " -->";
 ?>
 
 <!doctype html>
@@ -63,7 +60,6 @@ $stmt->close();
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    /* CSS tetap sama seperti sebelumnya */
     body {
       background-color: #f8f9fa;
       padding-top: 80px;
@@ -295,6 +291,148 @@ $stmt->close();
       margin-bottom: 24px;
     }
 
+    /* Custom Modal Delete Confirmation */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .delete-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 0;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+      overflow: hidden;
+    }
+
+    .modal-header-custom {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .modal-header-custom i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      animation: shake 0.5s ease;
+    }
+
+    .modal-header-custom h5 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+
+    .modal-body-custom {
+      padding: 28px;
+      text-align: center;
+    }
+
+    .modal-body-custom p {
+      color: #495057;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    .modal-body-custom .kos-name-highlight {
+      font-weight: 700;
+      color: #212529;
+      display: block;
+      margin-top: 12px;
+      font-size: 1.1rem;
+    }
+
+    .modal-footer-custom {
+      padding: 0 28px 28px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .modal-footer-custom button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-cancel-modal {
+      background: #f8f9fa;
+      color: #495057;
+      border: 2px solid #dee2e6;
+    }
+
+    .btn-cancel-modal:hover {
+      background: #e9ecef;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-delete-confirm {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+    }
+
+    .btn-delete-confirm:hover {
+      background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
+    }
+
+    .btn-delete-confirm:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { 
+        opacity: 0;
+        transform: translateY(50px) scale(0.9); 
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1); 
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
     @keyframes fadeInUp {
       from { 
         opacity: 0; 
@@ -324,27 +462,6 @@ $stmt->close();
 
     .removing {
       animation: slideOut 0.4s ease forwards;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .wishlist-card {
-        flex-direction: column;
-      }
-
-      .wishlist-img {
-        border-left: none;
-        border-top: 1px solid #dee2e6;
-        min-height: 200px;
-      }
-
-      .action-buttons {
-        flex-direction: column;
-      }
-
-      .btn-remove, .btn-view {
-        justify-content: center;
-      }
     }
 
     /* Toast Notification */
@@ -405,6 +522,36 @@ $stmt->close();
         opacity: 0;
       }
     }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .wishlist-card {
+        flex-direction: column;
+      }
+
+      .wishlist-img {
+        border-left: none;
+        border-top: 1px solid #dee2e6;
+        min-height: 200px;
+        min-width: 100%;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .btn-remove, .btn-view {
+        justify-content: center;
+      }
+
+      .delete-modal {
+        margin: 20px;
+      }
+
+      .modal-footer-custom {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
@@ -435,7 +582,7 @@ $stmt->close();
   <?php else: ?>
     <div id="wishlist-container">
       <?php foreach ($wishlist as $item): ?>
-        <div class="wishlist-card" id="wishlist-<?php echo $item['id']; ?>" data-kos-id="<?php echo $item['id']; ?>">
+        <div class="wishlist-card" id="wishlist-<?php echo $item['id']; ?>" data-kos-id="<?php echo $item['id']; ?>" data-kos-name="<?php echo htmlspecialchars($item['name']); ?>">
           <div class="wishlist-info">
             <div>
               <span class="kos-type-badge <?php echo $item['kos_type']; ?>">
@@ -478,7 +625,7 @@ $stmt->close();
                 <a href="/Web-App/frontend/user/customer/detail_kos.php?id=<?php echo $item['id']; ?>" class="btn-view">
                   <i class="bi bi-eye-fill"></i> Lihat Detail
                 </a>
-                <button class="btn-remove" onclick="removeFromWishlist(<?php echo $item['id']; ?>)">
+                <button class="btn-remove" onclick="showDeleteModal(<?php echo $item['id']; ?>)">
                   <i class="bi bi-trash-fill"></i> Hapus
                 </button>
               </div>
@@ -503,9 +650,74 @@ $stmt->close();
   <?php endif; ?>
 </div>
 
+<!-- Custom Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="delete-modal">
+    <div class="modal-header-custom">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <h5>Hapus dari Wishlist?</h5>
+    </div>
+    <div class="modal-body-custom">
+      <p>Apakah Anda yakin ingin menghapus kos ini dari wishlist Anda?</p>
+      <span class="kos-name-highlight" id="modalKosName"></span>
+    </div>
+    <div class="modal-footer-custom">
+      <button class="btn-cancel-modal" onclick="hideDeleteModal()">
+        <i class="bi bi-x-circle"></i> Batal
+      </button>
+      <button class="btn-delete-confirm" id="confirmDeleteBtn">
+        <i class="bi bi-trash-fill"></i> Ya, Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+let currentKosId = null;
+
+// ========================================
+// MODAL FUNCTIONS
+// ========================================
+function showDeleteModal(kosId) {
+  currentKosId = kosId;
+  const card = document.getElementById('wishlist-' + kosId);
+  const kosName = card.getAttribute('data-kos-name');
+  
+  document.getElementById('modalKosName').textContent = kosName;
+  document.getElementById('deleteModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+  document.body.style.overflow = 'auto';
+  currentKosId = null;
+}
+
+// Close modal when clicking outside
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    hideDeleteModal();
+  }
+});
+
+// Confirm delete button
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+  if (currentKosId) {
+    removeFromWishlist(currentKosId);
+    hideDeleteModal();
+  }
+});
+
+// ESC key to close modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    hideDeleteModal();
+  }
+});
+
 // ========================================
 // FUNGSI NOTIFIKASI
 // ========================================
@@ -553,15 +765,7 @@ function showNotification(message, type = 'success') {
 // FUNGSI REMOVE FROM WISHLIST
 // ========================================
 function removeFromWishlist(kosId) {
-  if (!confirm('Apakah Anda yakin ingin menghapus kos ini dari wishlist?')) {
-    return;
-  }
-  
   const card = document.getElementById('wishlist-' + kosId);
-  const removeBtn = card.querySelector('.btn-remove');
-  const originalHTML = removeBtn.innerHTML;
-  removeBtn.disabled = true;
-  removeBtn.innerHTML = '<i class="bi bi-arrow-repeat fa-spin"></i> Menghapus...';
   
   fetch('/Web-App/backend/user/customer/classes/save_kos.php', {
     method: 'POST',
@@ -587,15 +791,11 @@ function removeFromWishlist(kosId) {
         showNotification(data.message, 'success');
       }, 400);
     } else {
-      removeBtn.disabled = false;
-      removeBtn.innerHTML = originalHTML;
       showNotification(data.message || 'Gagal menghapus kos dari wishlist', 'error');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    removeBtn.disabled = false;
-    removeBtn.innerHTML = originalHTML;
     showNotification('Terjadi kesalahan saat menghapus kos', 'error');
   });
 }
