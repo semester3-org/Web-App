@@ -114,6 +114,7 @@ try {
     <!-- Bootstrap Icons & Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Style Admin -->
     <link rel="stylesheet" href="../css/style.css">
@@ -372,6 +373,31 @@ try {
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- Modal Approve -->
+<div id="approveModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <h2>Setujui Property</h2>
+            <button class="close-modal" onclick="closeApproveModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <p>Anda akan <strong>menyetujui</strong> property:</p>
+            <p class="property-name-highlight" id="approvePropertyName"></p>
+            <p>Setelah disetujui, properti ini akan langsung <strong>tayang di website</strong> dan bisa dipesan pengguna.</p>
+            <p class="text-sm text-gray-600 mt-3">Tindakan ini tidak dapat dibatalkan.</p>
+            
+            <div class="modal-actions" style="margin-top: 24px;">
+                <button type="button" class="btn-cancel" onclick="closeApproveModal()">
+                    Batal
+                </button>
+                <button type="button" class="btn-confirm-approve" onclick="confirmApproveProperty()">
+                    Ya, Setujui Property
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Modal Reject -->
     <div id="rejectModal" class="modal">

@@ -15,6 +15,9 @@ if (!isset($conn)) {
     require_once __DIR__ . '/../../config/db.php';
 }
 
+// 🆕 Load Notification class untuk mengirim notifikasi ke owner
+require_once __DIR__ . '/../../user/owner/classes/Notification.php';
+
 // Check if user is admin or superadmin
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'], ['admin', 'superadmin'])) {
     return false;
@@ -24,6 +27,7 @@ class ApprovalProcess
 {
     private $conn;
     private $admin_id;
+    private $notification; // 🆕 Instance untuk notifikasi
 
     public function __construct($db_connection)
     {
@@ -36,6 +40,7 @@ class ApprovalProcess
         }
 
         $this->admin_id = $_SESSION['user_id'];
+        $this->notification = new Notification($db_connection); // 🆕 Inisialisasi notifikasi
     }
 
     /**
@@ -83,7 +88,6 @@ class ApprovalProcess
             $where = [];
             $params = [];
             $types = "";
-
 
             // Filter by status and payment
             if ($status === 'pending') {
@@ -161,7 +165,6 @@ class ApprovalProcess
             $params = [];
             $types = "";
 
-            // === Bagian yang diminta untuk diubah ===
             if ($status === 'pending') {
                 $where[] = "k.status = 'pending' AND k.payment_status = 'paid'";
             } elseif ($status === 'approved') {
@@ -172,8 +175,7 @@ class ApprovalProcess
                 $where[] = "k.status IS NOT NULL AND k.payment_status = 'paid'";
             }
 
-
-            // Advanced Filters (tambahan opsional dari kamu)
+            // Advanced Filters
             if (!empty($filters['city'])) {
                 $where[] = "k.city = ?";
                 $params[] = $filters['city'];
@@ -218,7 +220,6 @@ class ApprovalProcess
         }
     }
 
-
     public function getDistinctCities()
     {
         try {
@@ -236,7 +237,6 @@ class ApprovalProcess
             return [];
         }
     }
-
 
     /**
      * Get property images
@@ -283,7 +283,7 @@ class ApprovalProcess
             while ($row = $result->fetch_assoc()) {
                 $facilities[] = [
                     'name' => $row['name'],
-                    'icon' => $row['icon'] ?? 'fa-check' // fallback jika NULL
+                    'icon' => $row['icon'] ?? 'fa-check'
                 ];
             }
 
@@ -293,7 +293,6 @@ class ApprovalProcess
             return [];
         }
     }
-
 
     /**
      * Get approval statistics
@@ -308,28 +307,24 @@ class ApprovalProcess
                 'total' => 0
             ];
 
-            // Pending: hanya yang sudah bayar
             $pending_query = "SELECT COUNT(*) as count FROM kos WHERE status = 'pending' AND payment_status = 'paid'";
             $result = $this->conn->query($pending_query);
             if ($result && $row = $result->fetch_assoc()) {
                 $stats['pending'] = $row['count'];
             }
 
-            // Approved
             $approved_query = "SELECT COUNT(*) as count FROM kos WHERE status = 'approved'";
             $result = $this->conn->query($approved_query);
             if ($result && $row = $result->fetch_assoc()) {
                 $stats['approved'] = $row['count'];
             }
 
-            // Rejected
             $rejected_query = "SELECT COUNT(*) as count FROM kos WHERE status = 'rejected'";
             $result = $this->conn->query($rejected_query);
             if ($result && $row = $result->fetch_assoc()) {
                 $stats['rejected'] = $row['count'];
             }
 
-            // Total: semua yang sudah bayar (pending, approved, rejected)
             $total_query = "SELECT COUNT(*) as count FROM kos WHERE status IS NOT NULL AND payment_status = 'paid'";
             $result = $this->conn->query($total_query);
             if ($result && $row = $result->fetch_assoc()) {
@@ -348,9 +343,9 @@ class ApprovalProcess
         }
     }
 
-
     /**
      * Approve property
+     * 🆕 Sekarang mengirim notifikasi ke owner
      */
     public function approveProperty($property_id)
     {
@@ -384,14 +379,17 @@ class ApprovalProcess
                 throw new Exception("Gagal mengupdate status property");
             }
 
-            // TODO: Send notification to owner (implement your notification system)
-            // $this->sendApprovalNotification($property['owner_id'], $property_id);
+            // 🆕 Kirim notifikasi ke owner
+            $this->notification->createPropertyApprovedNotification(
+                $property_id, 
+                $property['owner_id']
+            );
 
             $this->conn->commit();
 
             return [
                 'success' => true,
-                'message' => 'Property berhasil disetujui'
+                'message' => 'Property berhasil disetujui dan notifikasi telah dikirim ke owner'
             ];
         } catch (Exception $e) {
             $this->conn->rollback();
@@ -405,6 +403,7 @@ class ApprovalProcess
 
     /**
      * Reject property
+     * 🆕 Sekarang mengirim notifikasi ke owner
      */
     public function rejectProperty($property_id, $reason)
     {
@@ -444,14 +443,21 @@ class ApprovalProcess
                 throw new Exception("Gagal menyimpan alasan penolakan");
             }
 
-            // TODO: Send notification to owner (implement your notification system)
-            // $this->sendRejectionNotification($property['owner_id'], $property_id, $reason);
+            $rejection_id = $this->conn->insert_id;
+
+            // 🆕 Kirim notifikasi ke owner dengan alasan penolakan
+            $this->notification->createPropertyRejectedNotification(
+                $property_id, 
+                $property['owner_id'],
+                $rejection_id,
+                $reason
+            );
 
             $this->conn->commit();
 
             return [
                 'success' => true,
-                'message' => 'Property berhasil ditolak'
+                'message' => 'Property berhasil ditolak dan notifikasi telah dikirim ke owner'
             ];
         } catch (Exception $e) {
             $this->conn->rollback();
@@ -613,7 +619,7 @@ if ($is_ajax_request && basename($_SERVER['PHP_SELF']) === 'approved_process.php
     }
 
     // End of AJAX handler
-} // End of is_ajax_request check
+}
 
 // Handle GET requests (for detail)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {

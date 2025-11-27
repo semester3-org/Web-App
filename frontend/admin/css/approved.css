@@ -963,3 +963,40 @@ body {
     width: 100%;
   }
 }
+
+/* Modal Approve - Sama persis seperti Reject tapi hijau */
+#approveModal .modal-header {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+#approveModal .modal-header h2 {
+    color: white;
+}
+
+#approveModal .btn-confirm-approve {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#approveModal .btn-confirm-approve:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+#approveModal .property-name-highlight {
+    background: #ecfdf5;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border-left: 4px solid #10b981;
+    font-weight: 600;
+    color: #065f46;
+    margin: 12px 0;
+    font-size: 16px;
+}

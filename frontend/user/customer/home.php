@@ -146,7 +146,7 @@ if ($isLoggedIn) {
   grid-template-columns: repeat(4, 160px); /* Lebar tiap thumbnail: 160px */
   justify-content: center;
   gap: 20px; /* Sedikit lebih rapat */
-  margin-top: 85px;
+  margin-top: 185px;
 }
 
 .thumbnail-item {

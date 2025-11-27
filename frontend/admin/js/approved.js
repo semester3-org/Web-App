@@ -46,12 +46,80 @@ function initializeSliders() {
 }
 
 // ============================================
-// APPROVE PROPERTY
+// APPROVE PROPERTY – MODAL CUSTOM (FIXED originalText)
 // ============================================
+let propertyIdToApprove = null;
+let approveButtonOriginalHTML = "";   // <-- simpan teks tombol card di sini
+
 function approveProperty(propertyId) {
-  if (!confirm("Apakah Anda yakin ingin menyetujui property ini?")) {
-    return;
+  // Simpan ID
+  propertyIdToApprove = propertyId;
+
+  // Ambil nama property
+  const card = document.querySelector(`.property-card[data-property-id="${propertyId}"]`);
+  const propertyName = card.querySelector(".property-header h3").textContent.trim();
+
+  // Simpan HTML tombol asli (yang di card) supaya bisa dikembalikan kalau gagal
+  const originalBtn = card.querySelector(".btn-approve");
+  approveButtonOriginalHTML = originalBtn.innerHTML;
+
+  // Isi modal
+  document.getElementById("approvePropertyName").textContent = propertyName;
+
+  // Tampilkan modal
+  document.getElementById("approveModal").classList.add("active");
+}
+
+function closeApproveModal() {
+  document.getElementById("approveModal").classList.remove("active");
+  propertyIdToApprove = null;
+}
+
+async function confirmApproveProperty() {
+  if (!propertyIdToApprove) return;
+
+  const modal = document.getElementById("approveModal");
+  const confirmBtn = modal.querySelector(".btn-confirm-approve");
+
+  // Simpan teks tombol di modal (biar bisa dikembalikan kalau error)
+  const modalOriginalText = confirmBtn.innerHTML;
+
+  // Loading di tombol modal
+  confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+  confirmBtn.disabled = true;
+
+  try {
+    const response = await fetch("/Web-App/backend/admin/classes/approved_process.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `action=approve&property_id=${propertyIdToApprove}`
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showNotification("Property berhasil disetujui!", "success");
+      closeApproveModal();
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      throw new Error(data.message || "Gagal menyetujui property");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    showNotification("Gagal menyetujui property: " + (error.message || "Server error"), "error");
+
+    // Kembalikan tombol di modal
+    confirmBtn.innerHTML = modalOriginalText;
+    confirmBtn.disabled = false;
+
+    // Kembalikan juga tombol di card (yang paling penting!)
+    const cardBtn = document.querySelector(`.property-card[data-property-id="${propertyIdToApprove}"] .btn-approve`);
+    if (cardBtn) {
+      cardBtn.innerHTML = approveButtonOriginalHTML;
+      cardBtn.disabled = false;
+    }
   }
+
 
   // Show loading
   const btn = event.target.closest("button");

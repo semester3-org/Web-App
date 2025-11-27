@@ -32,22 +32,37 @@ class Notification {
         $this->createNewBookingNotification($kos_id, $owner_id, $booking_id, "Pembayaran Berhasil!", "Pembayaran Rp {$amount_fmt} diterima.");
     }
 
+    /**
+     * 🆕 Notifikasi ketika properti disetujui oleh admin
+     * Dipanggil dari approved_process.php setelah approve berhasil
+     */
     public function createPropertyApprovedNotification($kos_id, $owner_id) {
+        $kos_name = $this->getKosName($kos_id);
         $stmt = $this->conn->prepare("INSERT INTO {$this->table} 
             (user_id, kos_id, type, title, message, is_read, is_archived, created_at) 
-            VALUES (?, ?, 'property_approved', 'Properti Disetujui', 'Selamat! Kos Anda telah disetujui.', 0, 0, NOW())");
-        $stmt->bind_param("ii", $owner_id, $kos_id);
+            VALUES (?, ?, 'property_approved', 'Properti Disetujui', ?, 0, 0, NOW())");
+        
+        $message = "Selamat! Properti \"{$kos_name}\" telah disetujui dan sekarang dapat dilihat oleh pengguna.";
+        $stmt->bind_param("iis", $owner_id, $kos_id, $message);
         $stmt->execute();
         $stmt->close();
         $this->conn->commit();
     }
 
+    /**
+     * 🆕 Notifikasi ketika properti ditolak oleh admin
+     * Dipanggil dari approved_process.php setelah reject berhasil
+     */
     public function createPropertyRejectedNotification($kos_id, $owner_id, $rejection_id, $reason) {
+        $kos_name = $this->getKosName($kos_id);
         $short = substr($reason, 0, 200);
+        
         $stmt = $this->conn->prepare("INSERT INTO {$this->table} 
             (user_id, kos_id, type, title, message, related_id, is_read, is_archived, created_at) 
             VALUES (?, ?, 'property_rejected', 'Properti Ditolak', ?, ?, 0, 0, NOW())");
-        $stmt->bind_param("iisi", $owner_id, $kos_id, $short, $rejection_id);
+        
+        $message = "Properti \"{$kos_name}\" ditolak. Alasan: {$short}";
+        $stmt->bind_param("iisi", $owner_id, $kos_id, $message, $rejection_id);
         $stmt->execute();
         $stmt->close();
         $this->conn->commit();
