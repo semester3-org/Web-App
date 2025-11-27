@@ -623,6 +623,22 @@ $system_tax_rate = 0.10;
         </div>
     </div>
 
+    <!-- Success Pop-up Modal -->
+<div id="successModal" class="modal">
+    <div class="modal-content modal-success">
+        <div class="success-animation">
+            <div class="checkmark-circle">
+                <div class="checkmark"></div>
+            </div>
+        </div>
+        <h2>Dana Berhasil Disalurkan!</h2>
+        <p>Dana telah berhasil ditandai sebagai disalurkan ke owner</p>
+        <button class="btn-success-ok" onclick="closeSuccessModal()">
+            <i class="fas fa-check"></i> OK
+        </button>
+    </div>
+</div>
+
     <script>
         let currentDisburseId = null;
         let currentPage = 1;
@@ -691,6 +707,64 @@ $system_tax_rate = 0.10;
                 document.getElementById("dropdownMenu").style.display = "none";
             }
         });
+
+        // Update fungsi confirmDisburse yang sudah ada
+function confirmDisburse() {
+    if (currentDisburseId) {
+        // Tutup modal konfirmasi
+        closeModal('disburseModal');
+        
+        // Tampilkan loading (opsional)
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        loadingOverlay.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(loadingOverlay);
+
+        // Kirim form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="disburse">
+            <input type="hidden" name="booking_id" value="${currentDisburseId}">
+            <input type="hidden" name="current_page" value="${currentPage}">
+        `;
+        document.body.appendChild(form);
+        
+        // Simulasi delay untuk menampilkan success modal
+        setTimeout(() => {
+            // Hapus loading
+            if (document.getElementById('loadingOverlay')) {
+                document.getElementById('loadingOverlay').remove();
+            }
+            
+            // Tampilkan success modal
+            document.getElementById('successModal').style.display = 'block';
+            
+            // Submit form setelah 1.5 detik
+            setTimeout(() => {
+                form.submit();
+            }, 1500);
+        }, 500);
+    }
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').style.display = 'none';
+    // Reload halaman untuk melihat perubahan
+    location.reload();
+}
     </script>
 </body>
 
