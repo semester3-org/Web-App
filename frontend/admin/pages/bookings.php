@@ -380,7 +380,7 @@ $system_tax_rate = 0.10;
                         <i class="fas fa-check-double" style="color: #3b82f6;"></i>
                     </div>
                     <div class="stat-details">
-                        <h3><?= number_format($stats['paid_bookings']) ?></h3>
+                        <h3><?= number_format((float)($stats['paid_bookings'] ?? 0)) ?></h3>
                         <p>Paid Bookings</p>
                     </div>
                 </div>
@@ -390,7 +390,7 @@ $system_tax_rate = 0.10;
                         <i class="fas fa-money-bill-wave" style="color: #f59e0b;"></i>
                     </div>
                     <div class="stat-details">
-                        <h3>Rp <?= number_format($stats['total_revenue'], 0, ',', '.') ?></h3>
+                        <h3>Rp <?= number_format((float)($stats['total_revenue'] ?? 0), 0, ',', '.') ?></h3>
                         <p>Total Profit</p>
                     </div>
                 </div>
@@ -400,7 +400,7 @@ $system_tax_rate = 0.10;
                         <i class="fas fa-hourglass-half" style="color: #ef4444;"></i>
                     </div>
                     <div class="stat-details">
-                        <h3>Rp <?= number_format($stats['pending_disbursement'], 0, ',', '.') ?></h3>
+                        <h3>Rp <?= number_format((float)($stats['pending_disbursement'] ?? 0), 0, ',', '.') ?></h3>
                         <p>Pending Disbursement</p>
                     </div>
                 </div>
