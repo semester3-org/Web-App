@@ -296,4 +296,83 @@ class TransactionManager
             'total_tax_profit' => 0
         ];
     }
+    // Get financial report data
+    public function getFinancialReport($startDate = null, $endDate = null)
+    {
+        // Set default date range if not provided
+        if (!$startDate) {
+            $startDate = date('Y-m-d', strtotime('-30 days'));
+        }
+        if (!$endDate) {
+            $endDate = date('Y-m-d');
+        }
+
+        $query = "SELECT 
+                    pp.id,
+                    pp.order_id,
+                    pp.price_monthly,
+                    pp.tax_amount,
+                    pp.total_amount,
+                    pp.paid_at,
+                    k.name as property_name,
+                    u.full_name as owner_name
+                  FROM property_payments pp
+                  INNER JOIN kos k ON pp.kos_id = k.id
+                  INNER JOIN users u ON pp.owner_id = u.id
+                  WHERE pp.payment_status = 'settlement'
+                    AND DATE(pp.paid_at) BETWEEN ? AND ?
+                  ORDER BY pp.paid_at DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $transactions = [];
+        $totalIncome = 0;
+        $totalTax = 0;
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $transactions[] = $row;
+                $totalIncome += $row['total_amount'];
+                $totalTax += $row['tax_amount'];
+            }
+        }
+
+        // Calculate summary
+        $summary = [
+            'total_income' => $totalIncome,
+            'total_tax' => $totalTax,
+            'total_to_owner' => $totalIncome - $totalTax,
+            'total_transactions' => count($transactions)
+        ];
+
+        // Group by month for chart
+        $chartData = $this->groupByMonth($transactions, $startDate, $endDate);
+
+        return [
+            'summary' => $summary,
+            'transactions' => $transactions,
+            'chart_data' => $chartData
+        ];
+    }
+
+    private function groupByMonth($transactions, $startDate, $endDate)
+    {
+        $monthlyData = [];
+
+        foreach ($transactions as $transaction) {
+            $month = date('M Y', strtotime($transaction['paid_at']));
+            if (!isset($monthlyData[$month])) {
+                $monthlyData[$month] = 0;
+            }
+            $monthlyData[$month] += $transaction['total_amount'];
+        }
+
+        return [
+            'labels' => array_keys($monthlyData),
+            'values' => array_values($monthlyData)
+        ];
+    }
 }

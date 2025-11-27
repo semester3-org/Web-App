@@ -32,12 +32,21 @@ body {
 
 /* Header - Compact */
 .page-header {
+    display: flex;
+    justify-content: space-between; /* kiri dan kanan */
+    align-items: center; /* sejajarkan vertical */
+    width: 100%;
     background: var(--white);
     padding: 1rem 1.25rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
 }
+
+.header-actions {
+    margin-left: auto; /* dorong ke paling kanan */
+}
+
 
 .header-content h1 {
     color: var(--text-dark);
@@ -157,6 +166,7 @@ body {
         opacity: 0;
         transform: scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -168,6 +178,7 @@ body {
         transform: scale(0);
         opacity: 0;
     }
+
     to {
         transform: scale(1);
         opacity: 1;
@@ -190,8 +201,13 @@ body {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Statistics Cards - Horizontal Compact Layout */
@@ -511,6 +527,7 @@ body {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -534,6 +551,7 @@ body {
         transform: translateY(50px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -736,4 +754,117 @@ small {
 .bookings-table td small {
     display: block;
     margin-top: 0.125rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-large {
+    max-width: 900px;
+    width: 90%;
+}
+
+.date-filter {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 10px;
+    align-items: flex-end;
+}
+
+.date-filter .filter-group {
+    flex: 1;
+}
+
+.date-filter label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+}
+
+.date-filter input[type="month"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.financial-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.summary-details h4 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.summary-details p {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.financial-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.financial-table thead {
+    background: var(--primary-green);
+}
+
+.financial-table thead th {
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.financial-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.financial-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.financial-table tbody td {
+    padding: 15px;
+    font-size: 14px;
+}
+
+.text-center {
+    text-align: center !important;
 }
