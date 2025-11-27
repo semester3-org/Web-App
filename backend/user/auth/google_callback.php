@@ -1,6 +1,5 @@
 <?php
 // backend/user/auth/google_callback.php
-// SATU CALLBACK UNTUK SEMUA ROLE: customer, owner, dan admin
 session_start();
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/db.php';
@@ -54,8 +53,6 @@ try {
         // Redirect sesuai role
         switch ($user['user_type']) {
             case 'superadmin':
-                header("Location: ../../../frontend/admin/pages/dashboard.php");
-                break;
             case 'admin':
                 header("Location: ../../../frontend/admin/pages/dashboard.php");
                 break;
@@ -70,18 +67,18 @@ try {
         exit;
 
     } else {
-        // USER BELUM TERDAFTAR → arahkan ke registrasi Google
-        $params = http_build_query([
-            'email'   => $email,
-            'name'    => $name,
-            'picture' => $picture
-        ]);
-        header("Location: ../../../frontend/auth/register_google.php?$params");
+        // USER BELUM TERDAFTAR → kembali ke login dengan notifikasi
+        $stmt->close();
+        $conn->close();
+        
+        $_SESSION['error_notif'] = 'Akun Google Anda belum terdaftar. Silakan daftarkan akun terlebih dahulu.';
+        
+        header("Location: ../../../frontend/auth/login.php");
         exit;
     }
 
 } catch (Exception $e) {
-    $error = urlencode("Login dengan Google gagal: " . $e->getMessage());
-    header("Location: ../../../frontend/auth/login.php?error=$error");
+    $_SESSION['error_notif'] = "Login dengan Google gagal: " . $e->getMessage();
+    header("Location: ../../../frontend/auth/login.php");
     exit;
 }

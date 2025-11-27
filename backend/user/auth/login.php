@@ -29,31 +29,42 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['full_name']  = $user['full_name'];
             $_SESSION['user_type']  = $user['user_type'];
 
+            // Tutup statement dan connection
+            $stmt->close();
+            $conn->close();
+
             // Redirect sesuai role
             switch ($user['user_type']) {
                 case 'superadmin':
                 case 'admin':
-                    header("Location: /Web-App/frontend/admin/pages/dashboard.php");
+                    header("Location: ../../../frontend/admin/pages/dashboard.php");
                     break;
                 case 'owner':
-                    header("Location: /Web-App/frontend/user/owner/pages/dashboard.php");
+                    header("Location: ../../../frontend/user/owner/pages/dashboard.php");
                     break;
                 case 'user':
                 case 'customer':
                 default:
-                    header("Location: /Web-App/frontend/user/customer/home.php");
+                    header("Location: ../../../frontend/user/customer/home.php");
                     break;
             }
             exit;
         } else {
+            // Password salah
+            $stmt->close();
+            $conn->close();
             header("Location: ../../../frontend/auth/login.php?error=Password salah");
             exit;
         }
     } else {
+        // Username tidak ditemukan
+        $stmt->close();
+        $conn->close();
         header("Location: ../../../frontend/auth/login.php?error=Username tidak ditemukan");
         exit;
     }
 } else {
+    // Bukan POST request
     header("Location: ../../../frontend/auth/login.php");
     exit;
 }
