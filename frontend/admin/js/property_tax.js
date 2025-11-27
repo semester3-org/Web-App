@@ -282,3 +282,190 @@ window.onclick = function (event) {
     closeDetailModal();
   }
 };
+
+// Financial Report Modal Functions
+let incomeChart = null;
+
+function openFinancialReportModal() {
+  // Set default date range (last 30 days)
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+
+  document.getElementById("startDate").valueAsDate = startDate;
+  document.getElementById("endDate").valueAsDate = endDate;
+
+  document.getElementById("financialReportModal").style.display = "block";
+
+  // Load initial data
+  loadFinancialReport();
+}
+
+function closeFinancialReportModal() {
+  document.getElementById("financialReportModal").style.display = "none";
+  if (incomeChart) {
+    incomeChart.destroy();
+    incomeChart = null;
+  }
+}
+
+function filterFinancialReport() {
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+
+  if (!startDate || !endDate) {
+    alert("Mohon pilih tanggal mulai dan tanggal akhir");
+    return;
+  }
+
+  if (new Date(startDate) > new Date(endDate)) {
+    alert("Tanggal mulai tidak boleh lebih besar dari tanggal akhir");
+    return;
+  }
+
+  loadFinancialReport(startDate, endDate);
+}
+
+function resetFinancialFilter() {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+
+  document.getElementById("startDate").valueAsDate = startDate;
+  document.getElementById("endDate").valueAsDate = endDate;
+
+  loadFinancialReport();
+}
+
+function loadFinancialReport(startDate = null, endDate = null) {
+  // Build query parameters
+  let url = "../../../backend/admin/actions/get_financial_report.php";
+  if (startDate && endDate) {
+    url += `?start_date=${startDate}&end_date=${endDate}`;
+  }
+
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        updateFinancialSummary(data.summary);
+        updateFinancialChart(data.chart_data);
+        updateFinancialTable(data.transactions);
+      } else {
+        alert(data.message || "Gagal memuat data keuangan");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Terjadi kesalahan saat memuat data");
+    });
+}
+
+function updateFinancialSummary(summary) {
+  document.getElementById("totalIncome").textContent =
+    "Rp " + formatNumber(summary.total_income || 0);
+  document.getElementById("totalTax").textContent =
+    "Rp " + formatNumber(summary.total_tax || 0);
+  document.getElementById("totalToOwner").textContent =
+    "Rp " + formatNumber(summary.total_to_owner || 0);
+  document.getElementById("totalTransactions").textContent =
+    summary.total_transactions || 0;
+}
+
+function updateFinancialChart(chartData) {
+  const ctx = document.getElementById("incomeChart").getContext("2d");
+
+  // Destroy previous chart if exists
+  if (incomeChart) {
+    incomeChart.destroy();
+  }
+
+  incomeChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: chartData.labels,
+      datasets: [
+        {
+          label: "Pemasukan per Bulan",
+          data: chartData.values,
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+          borderColor: "rgba(16, 185, 129, 1)",
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+        },
+        title: {
+          display: true,
+          text: "Grafik Pemasukan per Bulan",
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              return "Rp " + formatNumber(value);
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+function updateFinancialTable(transactions) {
+  const tbody = document.getElementById("financialTableBody");
+  tbody.innerHTML = "";
+
+  if (transactions.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #6b7280;">Tidak ada data transaksi</td></tr>';
+    return;
+  }
+
+  transactions.forEach((transaction, index) => {
+    const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${formatDate(transaction.paid_at)}</td>
+                <td style="font-family: monospace; font-size: 12px;">${
+                  transaction.order_id
+                }</td>
+                <td>${transaction.property_name}</td>
+                <td>${transaction.owner_name}</td>
+                <td>Rp ${formatNumber(transaction.price_monthly)}</td>
+                <td>Rp ${formatNumber(transaction.tax_amount)}</td>
+                <td style="font-weight: 600; color: var(--primary-green);">Rp ${formatNumber(
+                  transaction.total_amount
+                )}</td>
+            </tr>
+        `;
+    tbody.innerHTML += row;
+  });
+}
+
+function exportToExcel() {
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+
+  let url = "../../../backend/admin/actions/export_financial_report.php";
+  if (startDate && endDate) {
+    url += `?start_date=${startDate}&end_date=${endDate}`;
+  }
+
+  window.open(url, "_blank");
+}
+
+function formatDate(dateString) {
+  const options = { year: "numeric", month: "short", day: "numeric" };
+  return new Date(dateString).toLocaleDateString("id-ID", options);
+}

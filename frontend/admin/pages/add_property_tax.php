@@ -35,19 +35,16 @@ $stats = $transactionManager->getPropertyTaxStats();
 
     <div class="main-content">
         <div class="header">
-            <h1><i class="fas fa-file-invoice-dollar"></i> Property Tax Management</h1>
+            <div class="header-left">
+                <h1><i class="fas fa-file-invoice-dollar"></i> Property Tax Management</h1>
+                <p class="header-subtitle">Kelola data pembayaran pajak properti oleh owner</p>
+            </div>
+
+            <button class="btn-financial-report" onclick="openFinancialReportModal()">
+                <i class="fas fa-chart-line"></i> Catatan Keuangan
+            </button>
         </div>
 
-        <!-- Info Card -->
-        <div class="info-card">
-            <div class="info-icon">
-                <i class="fas fa-info-circle"></i>
-            </div>
-            <div class="info-content">
-                <h3>Informasi Pajak Properti</h3>
-                <p>Semua properti yang sudah melakukan pembayaran akan masuk ke halaman ini. Pajak ini berlaku otomatis untuk semua status (Pending, Approved, Rejected).</p>
-            </div>
-        </div>
 
         <!-- Statistics Cards -->
         <div class="stats-container">
@@ -190,6 +187,112 @@ $stats = $transactionManager->getPropertyTaxStats();
                 </div>
             <?php endif; ?>
         </div>
+        <!-- Financial Report Modal -->
+        <div id="financialReportModal" class="modal">
+            <div class="modal-content modal-xlarge">
+                <div class="modal-header">
+                    <h2><i class="fas fa-chart-line"></i> Catatan Keuangan</h2>
+                    <span class="close" onclick="closeFinancialReportModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <!-- Filter Tanggal -->
+                    <div class="date-filter-container">
+                        <div class="form-group">
+                            <label>Dari Tanggal</label>
+                            <input type="date" id="startDate" class="date-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Sampai Tanggal</label>
+                            <input type="date" id="endDate" class="date-input">
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn-filter" onclick="filterFinancialReport()">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <button class="btn-reset" onclick="resetFinancialFilter()">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Summary Cards -->
+                    <div class="financial-summary">
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h3 id="totalIncome">Rp 0</h3>
+                                <p>Total Pemasukan</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-percent"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h3 id="totalTax">Rp 0</h3>
+                                <p>Total Pajak (10%)</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h3 id="totalToOwner">Rp 0</h3>
+                                <p>Total ke Owner</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h3 id="totalTransactions">0</h3>
+                                <p>Total Transaksi</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="chart-container">
+                        <canvas id="incomeChart"></canvas>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="financial-table-container">
+                        <h3><i class="fas fa-list"></i> Detail Transaksi</h3>
+                        <table class="financial-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>Order ID</th>
+                                    <th>Properti</th>
+                                    <th>Owner</th>
+                                    <th>Harga</th>
+                                    <th>Pajak 10%</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="financialTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Export Button -->
+                    <div class="export-container">
+                        <button class="btn-export" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Export ke Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </div>
 
     <!-- Property Detail Modal -->
