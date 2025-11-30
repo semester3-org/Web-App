@@ -340,6 +340,11 @@ $system_tax_rate = 0.10;
                     <h1><i class="fas fa-calendar-check"></i> Bookings Management</h1>
                     <p>Kelola pembayaran dan penyaluran dana ke owner</p>
                 </div>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openFinancialNotes()">
+                        <i class="fas fa-chart-line"></i> Catatan Keuangan
+                    </button>
+                </div>
             </div>
 
             <?php if (isset($_SESSION['success_message'])): ?>
@@ -375,7 +380,7 @@ $system_tax_rate = 0.10;
                         <i class="fas fa-check-double" style="color: #3b82f6;"></i>
                     </div>
                     <div class="stat-details">
-                        <h3><?= number_format($stats['paid_bookings']) ?></h3>
+                        <h3><?= number_format((float)($stats['paid_bookings'] ?? 0)) ?></h3>
                         <p>Paid Bookings</p>
                     </div>
                 </div>
@@ -385,7 +390,7 @@ $system_tax_rate = 0.10;
                         <i class="fas fa-money-bill-wave" style="color: #f59e0b;"></i>
                     </div>
                     <div class="stat-details">
-                        <h3>Rp <?= number_format($stats['total_revenue'], 0, ',', '.') ?></h3>
+                        <h3>Rp <?= number_format((float)($stats['total_revenue'] ?? 0), 0, ',', '.') ?></h3>
                         <p>Total Profit</p>
                     </div>
                 </div>
@@ -395,7 +400,7 @@ $system_tax_rate = 0.10;
                         <i class="fas fa-hourglass-half" style="color: #ef4444;"></i>
                     </div>
                     <div class="stat-details">
-                        <h3>Rp <?= number_format($stats['pending_disbursement'], 0, ',', '.') ?></h3>
+                        <h3>Rp <?= number_format((float)($stats['pending_disbursement'] ?? 0), 0, ',', '.') ?></h3>
                         <p>Pending Disbursement</p>
                     </div>
                 </div>
@@ -624,20 +629,93 @@ $system_tax_rate = 0.10;
     </div>
 
     <!-- Success Pop-up Modal -->
-<div id="successModal" class="modal">
-    <div class="modal-content modal-success">
-        <div class="success-animation">
-            <div class="checkmark-circle">
-                <div class="checkmark"></div>
+    <div id="successModal" class="modal">
+        <div class="modal-content modal-success">
+            <div class="success-animation">
+                <div class="checkmark-circle">
+                    <div class="checkmark"></div>
+                </div>
+            </div>
+            <h2>Dana Berhasil Disalurkan!</h2>
+            <p>Dana telah berhasil ditandai sebagai disalurkan ke owner</p>
+            <button class="btn-success-ok" onclick="closeSuccessModal()">
+                <i class="fas fa-check"></i> OK
+            </button>
+        </div>
+    </div>
+
+    <!-- Financial Notes Modal -->
+    <div id="financialModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeModal('financialModal')">&times;</span>
+            <div class="modal-header">
+                <i class="fas fa-chart-line modal-icon"></i>
+                <h2>Catatan Keuangan - Pemasukan Pajak</h2>
+            </div>
+            <div class="modal-body">
+                <!-- Date Range Filter -->
+                <div class="date-filter">
+                    <div class="filter-group">
+                        <label>Dari Bulan:</label>
+                        <input type="month" id="startMonth" onchange="loadFinancialData()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Sampai Bulan:</label>
+                        <input type="month" id="endMonth" onchange="loadFinancialData()">
+                    </div>
+                    <button class="btn-primary" onclick="loadFinancialData()">
+                        <i class="fas fa-search"></i> Tampilkan
+                    </button>
+                    <button class="btn-secondary" onclick="exportFinancialData()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="financial-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon" style="background: #dbeafe;">
+                            <i class="fas fa-receipt" style="color: #3b82f6;"></i>
+                        </div>
+                        <div class="summary-details">
+                            <h4 id="totalTransactions">0</h4>
+                            <p>Total Transaksi</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon" style="background: #fef3c7;">
+                            <i class="fas fa-coins" style="color: #f59e0b;"></i>
+                        </div>
+                        <div class="summary-details">
+                            <h4 id="totalTaxRevenue">Rp 0</h4>
+                            <p>Total Pemasukan Pajak (10%)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Table -->
+                <div class="table-container">
+                    <table class="financial-table" id="financialTable">
+                        <thead>
+                            <tr>
+                                <th>Bulan</th>
+                                <th>Total Transaksi</th>
+                                <th>Total Harga Booking</th>
+                                <th>Pemasukan Pajak (10%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financialTableBody">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <h2>Dana Berhasil Disalurkan!</h2>
-        <p>Dana telah berhasil ditandai sebagai disalurkan ke owner</p>
-        <button class="btn-success-ok" onclick="closeSuccessModal()">
-            <i class="fas fa-check"></i> OK
-        </button>
     </div>
-</div>
 
     <script>
         let currentDisburseId = null;
@@ -673,16 +751,130 @@ $system_tax_rate = 0.10;
 
         function confirmDisburse() {
             if (currentDisburseId) {
+                closeModal('disburseModal');
+
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'loadingOverlay';
+                loadingOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+                loadingOverlay.innerHTML = '<div class="spinner"></div>';
+                document.body.appendChild(loadingOverlay);
+
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
-                    <input type="hidden" name="action" value="disburse">
-                    <input type="hidden" name="booking_id" value="${currentDisburseId}">
-                    <input type="hidden" name="current_page" value="${currentPage}">
-                `;
+            <input type="hidden" name="action" value="disburse">
+            <input type="hidden" name="booking_id" value="${currentDisburseId}">
+            <input type="hidden" name="current_page" value="${currentPage}">
+        `;
                 document.body.appendChild(form);
-                form.submit();
+
+                setTimeout(() => {
+                    if (document.getElementById('loadingOverlay')) {
+                        document.getElementById('loadingOverlay').remove();
+                    }
+
+                    document.getElementById('successModal').style.display = 'block';
+
+                    setTimeout(() => {
+                        form.submit();
+                    }, 1500);
+                }, 500);
             }
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+            location.reload();
+        }
+
+        function openFinancialNotes() {
+            // Set default date range (current year)
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
+            document.getElementById('startMonth').value = `${currentYear}-01`;
+            document.getElementById('endMonth').value = `${currentYear}-${currentMonth}`;
+
+            document.getElementById('financialModal').style.display = 'block';
+            loadFinancialData();
+        }
+
+        function loadFinancialData() {
+            const startMonth = document.getElementById('startMonth').value;
+            const endMonth = document.getElementById('endMonth').value;
+
+            if (!startMonth || !endMonth) {
+                alert('Silakan pilih rentang bulan terlebih dahulu');
+                return;
+            }
+
+            const tableBody = document.getElementById('financialTableBody');
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+            fetch(`../../../backend/admin/classes/get_financial_data.php?start=${startMonth}&end=${endMonth}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayFinancialData(data.data, data.summary);
+                    } else {
+                        tableBody.innerHTML = `<tr><td colspan="4" class="text-center">Error: ${data.message}</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Gagal memuat data keuangan</td></tr>';
+                });
+        }
+
+        function displayFinancialData(data, summary) {
+            const tableBody = document.getElementById('financialTableBody');
+
+            // Update summary cards
+            document.getElementById('totalTransactions').textContent = summary.total_transactions;
+            document.getElementById('totalTaxRevenue').textContent = 'Rp ' + summary.total_tax.toLocaleString('id-ID');
+
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada data untuk periode yang dipilih</td></tr>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(row => {
+                html += `
+            <tr>
+                <td><strong>${row.month_name}</strong></td>
+                <td>${row.transaction_count} transaksi</td>
+                <td><strong>Rp ${parseInt(row.total_booking_price).toLocaleString('id-ID')}</strong></td>
+                <td><strong style="color: var(--primary-green);">Rp ${parseInt(row.tax_revenue).toLocaleString('id-ID')}</strong></td>
+            </tr>
+        `;
+            });
+
+            tableBody.innerHTML = html;
+        }
+
+        function exportFinancialData() {
+            const startMonth = document.getElementById('startMonth').value;
+            const endMonth = document.getElementById('endMonth').value;
+
+            if (!startMonth || !endMonth) {
+                alert('Silakan pilih rentang bulan terlebih dahulu');
+                return;
+            }
+
+            window.location.href = `../../../backend/admin/classes/export_financial_data.php?start=${startMonth}&end=${endMonth}`;
         }
 
         function closeModal(modalId) {
@@ -695,76 +887,17 @@ $system_tax_rate = 0.10;
                 event.target.style.display = 'none';
             }
         }
-    </script>
-    <!-- Script dropdown user -->
-    <script>
+
         function toggleDropdown() {
             const menu = document.getElementById("dropdownMenu");
             menu.style.display = menu.style.display === "block" ? "none" : "block";
         }
+
         window.addEventListener("click", function(e) {
             if (!e.target.closest(".user-menu")) {
                 document.getElementById("dropdownMenu").style.display = "none";
             }
         });
-
-        // Update fungsi confirmDisburse yang sudah ada
-function confirmDisburse() {
-    if (currentDisburseId) {
-        // Tutup modal konfirmasi
-        closeModal('disburseModal');
-        
-        // Tampilkan loading (opsional)
-        const loadingOverlay = document.createElement('div');
-        loadingOverlay.id = 'loadingOverlay';
-        loadingOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
-        loadingOverlay.innerHTML = '<div class="spinner"></div>';
-        document.body.appendChild(loadingOverlay);
-
-        // Kirim form
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.innerHTML = `
-            <input type="hidden" name="action" value="disburse">
-            <input type="hidden" name="booking_id" value="${currentDisburseId}">
-            <input type="hidden" name="current_page" value="${currentPage}">
-        `;
-        document.body.appendChild(form);
-        
-        // Simulasi delay untuk menampilkan success modal
-        setTimeout(() => {
-            // Hapus loading
-            if (document.getElementById('loadingOverlay')) {
-                document.getElementById('loadingOverlay').remove();
-            }
-            
-            // Tampilkan success modal
-            document.getElementById('successModal').style.display = 'block';
-            
-            // Submit form setelah 1.5 detik
-            setTimeout(() => {
-                form.submit();
-            }, 1500);
-        }, 500);
-    }
-}
-
-function closeSuccessModal() {
-    document.getElementById('successModal').style.display = 'none';
-    // Reload halaman untuk melihat perubahan
-    location.reload();
-}
     </script>
 </body>
 

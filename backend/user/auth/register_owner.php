@@ -12,28 +12,97 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $confirm   = $_POST['confirm_password'];
     $user_type = "owner";
 
-    // Validasi
-    if (empty($full_name) || empty($username) || empty($email) || empty($phone) || empty($password) || empty($confirm)) {
-        header("Location: ../../../frontend/auth/register_owner.php?error=Semua field wajib diisi");
+    // Array untuk menyimpan error
+    $errors = [];
+
+    // 1. Validasi field kosong
+    if (empty($full_name)) {
+        $errors[] = "Nama lengkap tidak boleh kosong";
+    }
+    if (empty($username)) {
+        $errors[] = "Username tidak boleh kosong";
+    }
+    if (empty($email)) {
+        $errors[] = "Email tidak boleh kosong";
+    }
+    if (empty($phone)) {
+        $errors[] = "Nomor handphone tidak boleh kosong";
+    }
+    if (empty($password)) {
+        $errors[] = "Password tidak boleh kosong";
+    }
+    if (empty($confirm)) {
+        $errors[] = "Konfirmasi password tidak boleh kosong";
+    }
+
+    // 2. Validasi panjang minimal
+    if (!empty($full_name) && strlen($full_name) < 3) {
+        $errors[] = "Nama lengkap minimal 3 karakter";
+    }
+
+    if (!empty($username) && strlen($username) < 4) {
+        $errors[] = "Username minimal 4 karakter";
+    }
+
+    if (!empty($password) && strlen($password) < 6) {
+        $errors[] = "Password minimal 6 karakter";
+    }
+
+    // 3. Validasi format username (hanya alfanumerik dan underscore)
+    if (!empty($username) && !preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        $errors[] = "Username hanya boleh mengandung huruf, angka, dan underscore";
+    }
+
+    // 4. Validasi format email
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Format email tidak valid";
+    }
+
+    // 5. Validasi nomor HP (10-13 digit, hanya angka)
+    if (!empty($phone) && !preg_match('/^[0-9]{10,13}$/', $phone)) {
+        $errors[] = "Nomor handphone harus 10-13 digit angka";
+    }
+
+    // 6. Validasi password match
+    if (!empty($password) && !empty($confirm) && $password !== $confirm) {
+        $errors[] = "Password dan konfirmasi password tidak cocok";
+    }
+
+    // Jika ada error, redirect dengan pesan error
+    if (!empty($errors)) {
+        $error_message = implode(", ", $errors);
+        header("Location: ../../../frontend/auth/register_owner.php?error=" . urlencode($error_message));
         exit;
     }
 
-    if ($password !== $confirm) {
-        header("Location: ../../../frontend/auth/register_owner.php?error=Password tidak cocok");
-        exit;
-    }
-
-    // Cek username / email
-    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
-    $stmt->bind_param("ss", $username, $email);
+    // 7. Cek username sudah digunakan
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+    $stmt->bind_param("s", $username);
     $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        header("Location: ../../../frontend/auth/register_owner.php?error=Username atau email sudah digunakan");
+    if ($stmt->get_result()->num_rows > 0) {
+        header("Location: ../../../frontend/auth/register_owner.php?error=Username sudah digunakan, silakan pilih username lain");
         exit;
     }
 
+    // 8. Cek email sudah digunakan
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    if ($stmt->get_result()->num_rows > 0) {
+        header("Location: ../../../frontend/auth/register_owner.php?error=Email sudah terdaftar, silakan gunakan email lain");
+        exit;
+    }
+
+    // 9. Cek nomor HP sudah digunakan (opsional, sesuaikan dengan kebutuhan)
+    $stmt = $conn->prepare("SELECT id FROM users WHERE phone = ? LIMIT 1");
+    $stmt->bind_param("s", $phone);
+    $stmt->execute();
+    if ($stmt->get_result()->num_rows > 0) {
+        header("Location: ../../../frontend/auth/register_owner.php?error=Nomor handphone sudah terdaftar");
+        exit;
+    }
+
+    // Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // === MULAI TRANSAKSI ===
@@ -47,14 +116,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $phone, $user_type);
         $stmt->execute();
 
-        $conn->commit(); // WAJIB!
+        // COMMIT
+        $conn->commit();
 
-        header("Location: ../../../frontend/auth/login.php?success=Registrasi owner berhasil");
+        header("Location: ../../../frontend/auth/login.php?success=Registrasi owner berhasil, silakan login");
         exit;
 
     } catch (Exception $e) {
         $conn->rollback();
-        header("Location: ../../../frontend/auth/register_owner.php?error=Gagal mendaftarkan owner");
+        error_log("Registration error: " . $e->getMessage());
+        header("Location: ../../../frontend/auth/register_owner.php?error=Gagal mendaftarkan owner, silakan coba lagi");
         exit;
     }
 
@@ -62,3 +133,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: ../../../frontend/auth/register_owner.php");
     exit;
 }
+?>
