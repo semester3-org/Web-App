@@ -745,94 +745,159 @@ body {
     }
 }
 
-/* Additional Compact Styles */
-small {
-    font-size: 0.75rem;
-    line-height: 1.3;
+/* Financial Report Modal Styles - Same as Property Tax */
+.modal-xlarge {
+    max-width: 1200px;
 }
 
-.bookings-table td small {
-    display: block;
-    margin-top: 0.125rem;
+.date-filter-container {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-.header-actions {
+.date-filter-buttons {
+    margin-left: auto;
     display: flex;
     gap: 10px;
 }
 
-.modal-large {
-    max-width: 900px;
-    width: 90%;
+
+.date-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
 }
 
-.date-filter {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    padding: 20px;
-    background: #f9fafb;
-    border-radius: 10px;
-    align-items: flex-end;
-}
-
-.date-filter .filter-group {
-    flex: 1;
-}
-
-.date-filter label {
-    display: block;
-    margin-bottom: 5px;
+.btn-filter {
+    background: var(--primary-green);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 600;
-    color: #374151;
-    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.date-filter input[type="month"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+.btn-filter:hover {
+    background: var(--primary-green-dark);
+}
+
+.btn-reset {
+    background: var(--text-gray);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-reset:hover {
+    background: #4b5563;
 }
 
 .financial-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    justify-content: space-between;
     gap: 20px;
-    margin-bottom: 25px;
+    margin: 25px 0;
 }
 
 .summary-card {
+    flex: 1;
     display: flex;
-    gap: 15px;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
+    align-items: center;
+    gap: 20px;
+
+    padding: 25px 30px;
+    border-radius: 15px;
+    background: #ffffff;
     border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+
+    transition: all .2s ease-in-out;
+}
+
+.summary-card:hover {
+    border-color: var(--primary-green);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .summary-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    background: #d1fae5;
     display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 24px;
+    align-items: center;
 }
 
-.summary-details h4 {
+.summary-icon i {
+    font-size: 28px;
+    color: #10b981;
+}
+
+.summary-info h3 {
     margin: 0;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
     color: #111827;
 }
 
-.summary-details p {
-    margin: 5px 0 0 0;
-    font-size: 14px;
+.summary-info p {
+    margin: 3px 0 0 0;
     color: #6b7280;
+    font-size: 15px;
+}
+
+
+.chart-wrapper {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.chart-container canvas {
+    max-width: 100% !important;
+    height: 400px !important;
+}
+
+.financial-table-container {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 2px solid var(--border-color);
+}
+
+.financial-table-container h3 {
+    margin-bottom: 16px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .financial-table {
@@ -841,30 +906,89 @@ small {
 }
 
 .financial-table thead {
-    background: var(--primary-green);
+    background: var(--primary-green-light);
 }
 
-.financial-table thead th {
-    color: white;
-    padding: 15px;
+.financial-table th {
+    padding: 12px;
     text-align: left;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
+    color: var(--primary-green-dark);
+    border-bottom: 2px solid var(--primary-green);
 }
 
-.financial-table tbody tr {
-    border-bottom: 1px solid #e5e7eb;
+.financial-table td {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .financial-table tbody tr:hover {
-    background: #f9fafb;
+    background-color: var(--bg-light);
 }
 
-.financial-table tbody td {
-    padding: 15px;
+.export-container {
+    text-align: right;
+}
+
+.btn-export {
+    background: #10b981;
+    color: var(--white);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
     font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.text-center {
-    text-align: center !important;
+.btn-export:hover {
+    background: #059669;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-xlarge {
+        max-width: 95%;
+    }
+    
+    .date-filter-container {
+        flex-direction: column;
+    }
+    
+    .date-filter-container .form-group {
+        width: 100%;
+    }
+    
+    .btn-filter,
+    .btn-reset {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .financial-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        padding: 15px;
+    }
+    
+    .chart-container canvas {
+        height: 300px !important;
+    }
+    
+    .financial-table {
+        font-size: 11px;
+    }
+    
+    .financial-table th,
+    .financial-table td {
+        padding: 8px 4px;
+    }
 }

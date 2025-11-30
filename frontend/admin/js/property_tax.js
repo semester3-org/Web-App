@@ -364,62 +364,111 @@ function loadFinancialReport(startDate = null, endDate = null) {
 function updateFinancialSummary(summary) {
   document.getElementById("totalIncome").textContent =
     "Rp " + formatNumber(summary.total_income || 0);
-  document.getElementById("totalTax").textContent =
-    "Rp " + formatNumber(summary.total_tax || 0);
-  document.getElementById("totalToOwner").textContent =
-    "Rp " + formatNumber(summary.total_to_owner || 0);
   document.getElementById("totalTransactions").textContent =
     summary.total_transactions || 0;
 }
 
 function updateFinancialChart(chartData) {
-  const ctx = document.getElementById("incomeChart").getContext("2d");
-
-  // Destroy previous chart if exists
-  if (incomeChart) {
-    incomeChart.destroy();
-  }
-
-  incomeChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: chartData.labels,
-      datasets: [
-        {
-          label: "Pemasukan per Bulan",
-          data: chartData.values,
-          backgroundColor: "rgba(16, 185, 129, 0.1)",
-          borderColor: "rgba(16, 185, 129, 1)",
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true,
+    const ctx = document.getElementById('incomeChart').getContext('2d');
+    
+    // Destroy previous chart if exists
+    if (incomeChart) {
+        incomeChart.destroy();
+    }
+    
+    incomeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Pemasukan per Bulan',
+                data: chartData.values,
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
         },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: true,
-          position: "top",
-        },
-        title: {
-          display: true,
-          text: "Grafik Pemasukan per Bulan",
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return "Rp " + formatNumber(value);
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.5,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Grafik Pemasukan per Bulan',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Pemasukan: Rp ' + formatNumber(context.parsed.y);
+                        }
+                    }
+                }
             },
-          },
-        },
-      },
-    },
-  });
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + formatNumber(value);
+                        },
+                        padding: 10,
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        padding: 10,
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            layout: {
+                padding: {
+                    left: 10,
+                    right: 10,
+                    top: 10,
+                    bottom: 10
+                }
+            }
+        }
+    });
 }
 
 function updateFinancialTable(transactions) {

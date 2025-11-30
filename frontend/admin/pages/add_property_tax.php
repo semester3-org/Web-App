@@ -229,24 +229,6 @@ $stats = $transactionManager->getPropertyTaxStats();
                         </div>
                         <div class="summary-card">
                             <div class="summary-icon">
-                                <i class="fas fa-percent"></i>
-                            </div>
-                            <div class="summary-info">
-                                <h3 id="totalTax">Rp 0</h3>
-                                <p>Total Pajak (10%)</p>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-icon">
-                                <i class="fas fa-hand-holding-usd"></i>
-                            </div>
-                            <div class="summary-info">
-                                <h3 id="totalToOwner">Rp 0</h3>
-                                <p>Total ke Owner</p>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-icon">
                                 <i class="fas fa-file-invoice"></i>
                             </div>
                             <div class="summary-info">
@@ -256,9 +238,11 @@ $stats = $transactionManager->getPropertyTaxStats();
                         </div>
                     </div>
 
-                    <!-- Chart -->
-                    <div class="chart-container">
-                        <canvas id="incomeChart"></canvas>
+                    <!-- Chart Container - Fixed Layout -->
+                    <div class="chart-wrapper">
+                        <div class="chart-container">
+                            <canvas id="incomeChart"></canvas>
+                        </div>
                     </div>
 
                     <!-- Transactions Table -->

@@ -646,76 +646,105 @@ $system_tax_rate = 0.10;
 
     <!-- Financial Notes Modal -->
     <div id="financialModal" class="modal">
-        <div class="modal-content modal-large">
+        <div class="modal-content modal-xlarge">
             <span class="close" onclick="closeModal('financialModal')">&times;</span>
             <div class="modal-header">
-                <i class="fas fa-chart-line modal-icon"></i>
-                <h2>Catatan Keuangan - Pemasukan Pajak</h2>
+                <h2><i class="fas fa-chart-line"></i> Catatan Keuangan - Bookings</h2>
             </div>
             <div class="modal-body">
                 <!-- Date Range Filter -->
-                <div class="date-filter">
-                    <div class="filter-group">
-                        <label>Dari Bulan:</label>
-                        <input type="month" id="startMonth" onchange="loadFinancialData()">
+                <div class="date-filter-container">
+
+                    <div class="form-group">
+                        <label>Dari Tanggal</label>
+                        <input type="date" id="startDate" class="date-input">
                     </div>
-                    <div class="filter-group">
-                        <label>Sampai Bulan:</label>
-                        <input type="month" id="endMonth" onchange="loadFinancialData()">
+
+                    <div class="form-group">
+                        <label>Sampai Tanggal</label>
+                        <input type="date" id="endDate" class="date-input">
                     </div>
-                    <button class="btn-primary" onclick="loadFinancialData()">
-                        <i class="fas fa-search"></i> Tampilkan
-                    </button>
-                    <button class="btn-secondary" onclick="exportFinancialData()">
-                        <i class="fas fa-download"></i> Export
-                    </button>
+
+                    <div class="date-filter-buttons">
+                        <button class="btn-filter" onclick="filterBookingFinancial()">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <button class="btn-reset" onclick="resetBookingFinancial()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+
                 </div>
+
 
                 <!-- Summary Cards -->
                 <div class="financial-summary">
                     <div class="summary-card">
-                        <div class="summary-icon" style="background: #dbeafe;">
-                            <i class="fas fa-receipt" style="color: #3b82f6;"></i>
+                        <div class="summary-icon">
+                            <i class="fas fa-money-bill-wave"></i>
                         </div>
-                        <div class="summary-details">
-                            <h4 id="totalTransactions">0</h4>
-                            <p>Total Transaksi</p>
+                        <div class="summary-info">
+                            <h3 id="totalIncome">Rp 0</h3>
+                            <p>Total Pemasukan</p>
                         </div>
                     </div>
                     <div class="summary-card">
-                        <div class="summary-icon" style="background: #fef3c7;">
-                            <i class="fas fa-coins" style="color: #f59e0b;"></i>
+                        <div class="summary-icon">
+                            <i class="fas fa-file-invoice"></i>
                         </div>
-                        <div class="summary-details">
-                            <h4 id="totalTaxRevenue">Rp 0</h4>
-                            <p>Total Pemasukan Pajak (10%)</p>
+                        <div class="summary-info">
+                            <h3 id="totalTransactions">0</h3>
+                            <p>Total Booking</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Financial Table -->
-                <div class="table-container">
-                    <table class="financial-table" id="financialTable">
+                <!-- Chart Container -->
+                <div class="chart-wrapper">
+                    <div class="chart-container">
+                        <canvas id="bookingIncomeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="financial-table-container">
+                    <h3><i class="fas fa-list"></i> Detail Transaksi</h3>
+                    <table class="financial-table">
                         <thead>
                             <tr>
-                                <th>Bulan</th>
-                                <th>Total Transaksi</th>
-                                <th>Total Harga Booking</th>
-                                <th>Pemasukan Pajak (10%)</th>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Order ID</th>
+                                <th>Properti</th>
+                                <th>Customer</th>
+                                <th>Tipe</th>
+                                <th>Total Harga</th>
+                                <th>Pajak 10%</th>
+                                <th>Total Profit</th>
                             </tr>
                         </thead>
                         <tbody id="financialTableBody">
                             <tr>
-                                <td colspan="4" class="text-center">
+                                <td colspan="9" style="text-align: center;">
                                     <i class="fas fa-spinner fa-spin"></i> Loading...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Export Button -->
+                <div class="export-container">
+                    <button class="btn-export" onclick="exportBookingFinancial()">
+                        <i class="fas fa-file-excel"></i> Export ke Excel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         let currentDisburseId = null;
@@ -798,83 +827,232 @@ $system_tax_rate = 0.10;
             location.reload();
         }
 
-        function openFinancialNotes() {
-            // Set default date range (current year)
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        // Financial Report Functions
+        let bookingIncomeChart = null;
 
-            document.getElementById('startMonth').value = `${currentYear}-01`;
-            document.getElementById('endMonth').value = `${currentYear}-${currentMonth}`;
+        function openFinancialNotes() {
+            // Set default date range (last 30 days)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+
+            document.getElementById('startDate').valueAsDate = startDate;
+            document.getElementById('endDate').valueAsDate = endDate;
 
             document.getElementById('financialModal').style.display = 'block';
-            loadFinancialData();
+
+            // Load initial data
+            loadBookingFinancial();
         }
 
-        function loadFinancialData() {
-            const startMonth = document.getElementById('startMonth').value;
-            const endMonth = document.getElementById('endMonth').value;
+        function filterBookingFinancial() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
 
-            if (!startMonth || !endMonth) {
-                alert('Silakan pilih rentang bulan terlebih dahulu');
+            if (!startDate || !endDate) {
+                alert('Mohon pilih tanggal mulai dan tanggal akhir');
                 return;
             }
 
-            const tableBody = document.getElementById('financialTableBody');
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
+                return;
+            }
 
-            fetch(`../../../backend/admin/classes/get_financial_data.php?start=${startMonth}&end=${endMonth}`)
+            loadBookingFinancial(startDate, endDate);
+        }
+
+        function resetBookingFinancial() {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+
+            document.getElementById('startDate').valueAsDate = startDate;
+            document.getElementById('endDate').valueAsDate = endDate;
+
+            loadBookingFinancial();
+        }
+
+        function loadBookingFinancial(startDate = null, endDate = null) {
+            let url = '../../../backend/admin/actions/get_booking_financial.php';
+            if (startDate && endDate) {
+                url += `?start_date=${startDate}&end_date=${endDate}`;
+            }
+
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        displayFinancialData(data.data, data.summary);
+                        updateBookingFinancialSummary(data.summary);
+                        updateBookingFinancialChart(data.chart_data);
+                        updateBookingFinancialTable(data.transactions);
                     } else {
-                        tableBody.innerHTML = `<tr><td colspan="4" class="text-center">Error: ${data.message}</td></tr>`;
+                        alert(data.message || 'Gagal memuat data keuangan');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Gagal memuat data keuangan</td></tr>';
+                    alert('Terjadi kesalahan saat memuat data');
                 });
         }
 
-        function displayFinancialData(data, summary) {
-            const tableBody = document.getElementById('financialTableBody');
-
-            // Update summary cards
-            document.getElementById('totalTransactions').textContent = summary.total_transactions;
-            document.getElementById('totalTaxRevenue').textContent = 'Rp ' + summary.total_tax.toLocaleString('id-ID');
-
-            if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada data untuk periode yang dipilih</td></tr>';
-                return;
-            }
-
-            let html = '';
-            data.forEach(row => {
-                html += `
-            <tr>
-                <td><strong>${row.month_name}</strong></td>
-                <td>${row.transaction_count} transaksi</td>
-                <td><strong>Rp ${parseInt(row.total_booking_price).toLocaleString('id-ID')}</strong></td>
-                <td><strong style="color: var(--primary-green);">Rp ${parseInt(row.tax_revenue).toLocaleString('id-ID')}</strong></td>
-            </tr>
-        `;
-            });
-
-            tableBody.innerHTML = html;
+        function updateBookingFinancialSummary(summary) {
+            document.getElementById('totalIncome').textContent = 'Rp ' + formatNumber(summary.total_income || 0);
+            document.getElementById('totalTransactions').textContent = summary.total_transactions || 0;
         }
 
-        function exportFinancialData() {
-            const startMonth = document.getElementById('startMonth').value;
-            const endMonth = document.getElementById('endMonth').value;
+        function updateBookingFinancialChart(chartData) {
+            const ctx = document.getElementById('bookingIncomeChart').getContext('2d');
 
-            if (!startMonth || !endMonth) {
-                alert('Silakan pilih rentang bulan terlebih dahulu');
+            if (bookingIncomeChart) {
+                bookingIncomeChart.destroy();
+            }
+
+            bookingIncomeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Pemasukan per Bulan',
+                        data: chartData.values,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.5,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Grafik Pemasukan per Bulan',
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Pemasukan: Rp ' + formatNumber(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + formatNumber(value);
+                                },
+                                padding: 10,
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                padding: 10,
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 10,
+                            bottom: 10
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBookingFinancialTable(transactions) {
+            const tbody = document.getElementById('financialTableBody');
+            tbody.innerHTML = '';
+
+            if (transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: #6b7280;">Tidak ada data transaksi</td></tr>';
                 return;
             }
 
-            window.location.href = `../../../backend/admin/classes/export_financial_data.php?start=${startMonth}&end=${endMonth}`;
+            transactions.forEach((transaction, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${formatDate(transaction.paid_at)}</td>
+                        <td style="font-family: monospace; font-size: 12px;">${transaction.order_id || '-'}</td>
+                        <td>${transaction.kos_name}</td>
+                        <td>${transaction.customer_name}</td>
+                        <td><span class="badge badge-${transaction.booking_type === 'monthly' ? 'info' : 'warning'}">${transaction.booking_type}</span></td>
+                        <td>Rp ${formatNumber(transaction.total_price)}</td>
+                        <td>Rp ${formatNumber(transaction.tax_amount)}</td>
+                        <td style="font-weight: 600; color: var(--primary-green);">Rp ${formatNumber(transaction.total_with_tax)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function exportBookingFinancial() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            let url = '../../../backend/admin/actions/export_booking_financial.php';
+            if (startDate && endDate) {
+                url += `?start_date=${startDate}&end_date=${endDate}`;
+            }
+
+            window.open(url, '_blank');
+        }
+
+        function formatDate(dateString) {
+            const options = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
         function closeModal(modalId) {
