@@ -64,7 +64,7 @@ try {
     }
 
     @chmod($uploadPath, 0644);
-    $relativePath = '/Web-App/uploads/profiles/' . $fileName;
+    $relativePath = '/uploads/profiles/' . $fileName;
 
     $stmt = $conn->prepare("UPDATE users SET profile_picture = ?, updated_at = NOW() WHERE id = ?");
     $stmt->bind_param('si', $relativePath, $userId);

@@ -33,9 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Simpan foto profil (gunakan default jika belum ada)
             if (!empty($user['profile_picture'])) {
-                $_SESSION['profile_picture'] = '/Web-App/uploads/profiles/' . $user['profile_picture'];
+                $_SESSION['profile_picture'] = '/uploads/profiles/' . $user['profile_picture'];
             } else {
-                $_SESSION['profile_picture'] = '/Web-App/frontend/assets/default-avatar.png';
+                $_SESSION['profile_picture'] = '/frontend/assets/default-avatar.png';
             }
 
             // Redirect sesuai role

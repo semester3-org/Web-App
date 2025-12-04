@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 // Pastikan koneksi aktif
 if ($conn->connect_error) {
@@ -60,7 +60,7 @@ try {
         // ✅ UPDATE NOTIFIKASI SUMMARY SETELAH HAPUS
         // Summary akan otomatis terhapus jika count = 0
         if ($owner_id != $user_id) {
-            require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+            require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/user/owner/classes/Notification.php");
             $notif = new Notification($conn);
             $notif->updateOrCreateWishlistSummaryNotification($kos_id, $owner_id);
         }
@@ -82,7 +82,7 @@ try {
         // ✅ UPDATE NOTIFIKASI SUMMARY SETELAH TAMBAH
         // Summary akan dibuat atau di-update countnya
         if ($owner_id != $user_id) {
-            require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+            require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/user/owner/classes/Notification.php");
             $notif = new Notification($conn);
             $notif->updateOrCreateWishlistSummaryNotification($kos_id, $owner_id);
         }

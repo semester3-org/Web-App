@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
     exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $input = json_decode(file_get_contents('php://input'), true);
 $booking_id = intval($input['booking_id'] ?? 0);

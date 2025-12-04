@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
   exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $user_id = $_SESSION['user_id'];
 $booking_id = isset($_POST['booking_id']) ? intval($_POST['booking_id']) : 0;

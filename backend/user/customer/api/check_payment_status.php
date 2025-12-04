@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/midtrans.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/midtrans.php");
 
 header('Content-Type: application/json');
 
@@ -113,7 +113,7 @@ try {
         $kos_data = $kos_query->get_result()->fetch_assoc();
         
         if ($kos_data) {
-            require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+            require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/user/owner/classes/Notification.php");
             $notif = new Notification($conn);
 
             // Cek agar tidak double notifikasi

@@ -7,12 +7,12 @@
  * ============================================
  */
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/midtrans.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/midtrans.php");
 
 // Log function for debugging
 function logNotification($message, $data = null) {
-    $log_file = $_SERVER['DOCUMENT_ROOT'] . '/Web-App/backend/logs/payment_notifications.log';
+    $log_file = $_SERVER['DOCUMENT_ROOT'] . '/backend/logs/payment_notifications.log';
     $log_dir = dirname($log_file);
     
     if (!file_exists($log_dir)) {

@@ -7,19 +7,21 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['user_type'])) {
     switch ($_SESSION['user_type']) {
         case 'superadmin':
         case 'admin':
-            header("Location: /Web-App/frontend/admin/pages/dashboard.php");
+            header("Location: /frontend/admin/pages/dashboard.php");
             exit;
+
         case 'owner':
-            header("Location: /Web-App/frontend/user/owner/pages/dashboard.php");
+            header("Location: /frontend/user/owner/pages/dashboard.php");
             exit;
+
         case 'user':
         case 'customer':
-            header("Location: /Web-App/frontend/user/customer/home.php");
+            header("Location: /frontend/user/customer/home.php");
             exit;
     }
 }
 
-// Kalau belum login / guest → tetap ke home customer (read-only)
-header("Location: /Web-App/frontend/user/customer/home.php");
+// Guest / belum login → langsung ke home customer
+header("Location: /frontend/user/customer/home.php");
 exit;
 ?>
