@@ -6,11 +6,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Cek login
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
-    header("Location: /Web-App/frontend/auth/login.php");
+    header("Location: /frontend/auth/login.php");
     exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $userId = $_SESSION['user_id'];
 
@@ -575,7 +575,7 @@ $stmt->close();
       <i class="bi bi-heart"></i>
       <h5>Belum ada kos di wishlist</h5>
       <p>Yuk, tambahkan kos favoritmu dari halaman Explore!</p>
-      <a href="/Web-App/frontend/user/customer/explore.php" class="btn btn-success btn-lg">
+      <a href="/frontend/user/customer/explore.php" class="btn btn-success btn-lg">
         <i class="bi bi-compass"></i> Jelajahi Kos Sekarang
       </a>
     </div>
@@ -622,7 +622,7 @@ $stmt->close();
                 <small>/ bulan</small>
               </p>
               <div class="action-buttons">
-                <a href="/Web-App/frontend/user/customer/detail_kos.php?id=<?php echo $item['id']; ?>" class="btn-view">
+                <a href="/frontend/user/customer/detail_kos.php?id=<?php echo $item['id']; ?>" class="btn-view">
                   <i class="bi bi-eye-fill"></i> Lihat Detail
                 </a>
                 <button class="btn-remove" onclick="showDeleteModal(<?php echo $item['id']; ?>)">
@@ -767,7 +767,7 @@ function showNotification(message, type = 'success') {
 function removeFromWishlist(kosId) {
   const card = document.getElementById('wishlist-' + kosId);
   
-  fetch('/Web-App/backend/user/customer/classes/save_kos.php', {
+  fetch('/backend/user/customer/classes/save_kos.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -816,7 +816,7 @@ function showEmptyState() {
         <i class="bi bi-heart"></i>
         <h5>Wishlist kamu kosong</h5>
         <p>Sepertinya kamu sudah menghapus semua kos dari wishlist</p>
-        <a href="/Web-App/frontend/user/customer/explore.php" class="btn btn-success btn-lg">
+        <a href="/frontend/user/customer/explore.php" class="btn btn-success btn-lg">
           <i class="bi bi-compass"></i> Jelajahi Kos Sekarang
         </a>
       </div>

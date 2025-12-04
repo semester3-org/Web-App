@@ -4,7 +4,7 @@ $email = $_SESSION['reset_email'] ?? null;
 
 // Jika belum ada email (akses langsung halaman ini tanpa forgot password)
 if (!$email) {
-  header("Location: /Web-App/frontend/auth/forgot_password.php?error=Silakan masukkan email terlebih dahulu");
+  header("Location: /frontend/auth/forgot_password.php?error=Silakan masukkan email terlebih dahulu");
   exit;
 }
 ?>
@@ -66,7 +66,7 @@ if (!$email) {
             <div class="alert alert-success py-2"><?= htmlspecialchars($_GET['success']); ?></div>
           <?php endif; ?>
 
-          <form action="/Web-App/backend/auth/process_confirm_code.php" method="POST">
+          <form action="/backend/auth/process_confirm_code.php" method="POST">
             <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>">
 
             <!-- Code Input -->
@@ -82,7 +82,7 @@ if (!$email) {
           </form>
 
           <p class="mt-4 text-center">
-            Tidak menerima email? <a href="/Web-App/backend/auth/resend_code.php" class="text-success fw-bold">Kirim ulang</a>
+            Tidak menerima email? <a href="/backend/auth/resend_code.php" class="text-success fw-bold">Kirim ulang</a>
           </p>
         </div>
 

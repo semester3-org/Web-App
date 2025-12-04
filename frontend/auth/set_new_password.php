@@ -45,7 +45,7 @@ if (!isset($_SESSION['reset_email'])) {
             <div class="alert alert-success text-center"><?php echo htmlspecialchars($_GET['success']); ?></div>
           <?php endif; ?>
 
-          <form action="/Web-App/backend/auth/process_reset_password.php" method="POST">
+          <form action="/backend/auth/process_reset_password.php" method="POST">
             <!-- Password Baru -->
             <div class="mb-3">
               <label for="password" class="form-label fw-semibold">Password Baru</label>

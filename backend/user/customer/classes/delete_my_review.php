@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 // Pastikan user sudah login dan bertipe 'user'
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
@@ -66,7 +66,7 @@ if ($review_id > 0) {
 
 if ($delete->execute()) {
     // UPDATE REVIEW SUMMARY NOTIFICATION SETELAH HAPUS
-    require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+    require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/user/owner/classes/Notification.php");
     $notif = new Notification($conn);
     $notif->updateOrCreateReviewSummaryNotification($kos_id_from_db, $owner_id);
     

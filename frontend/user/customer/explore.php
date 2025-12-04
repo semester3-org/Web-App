@@ -3,12 +3,12 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $isLoggedIn = isset($_SESSION['user_id']) && $_SESSION['user_type'] === 'user';
 $userId = $isLoggedIn ? $_SESSION['user_id'] : null;
 
-$profilePic = '/Web-App/frontend/assets/default-avatar.png';
+$profilePic = '/frontend/assets/default-avatar.png';
 $fullName = 'Guest';
 
 // Ambil semua fasilitas untuk filter, dikelompokkan berdasarkan kategori
@@ -1004,8 +1004,7 @@ $stmt->close();
                   <div class="property-card">
                     <div class="property-img-container">
                       <?php if (!empty($property['image'])): ?>
-                        <img src="<?php echo htmlspecialchars('/Web-App/' . $property['image']); ?>"
-                          class="property-img"
+                    <img src="<?php echo htmlspecialchars('/' . ltrim($property['image'], '/')); ?>"                          class="property-img"
                           alt="<?php echo htmlspecialchars($property['name']); ?>"
                           onerror="handleImageError(this)">
                       <?php else: ?>
@@ -1177,7 +1176,7 @@ $stmt->close();
           <p class="mb-4 text-muted">Silakan login untuk menambahkan kost ke wishlist</p>
           <div class="d-flex gap-2 justify-content-center">
             <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="closeLoginToast()">Batal</button>
-            <a href="/Web-App/frontend/auth/login.php" class="btn btn-success rounded-pill px-5">Login Sekarang</a>
+            <a href="/frontend/auth/login.php" class="btn btn-success rounded-pill px-5">Login Sekarang</a>
           </div>
         </div>
         <button type="button" class="btn-close btn-close me-2 m-auto" onclick="closeLoginToast()"></button>
@@ -1275,7 +1274,7 @@ $stmt->close();
         icon.className = 'bi bi-arrow-repeat fa-spin';
         btn.disabled = true;
 
-        fetch('/Web-App/backend/user/customer/classes/save_kos.php', {
+        fetch('/backend/user/customer/classes/save_kos.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

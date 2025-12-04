@@ -6,3 +6,7 @@
 [2025-11-13 00:02:25] Insert gagal: Data truncated for column 'user_type' at row 1
 [2025-11-13 00:02:25] Exception: Data truncated for column 'user_type' at row 1
 [2025-11-13 00:11:06] Akun baru dibuat: naufalzyram@gmail.com
+[2025-12-03 21:33:04] Code tidak diterima: []
+[2025-12-03 21:33:04] Exception: Kode autentikasi tidak ditemukan.
+[2025-12-03 21:33:26] Akun baru dibuat: naufalzyram@gmail.com
+[2025-12-03 22:16:04] User sudah terdaftar: e41242204@student.polije.ac.id

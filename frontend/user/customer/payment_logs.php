@@ -1,11 +1,11 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
-  header("Location: /Web-App/frontend/auth/login.php");
+  header("Location: /frontend/auth/login.php");
   exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $user_id = $_SESSION['user_id'];
 $booking_id = isset($_GET['booking_id']) ? intval($_GET['booking_id']) : 0;
