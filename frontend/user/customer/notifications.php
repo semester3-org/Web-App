@@ -4,7 +4,7 @@ require_once "../../../backend/config/db.php";
 
 // Check authentication
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
-    header("Location: /Web-App/frontend/auth/login.php");
+    header("Location: /frontend/auth/login.php");
     exit();
 }
 
@@ -157,15 +157,15 @@ $user_id = $_SESSION['user_id'];
         // Jika tidak ada, gunakan navbar sederhana
         echo '<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top" style="height:65px; z-index:1050;">
                 <div class="container-fluid px-4">
-                    <a class="navbar-brand fw-bold" href="/Web-App/frontend/user/customer/home.php">
-                        <img src="/Web-App/frontend/assets/logo_kos.png" alt="logo" style="height:30px;" class="me-2">
+                    <a class="navbar-brand fw-bold" href="/frontend/user/customer/home.php">
+                        <img src="/frontend/assets/logo_kos.png" alt="logo" style="height:30px;" class="me-2">
                         KostHub
                     </a>
                     <div class="d-flex">
-                        <a href="/Web-App/frontend/user/customer/home.php" class="btn btn-outline-success btn-sm me-2">
+                        <a href="/frontend/user/customer/home.php" class="btn btn-outline-success btn-sm me-2">
                             <i class="bi bi-house-door"></i> Home
                         </a>
-                        <a href="/Web-App/logout.php" class="btn btn-outline-danger btn-sm">
+                        <a href="/logout.php" class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-box-arrow-right"></i> Logout
                         </a>
                     </div>
@@ -257,7 +257,7 @@ $user_id = $_SESSION['user_id'];
             const status = document.getElementById('filterStatus').value;
             const type = document.getElementById('filterType').value;
             
-            let url = `/Web-App/backend/user/customer/classes/notifications.php?action=get_notifications&limit=${limit}&page=${currentPage}`;
+            let url = `/backend/user/customer/classes/notifications.php?action=get_notifications&limit=${limit}&page=${currentPage}`;
             if (status) url += `&status=${status}`;
             if (type) url += `&type=${type}`;
             
@@ -378,7 +378,7 @@ $user_id = $_SESSION['user_id'];
         // Handle notification click
         function handleNotificationClick(notifId, kosId) {
             // Mark as read
-            fetch('/Web-App/backend/user/customer/classes/notifications.php', {
+            fetch('/backend/user/customer/classes/notifications.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: `action=mark_read&notification_id=${notifId}`
@@ -386,7 +386,7 @@ $user_id = $_SESSION['user_id'];
             .then(response => response.json())
             .then(data => {
                 if (data.success && kosId) {
-                    window.location.href = `/Web-App/frontend/user/customer/detail_kos.php?id=${kosId}`;
+                    window.location.href = `/frontend/user/customer/detail_kos.php?id=${kosId}`;
                 } else {
                     loadNotifications();
                 }
@@ -397,7 +397,7 @@ $user_id = $_SESSION['user_id'];
         document.getElementById('markAllReadBtn').addEventListener('click', function() {
             if (!confirm('Tandai semua notifikasi sebagai sudah dibaca?')) return;
             
-            fetch('/Web-App/backend/user/customer/classes/notifications.php', {
+            fetch('/backend/user/customer/classes/notifications.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: 'action=mark_all_read'

@@ -2,7 +2,11 @@
 session_start();
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../../vendor/autoload.php';
+
+// LOAD PHPMailer SECARA MANUAL (karena tidak pakai Composer)
+require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/Exception.php';
+require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/SMTP.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -26,16 +30,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
   }
 
-  // Ambil data user
   $user = $result->fetch_assoc();
   $name = $user['full_name'];
   $userId = $user['id'];
 
-  // Generate 4-digit code
+  // Generate kode
   $code = rand(1000, 9999);
   $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
-  // Simpan ke database (buat tabel password_resets jika belum ada)
+  // Simpan ke tabel password_resets
   $stmt = $conn->prepare("
     INSERT INTO password_resets (user_id, code, expires_at)
     VALUES (?, ?, ?)
@@ -43,15 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   ");
   $stmt->bind_param("iss", $userId, $code, $expiresAt);
   $stmt->execute();
-  $conn->commit(); 
 
-  // Simpan juga ke session agar bisa dicek di halaman berikutnya
+  // Simpan session
   $_SESSION['reset_email']   = $email;
   $_SESSION['reset_code']    = $code;
-  $_SESSION['reset_expires'] = time() + (10 * 60); // 10 menit
+  $_SESSION['reset_expires'] = time() + 600; // 10 menit
 
-  // Konfigurasi PHPMailer
+  // KIRIM EMAIL
   $mail = new PHPMailer(true);
+
   try {
     $mail->isSMTP();
     $mail->Host = MAIL_HOST;
@@ -68,17 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mail->Subject = 'Kode Reset Password KostHub';
     $mail->Body = "
       <h3>Hai, {$name}</h3>
-      <p>Kami menerima permintaan untuk mengatur ulang kata sandi akun Anda di KostHub.</p>
-      <p><b>Kode Verifikasi Anda:</b></p>
+      <p>Berikut kode verifikasi reset password Anda:</p>
       <h2 style='background:#28a745;color:white;padding:10px;border-radius:8px;display:inline-block;'>{$code}</h2>
-      <p>Kode ini hanya berlaku selama 10 menit.</p>
+      <p>Kode ini berlaku selama <b>10 menit</b>.</p>
       <br>
-      <small>Jika Anda tidak meminta reset password, abaikan email ini.</small>
+      <small>Abaikan jika Anda tidak meminta reset password.</small>
     ";
 
     $mail->send();
 
-    // Setelah email berhasil dikirim, arahkan ke halaman konfirmasi kode
     header("Location: ../../frontend/auth/confirm_code.php?success=Kode telah dikirim ke email Anda");
     exit();
 

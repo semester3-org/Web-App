@@ -159,7 +159,7 @@ include __DIR__ . '/../includes/header.php';
 
 <script>
 // API BASE — biar gak capek nulis panjang
-const API = '/Web-App/backend/user/owner/api/notification_api.php';
+const API = '/backend/user/owner/api/notification_api.php';
 // ====================================================================
 // 1. Buka detail notifikasi + otomatis tandai dibaca
 // ====================================================================

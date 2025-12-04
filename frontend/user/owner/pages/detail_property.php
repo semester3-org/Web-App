@@ -344,7 +344,7 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
 
                                 // Jika path kosong → gunakan default avatar
                                 if (empty($profilePath)) {
-                                    $profilePath = '/Web-App/frontend/assets/default-avatar.png';
+                                    $profilePath = '/frontend/assets/default-avatar.png';
                                 } else {
                                     // Pastikan path diawali slash (agar absolut)
                                     if ($profilePath[0] !== '/') {
@@ -363,7 +363,7 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                                         <img src="<?php echo htmlspecialchars($profilePath); ?>"
                                             class="review-avatar"
                                             alt="User"
-                                            onerror="this.src='/Web-App/frontend/assets/default-avatar.png'">
+                                            onerror="this.src='/frontend/assets/default-avatar.png'">
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
@@ -455,9 +455,9 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                                 $profilePath = '/' . ltrim($profilePath, '/');
                                 ?>
                                 <div class="saved-user-item">
-                                    <img src="<?php echo $profilePath ?: '/Web-App/frontend/assets/default-avatar.png'; ?>"
+                                    <img src="<?php echo $profilePath ?: '/frontend/assets/default-avatar.png'; ?>"
                                         alt="User"
-                                        onerror="this.src='/Web-App/frontend/assets/default-avatar.png'">
+                                        onerror="this.src='/frontend/assets/default-avatar.png'">
                                     <small><?php echo htmlspecialchars($user['full_name']); ?></small>
                                 </div>
                             <?php endforeach; ?>

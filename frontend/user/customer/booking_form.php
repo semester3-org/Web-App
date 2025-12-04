@@ -1,11 +1,11 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
-    header("Location: /Web-App/frontend/auth/login.php");
+    header("Location: /frontend/auth/login.php");
     exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $kos_id = isset($_GET['kos_id']) ? intval($_GET['kos_id']) : 0;
 if ($kos_id == 0) {
@@ -198,7 +198,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     }
 
     try {
-        const res = await fetch('/Web-App/backend/user/customer/classes/create_booking.php', {
+        const res = await fetch('/backend/user/customer/classes/create_booking.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

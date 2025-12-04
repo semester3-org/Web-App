@@ -7,7 +7,7 @@
  */
 
 session_start();
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 header('Content-Type: application/json');
 

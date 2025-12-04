@@ -1,0 +1,44 @@
+[03-Dec-2025 21:39:44 Asia/Jakarta] DEBUG: User ID = 43
+[03-Dec-2025 21:39:44 Asia/Jakarta] DEBUG: Profile Picture Path = https://lh3.googleusercontent.com/a/ACg8ocKylPh_jMDZnjyuWbhIjloSKpqs6P1XQh23TXdyTZSbu3rf0g=s96-c
+[03-Dec-2025 22:06:52 Asia/Jakarta] DEBUG: User ID = 36
+[03-Dec-2025 22:06:52 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692882218b8842.76456133.jpg
+[03-Dec-2025 22:13:47 Asia/Jakarta] DEBUG: User ID = 36
+[03-Dec-2025 22:13:47 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692882218b8842.76456133.jpg
+[03-Dec-2025 22:26:04 Asia/Jakarta] DEBUG: User ID = 34
+[03-Dec-2025 22:26:04 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692881dc8dc555.34745600.jpg
+[03-Dec-2025 22:28:01 Asia/Jakarta] PHP Warning:  require_once(/home/koshubmy/public_html/frontend/user/customer/../../../../backend/config/db.php): Failed to open stream: No such file or directory in /home/koshubmy/public_html/frontend/user/customer/navbar.php on line 5
+[03-Dec-2025 22:28:01 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Failed opening required '/home/koshubmy/public_html/frontend/user/customer/../../../../backend/config/db.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/koshubmy/public_html/frontend/user/customer/navbar.php:5
+Stack trace:
+#0 /home/koshubmy/public_html/frontend/user/customer/home.php(300): include()
+#1 {main}
+  thrown in /home/koshubmy/public_html/frontend/user/customer/navbar.php on line 5
+[03-Dec-2025 22:28:39 Asia/Jakarta] DEBUG: User ID = 34
+[03-Dec-2025 22:28:39 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692881dc8dc555.34745600.jpg
+[03-Dec-2025 22:29:17 Asia/Jakarta] PHP Warning:  require_once(/home/koshubmy/public_html/frontend/user/customer/../../../../backend/config/db.php): Failed to open stream: No such file or directory in /home/koshubmy/public_html/frontend/user/customer/navbar.php on line 5
+[03-Dec-2025 22:29:17 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Failed opening required '/home/koshubmy/public_html/frontend/user/customer/../../../../backend/config/db.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/koshubmy/public_html/frontend/user/customer/navbar.php:5
+Stack trace:
+#0 /home/koshubmy/public_html/frontend/user/customer/home.php(300): include()
+#1 {main}
+  thrown in /home/koshubmy/public_html/frontend/user/customer/navbar.php on line 5
+[03-Dec-2025 22:29:40 Asia/Jakarta] PHP Warning:  require_once(/home/koshubmy/public_html/frontend/user/customer/../../../../backend/config/db.php): Failed to open stream: No such file or directory in /home/koshubmy/public_html/frontend/user/customer/navbar.php on line 5
+[03-Dec-2025 22:29:40 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Failed opening required '/home/koshubmy/public_html/frontend/user/customer/../../../../backend/config/db.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/koshubmy/public_html/frontend/user/customer/navbar.php:5
+Stack trace:
+#0 /home/koshubmy/public_html/frontend/user/customer/home.php(300): include()
+#1 {main}
+  thrown in /home/koshubmy/public_html/frontend/user/customer/navbar.php on line 5
+[03-Dec-2025 22:30:52 Asia/Jakarta] DEBUG: User ID = 34
+[03-Dec-2025 22:30:52 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692881dc8dc555.34745600.jpg
+[03-Dec-2025 22:33:07 Asia/Jakarta] DEBUG: User ID = 34
+[03-Dec-2025 22:33:07 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692881dc8dc555.34745600.jpg
+[03-Dec-2025 23:02:19 Asia/Jakarta] DEBUG: User ID = 43
+[03-Dec-2025 23:02:19 Asia/Jakarta] DEBUG: Profile Picture Path = https://lh3.googleusercontent.com/a/ACg8ocKylPh_jMDZnjyuWbhIjloSKpqs6P1XQh23TXdyTZSbu3rf0g=s96-c
+[04-Dec-2025 01:32:13 Asia/Jakarta] DEBUG: User ID = 43
+[04-Dec-2025 01:32:13 Asia/Jakarta] DEBUG: Profile Picture Path = https://lh3.googleusercontent.com/a/ACg8ocKylPh_jMDZnjyuWbhIjloSKpqs6P1XQh23TXdyTZSbu3rf0g=s96-c
+[04-Dec-2025 04:11:53 Asia/Jakarta] DEBUG: User ID = 36
+[04-Dec-2025 04:11:53 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692882218b8842.76456133.jpg
+[04-Dec-2025 04:11:55 Asia/Jakarta] DEBUG: User ID = 36
+[04-Dec-2025 04:11:55 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692882218b8842.76456133.jpg
+[04-Dec-2025 04:11:56 Asia/Jakarta] DEBUG: User ID = 36
+[04-Dec-2025 04:11:56 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692882218b8842.76456133.jpg
+[04-Dec-2025 04:11:58 Asia/Jakarta] DEBUG: User ID = 36
+[04-Dec-2025 04:11:58 Asia/Jakarta] DEBUG: Profile Picture Path = /Web-App/uploads/profiles/profile_692882218b8842.76456133.jpg

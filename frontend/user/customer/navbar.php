@@ -1,11 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $isLoggedIn = isset($_SESSION['user_id']) && ($_SESSION['user_type'] ?? '') === 'user';
-
-$profilePic = '/Web-App/frontend/assets/default-avatar.png';
-$fullName = 'Guest';
+$profilePic = '/frontend/assets/default-avatar.png';  // fallback
+$fullName   = 'Guest';
 
 if ($isLoggedIn) {
     $stmt = $conn->prepare("SELECT full_name, profile_picture FROM users WHERE id = ?");
@@ -15,11 +14,25 @@ if ($isLoggedIn) {
     $stmt->close();
 
     $fullName = htmlspecialchars($user['full_name'] ?? 'User');
-    $profilePic = !empty($user['profile_picture']) && file_exists($_SERVER['DOCUMENT_ROOT'] . $user['profile_picture'])
-        ? $user['profile_picture'] : $profilePic;
+
+    // PERBAIKAN UTAMA & FINAL – SUPPORT GOOGLE PHOTO + LOKAL
+    if (!empty($user['profile_picture'])) {
+        $pic = trim($user['profile_picture']);
+
+        // Kalau sudah URL lengkap (Google, Facebook, dll)
+        if (preg_match('#^https?://#i', $pic)) {
+            $profilePic = $pic;
+        } 
+        // Kalau path lokal (uploads/profile/xxx.jpg)
+        else {
+            // Bersihkan dari folder lama /Web-App atau backslash
+            $pic = str_replace(['\\', '/Web-App'], ['', ''], $pic);
+            // Pastikan dimulai dengan satu slashaba slash
+            $profilePic = '/' . ltrim($pic, '/');
+        }
+    }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -54,48 +67,40 @@ if ($isLoggedIn) {
         .btn-mark-all{background:rgba(255,255,255,.2);border:none;color:#fff;width:38px;height:38px;border-radius:50%;transition:.3s}
         .btn-mark-all:hover{background:rgba(255,255,255,.35);transform:scale(1.1)}
         @media(max-width:768px){.notif-dropdown{width:100vw!important;border-radius:0;margin-top:0}}
-        /* FIX JARAK BELL & PROFILE — INI YANG BIKIN GANTENG */
         @media (min-width: 992px) {
-            .navbar .d-flex.gap-5 > .dropdown + .dropdown {
-                margin-left: 8px !important; /* Total jarak jadi ~48px (gap-5 + 8px) — PAS BANGET */
-            }
+            .navbar .d-flex.gap-4 > .dropdown + .dropdown {margin-left: 8px !important;}
         }
-
-        /* Hover lebih hidup */
-        .bell:hover { background: var(--green) !important; transform: scale(1.15) !important; }
-        .bell:hover i { color: white !important; }
-        .profile-img:hover { transform: scale(1.12) !important; border-color: #13a144 !important; box-shadow: 0 0 15px rgba(22,163,74,0.3); }
-
+        .bell:hover {background: var(--green) !important;transform: scale(1.15) !important;}
+        .bell:hover i {color: white !important;}
+        .profile-img:hover {transform: scale(1.12) !important;border-color: #13a144 !important;box-shadow: 0 0 15px rgba(22,163,74,0.3);}
     </style>
 </head>
-
 <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-4">
-        <a class="navbar-brand" href="home.php">
-            <img src="/Web-App/frontend/assets/logo_kos.png" height="38" class="me-2"> KostHub
+        <!-- Logo -->
+        <a class="navbar-brand" href="/frontend/user/customer/home.php">
+            <img src="/frontend/assets/logo_kos.png" height="38" class="me-2" alt="Logo"> KostHub
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto gap-4">
-                <li><a class="nav-link <?=basename($_SERVER['PHP_SELF'])=='home.php'?'active':''?>" href="home.php">Home</a></li>
-                <li><a class="nav-link <?=basename($_SERVER['PHP_SELF'])=='explore.php'?'active':''?>" href="explore.php">Explore</a></li>
-                <li><a class="nav-link <?=basename($_SERVER['PHP_SELF'])=='wishlist.php'?'active':''?>"
-                       href="<?= $isLoggedIn?'wishlist.php':'#' ?>"
-                       <?= !$isLoggedIn?'data-bs-toggle="modal" data-bs-target="#loginModal"':'' ?>>Wishlist</a></li>
-                <li><a class="nav-link <?=basename($_SERVER['PHP_SELF'])=='booking.php'?'active':''?>"
-                       href="<?= $isLoggedIn?'booking.php':'#' ?>"
-                       <?= !$isLoggedIn?'data-bs-toggle="modal" data-bs-target="#loginModal"':'' ?>>Your Booking</a></li>
+                <li><a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='home.php' ? 'active' : '' ?>" href="/frontend/user/customer/home.php">Home</a></li>
+                <li><a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='explore.php' ? 'active' : '' ?>" href="/frontend/user/customer/explore.php">Explore</a></li>
+                <li><a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='wishlist.php' ? 'active' : '' ?>"
+                       href="<?= $isLoggedIn ? '/frontend/user/customer/wishlist.php' : '#' ?>"
+                       <?= !$isLoggedIn ? 'data-bs-toggle="modal" data-bs-target="#loginModal"' : '' ?>>Wishlist</a></li>
+                <li><a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='booking.php' ? 'active' : '' ?>"
+                       href="<?= $isLoggedIn ? '/frontend/user/customer/booking.php' : '#' ?>"
+                       <?= !$isLoggedIn ? 'data-bs-toggle="modal" data-bs-target="#loginModal"' : '' ?>>Your Booking</a></li>
             </ul>
 
             <?php if (!$isLoggedIn): ?>
-                <a href="/Web-App/frontend/auth/login.php" class="btn btn-success px-4">Login</a>
+                <a href="/frontend/auth/login.php" class="btn btn-success px-4">Login</a>
             <?php else: ?>
-                <!-- JARAK BELL & PROFILE SUDAH PAS BANGET (gap-4 = 32px) -->
                 <div class="d-flex align-items-center gap-4">
-
-                    <!-- NOTIFIKASI BELL -->
+                    <!-- BELL NOTIFIKASI -->
                     <div class="dropdown bell-wrapper position-relative">
                         <a class="bell" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bell-fill"></i>
@@ -113,24 +118,26 @@ if ($isLoggedIn) {
                             </li>
                             <div id="notificationList" class="notif-list"></div>
                             <li class="p-3 bg-light text-center border-top">
-                                <a href="notifications.php" class="text-kosthub fw-bold">Lihat Semua Notifikasi</a>
+                                <a href="/frontend/user/customer/notifications.php" class="text-kosthub fw-bold">Lihat Semua Notifikasi</a>
                             </li>
                         </ul>
                     </div>
 
-                    <!-- PROFILE -->
+                    <!-- PROFILE DROPDOWN -->
                     <div class="dropdown">
                         <a data-bs-toggle="dropdown" aria-expanded="false" class="d-block">
-                            <img src="<?=htmlspecialchars($profilePic)?>" class="profile-img" alt="Profile">
+                            <img src="<?= htmlspecialchars($profilePic) ?>" 
+                                 class="profile-img" 
+                                 alt="Profile"
+                                 onerror="this.src='/frontend/assets/default-avatar.png'; this.onerror=null;">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
-                            <li class="px-4 py-3 text-center fw-bold"><?=$fullName?></li>
+                            <li class="px-4 py-3 text-center fw-bold"><?= $fullName ?></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="profile.php">Profile</a></li>
-                            <li><a class="dropdown-item text-danger" href="/Web-App/logout.php">Log Out</a></li>
+                            <li><a class="dropdown-item" href="/frontend/user/customer/profile.php">Profile</a></li>
+                            <li><a class="dropdown-item text-danger" href="/logout.php">Log Out</a></li>
                         </ul>
                     </div>
-
                 </div>
             <?php endif; ?>
         </div>
@@ -148,7 +155,7 @@ if ($isLoggedIn) {
             <div class="modal-body text-center py-5">
                 <i class="bi bi-lock-fill text-success" style="font-size:3.5rem"></i>
                 <p class="mt-3 fs-5">Silakan login untuk mengakses fitur ini</p>
-                <a href="/Web-App/frontend/auth/login.php" class="btn btn-success px-5 py-3">Login Sekarang</a>
+                <a href="/frontend/auth/login.php" class="btn btn-success px-5 py-3">Login Sekarang</a>
             </div>
         </div>
     </div>
@@ -156,9 +163,8 @@ if ($isLoggedIn) {
 
 <?php if ($isLoggedIn): ?>
 <script>
-// Notifikasi + Badge (sama persis seperti sebelumnya)
 function updateBadge(){
-    fetch("/Web-App/backend/user/customer/classes/notifications.php?action=get_count")
+    fetch("/backend/user/customer/classes/notifications.php?action=get_count")
     .then(r=>r.json())
     .then(d=>{
         const b=document.getElementById("notifBadge"), s=document.getElementById("notifSubtitle");
@@ -173,7 +179,7 @@ function updateBadge(){
     });
 }
 function loadNotifications(){
-    fetch("/Web-App/backend/user/customer/classes/notifications.php?action=get_notifications&limit=10")
+    fetch("/backend/user/customer/classes/notifications.php?action=get_notifications&limit=10")
     .then(r=>r.json())
     .then(d=>{
         const c=document.getElementById("notificationList");
@@ -202,9 +208,9 @@ function loadNotifications(){
             a.onclick=e=>{
                 e.preventDefault();
                 const id=a.dataset.id, kos=a.dataset.kos;
-                if(id) fetch("/Web-App/backend/user/customer/classes/notifications.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:`action=mark_read&notification_id=${id}`}).then(()=>{updateBadge();});
-                if(kos) location.href=`detail_kos.php?id=${kos}`;
-                else location.href="notifications.php";
+                if(id) fetch("/backend/user/customer/classes/notifications.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:`action=mark_read&notification_id=${id}`}).then(()=>{updateBadge();});
+                if(kos) location.href=`/frontend/user/customer/detail_kos.php?id=${kos}`;
+                else location.href="/frontend/user/customer/notifications.php";
             };
         });
     });
@@ -212,7 +218,7 @@ function loadNotifications(){
 document.getElementById("notifDropdown")?.addEventListener("show.bs.dropdown", loadNotifications);
 document.getElementById("markAllReadBtn")?.addEventListener("click", e=>{
     e.stopPropagation();
-    fetch("/Web-App/backend/user/customer/classes/notifications.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"action=mark_all_read"})
+    fetch("/backend/user/customer/classes/notifications.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"action=mark_all_read"})
     .then(()=>{updateBadge(); loadNotifications();});
 });
 document.addEventListener("DOMContentLoaded",()=>{updateBadge(); setInterval(updateBadge,30000);});

@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $isLoggedIn = isset($_SESSION['user_id']) && isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'user';
 $isOwner    = isset($_SESSION['user_id']) && isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'owner';
@@ -309,14 +309,16 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
         </div>
     </div>
 
-  <!-- Image Gallery -->
+<!-- Image Gallery -->
 <div class="row g-3 mb-4">
     <?php if (!empty($images)): ?>
         <div class="col-md-8">
             <?php
-                $mainImage = '/Web-App/' . $images[0]['image_url'];
-                $defaultImg = '/Web-App/frontend/assets/default-kos.jpg';
+                // HAPUS PREFIX /Web-App/
+                $mainImage = '/' . $images[0]['image_url'];
+                $defaultImg = '/frontend/assets/default-kos.jpg';
                 $mainPath = $_SERVER['DOCUMENT_ROOT'] . $mainImage;
+                
                 if (!file_exists($mainPath) || empty($images[0]['image_url'])) {
                     $mainImage = $defaultImg;
                 }
@@ -333,8 +335,10 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
             <div class="row g-2">
                 <?php for ($i = 1; $i < min(4, count($images)); $i++): ?>
                     <?php
-                        $imgUrl = '/Web-App/' . $images[$i]['image_url'];
+                        // HAPUS PREFIX /Web-App/
+                        $imgUrl = '/' . $images[$i]['image_url'];
                         $path = $_SERVER['DOCUMENT_ROOT'] . $imgUrl;
+                        
                         if (!file_exists($path) || empty($images[$i]['image_url'])) {
                             $imgUrl = $defaultImg;
                         }
@@ -561,62 +565,62 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
 
                 <!-- Daftar Review -->
-                <div id="reviewList">
-                    <?php if ($reviews): ?>
-                        <?php foreach ($reviews as $r): ?>
-                            <div class="review-item border-bottom py-3" data-rating="<?php echo $r['rating']; ?>">
-                                <div class="d-flex gap-3">
-                                    <?php
-                                            $profilePic = $r['profile_picture'] ?? '';
-                                            $defaultAvatar = '/Web-App/frontend/assets/default-avatar.png';
+<div id="reviewList">
+    <?php if ($reviews): ?>
+        <?php foreach ($reviews as $r): ?>
+            <div class="review-item border-bottom py-3" data-rating="<?php echo $r['rating']; ?>">
+                <div class="d-flex gap-3">
+                    <?php
+                    $profilePic = $r['profile_picture'] ?? '';
+                    $defaultAvatar = '/frontend/assets/default-avatar.png';
 
-                                            // bersihkan slash ganda
-                                            $profilePic = preg_replace('#/+#', '/', $profilePic);
+                    // BERSIHKAN SLASH GANDA & HAPUS /Web-App/
+                    $profilePic = preg_replace('#/+#', '/', $profilePic);
+                    
+                    // Pastikan dimulai dengan /
+                    if (!empty($profilePic) && substr($profilePic, 0, 1) !== '/') {
+                        $profilePic = '/' . $profilePic;
+                    }
 
-                                            // tambahkan /Web-App kalau belum ada
-                                            if (!str_starts_with($profilePic, '/Web-App/')) {
-                                                $profilePic = '/Web-App/' . ltrim($profilePic, '/');
-                                            }
+                    // Cek apakah file ada
+                    if (empty($profilePic) || !file_exists($_SERVER['DOCUMENT_ROOT'] . $profilePic)) {
+                        $profilePic = $defaultAvatar;
+                    }
+                    ?>
+                    <img src="<?php echo htmlspecialchars($profilePic); ?>"
+                        class="review-avatar"
+                        onerror="this.onerror=null; this.src='<?php echo $defaultAvatar; ?>';">
 
-                                            // cek apakah file beneran ada
-                                            if (!file_exists($_SERVER['DOCUMENT_ROOT'] . $profilePic)) {
-                                                $profilePic = $defaultAvatar;
-                                            }
-                                            ?>
-                                            <img src="<?php echo htmlspecialchars($profilePic); ?>"
-                                                class="review-avatar"
-                                                onerror="this.onerror=null; this.src='<?php echo $defaultAvatar; ?>';">
-
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <strong><?php echo htmlspecialchars($r['full_name']); ?></strong>
-                                                <div class="text-warning small mb-1">
-                                                    <?php for ($i=1;$i<=5;$i++): ?>
-                                                        <i class="bi <?php echo $i<=$r['rating']?'bi-star-fill':'bi-star'; ?>"></i>
-                                                    <?php endfor; ?>
-                                                </div>
-                                            </div>
-                                            <?php if ($isLoggedIn && $_SESSION['user_id'] == $r['user_id']): ?>
-                                                <button class="btn btn-sm btn-outline-danger btn-delete-review" data-review-id="<?php echo $r['id']; ?>">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            <?php elseif ($isOwner): ?>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReview(<?php echo $r['id']; ?>)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
-                                        <p class="mb-1"><?php echo nl2br(htmlspecialchars($r['comment'])); ?></p>
-                                        <small class="text-muted"><?php echo date('d M Y', strtotime($r['created_at'])); ?></small>
-                                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong><?php echo htmlspecialchars($r['full_name']); ?></strong>
+                                <div class="text-warning small mb-1">
+                                    <?php for ($i=1;$i<=5;$i++): ?>
+                                        <i class="bi <?php echo $i<=$r['rating']?'bi-star-fill':'bi-star'; ?>"></i>
+                                    <?php endfor; ?>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p class="text-muted text-center py-4">Belum ada review</p>
-                    <?php endif; ?>
+                            <?php if ($isLoggedIn && $_SESSION['user_id'] == $r['user_id']): ?>
+                                <button class="btn btn-sm btn-outline-danger btn-delete-review" data-review-id="<?php echo $r['id']; ?>">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            <?php elseif ($isOwner): ?>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReview(<?php echo $r['id']; ?>)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <p class="mb-1"><?php echo nl2br(htmlspecialchars($r['comment'])); ?></p>
+                        <small class="text-muted"><?php echo date('d M Y', strtotime($r['created_at'])); ?></small>
+                    </div>
                 </div>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <p class="text-muted text-center py-4">Belum ada review</p>
+    <?php endif; ?>
+</div>
 
                <!-- Form Review (hanya user) -->
 <?php if ($isLoggedIn && !$isOwner): ?>
@@ -671,16 +675,32 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
                         <?php if ($saved_by): ?>
                             <h6 class="mb-3">Disimpan Oleh</h6>
                             <div class="saved-users">
-                                <?php foreach (array_slice($saved_by,0,5) as $u):
-                                    $pp = $u['profile_picture'] ? '/Web-App/'.$u['profile_picture'] : '/Web-App/frontend/assets/default-avatar.png';
+                                <?php foreach (array_slice($saved_by, 0, 5) as $u): 
+                                    $pp = $u['profile_picture'] ?? '';
+                                    $defaultAvatar = '/frontend/assets/default-avatar.png';
+                                    
+                                    // HAPUS PREFIX /Web-App/
+                                    if (!empty($pp)) {
+                                        $pp = preg_replace('#/+#', '/', $pp);
+                                        if (substr($pp, 0, 1) !== '/') {
+                                            $pp = '/' . $pp;
+                                        }
+                                        if (!file_exists($_SERVER['DOCUMENT_ROOT'] . $pp)) {
+                                            $pp = $defaultAvatar;
+                                        }
+                                    } else {
+                                        $pp = $defaultAvatar;
+                                    }
                                 ?>
                                     <div class="saved-user-item">
-                                        <img src="<?php echo $pp; ?>" alt="user" onerror="this.src='/Web-App/frontend/assets/default-avatar.png'">
+                                        <img src="<?php echo htmlspecialchars($pp); ?>" 
+                                             alt="user" 
+                                             onerror="this.src='<?php echo $defaultAvatar; ?>'">
                                         <small><?php echo htmlspecialchars($u['full_name']); ?></small>
                                     </div>
                                 <?php endforeach; ?>
-                                <?php if (count($saved_by)>5): ?>
-                                    <small class="text-muted">+<?php echo count($saved_by)-5; ?> lainnya</small>
+                                <?php if (count($saved_by) > 5): ?>
+                                    <small class="text-muted">+<?php echo count($saved_by) - 5; ?> lainnya</small>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
@@ -760,105 +780,131 @@ $saved_by = $stmt_saved->get_result()->fetch_all(MYSQLI_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-      // Inisialisasi map
-        const latitude = <?php echo $property['latitude']; ?>;
-        const longitude = <?php echo $property['longitude']; ?>;
+     // ========================================
+// 🗺️ INISIALISASI MAP
+// ========================================
+const latitude = <?php echo $property['latitude']; ?>;
+const longitude = <?php echo $property['longitude']; ?>;
 
-        const detailMap = L.map('detailMap').setView([latitude, longitude], 15);
+const detailMap = L.map('detailMap').setView([latitude, longitude], 15);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(detailMap);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(detailMap);
 
-        L.marker([latitude, longitude]).addTo(detailMap);
+L.marker([latitude, longitude]).addTo(detailMap);
 
-        // Tombol buka Google Maps
-        document.getElementById('openGmapsBtn').addEventListener('click', function() {
-            const gmapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            window.open(gmapsUrl, '_blank');
-        });
-    // 🖼️ Lightbox
-    const defaultImg = '/Web-App/frontend/assets/default-kos.jpg';
-    const images = <?php echo json_encode(array_map(function($img) {
-        $path = $_SERVER['DOCUMENT_ROOT'] . '/Web-App/' . $img['image_url'];
-        return (file_exists($path) && !empty($img['image_url'])) ? $img['image_url'] : 'frontend/assets/default-kos.jpg';
-    }, $images)); ?>;
+// Tombol buka Google Maps
+document.getElementById('openGmapsBtn').addEventListener('click', function() {
+    const gmapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    window.open(gmapsUrl, '_blank');
+});
 
-    let currentIndex = 0;
+// ========================================
+// 🖼️ LIGHTBOX - FIXED PATHS
+// ========================================
+const defaultImg = '/frontend/assets/default-kos.jpg';
+const images = <?php echo json_encode(array_map(function($img) {
+    $path = $_SERVER['DOCUMENT_ROOT'] . '/' . $img['image_url'];
+    // HAPUS PREFIX /Web-App/ dari return value
+    return (file_exists($path) && !empty($img['image_url'])) ? $img['image_url'] : 'frontend/assets/default-kos.jpg';
+}, $images)); ?>;
 
-    function openLightbox(i) {
-        if (!images.length) {
-            document.getElementById('lightbox-img').src = defaultImg;
-            document.getElementById('lightbox-caption').innerHTML = 'Tidak ada gambar';
-        } else {
-            currentIndex = i;
-            document.getElementById('lightbox').style.display = 'block';
-            updateLightbox();
-        }
-    }
+let currentIndex = 0;
 
-    function closeLightbox() {
-        document.getElementById('lightbox').style.display = 'none';
-    }
-
-    function changeImage(step) {
-        if (!images.length) return;
-        currentIndex = (currentIndex + step + images.length) % images.length;
+function openLightbox(index) {
+    const lightbox = document.getElementById('lightbox');
+    
+    if (!images.length) {
+        document.getElementById('lightbox-img').src = defaultImg;
+        document.getElementById('lightbox-caption').innerHTML = 'Tidak ada gambar';
+    } else {
+        currentIndex = index;
         updateLightbox();
     }
+    
+    lightbox.style.display = 'block';
+}
 
-    function updateLightbox() {
-        const imgSrc = images[currentIndex] ? '/Web-App/' + images[currentIndex] : defaultImg;
-        document.getElementById('lightbox-img').src = imgSrc;
-        document.getElementById('lightbox-caption').innerHTML = `Foto ${currentIndex + 1} dari ${images.length}`;
+function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+}
+
+function changeImage(step) {
+    if (!images.length) return;
+    currentIndex = (currentIndex + step + images.length) % images.length;
+    updateLightbox();
+}
+
+function updateLightbox() {
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    
+    // HAPUS PREFIX /Web-App/ - LANGSUNG / saja
+    const currentImgSrc = images[currentIndex] ? '/' + images[currentIndex] : defaultImg;
+    lightboxImg.src = currentImgSrc;
+    lightboxCaption.innerHTML = `Foto ${currentIndex + 1} dari ${images.length}`;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox.style.display === 'block') {
+        if (e.key === 'ArrowRight') changeImage(1);
+        if (e.key === 'ArrowLeft') changeImage(-1);
+        if (e.key === 'Escape') closeLightbox();
     }
+});
 
-    document.addEventListener('keydown', e => {
-        if (document.getElementById('lightbox').style.display === 'block') {
-            if (e.key === 'ArrowRight') changeImage(1);
-            if (e.key === 'ArrowLeft') changeImage(-1);
-            if (e.key === 'Escape') closeLightbox();
-        }
-    });
+// ========================================
+// ❤️ FAVORITE / SAVE KOS
+// ========================================
+function toggleFavorite(kosId, btn) {
+    <?php if($isLoggedIn && !$isOwner): ?>
+        const icon = btn.querySelector('i');
+        const wasFav = icon.classList.contains('bi-heart-fill');
+        
+        icon.className = 'bi bi-arrow-repeat fa-spin';
+        btn.disabled = true;
+        
+        fetch('/backend/user/customer/classes/save_kos.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({kos_id: kosId})
+        })
+        .then(r => r.json())
+        .then(d => {
+            if(d.success) {
+                if(d.favorited) {
+                    icon.className = 'bi bi-heart-fill';
+                    btn.classList.add('favorited');
+                    btn.innerHTML = '<i class="bi bi-heart-fill"></i> Tersimpan';
+                } else {
+                    icon.className = 'bi bi-heart';
+                    btn.classList.remove('favorited');
+                    btn.innerHTML = '<i class="bi bi-heart"></i> Simpan';
+                }
+                showNotif(d.message);
+            } else {
+                showNotif(d.message || 'Gagal menyimpan', 'error');
+            }
+            btn.disabled = false;
+        })
+        .catch(err => {
+            showNotif('Error koneksi', 'error');
+            btn.disabled = false;
+            icon.className = wasFav ? 'bi bi-heart-fill' : 'bi bi-heart';
+        });
+    <?php else: ?>
+        alert('Login sebagai user untuk menyimpan kos ini');
+    <?php endif; ?>
+}
 
-
-    // Favorite
-    function toggleFavorite(kosId, btn){
-        <?php if($isLoggedIn && !$isOwner): ?>
-            const icon = btn.querySelector('i');
-            const wasFav = icon.classList.contains('bi-heart-fill');
-            icon.className='bi bi-arrow-repeat fa-spin';
-            btn.disabled=true;
-            fetch('/Web-App/backend/user/customer/classes/save_kos.php',{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({kos_id:kosId})
-            })
-            .then(r=>r.json())
-            .then(d=>{
-                if(d.success){
-                    if(d.favorited){
-                        icon.className='bi bi-heart-fill';
-                        btn.classList.add('favorited');
-                        btn.innerHTML='<i class="bi bi-heart-fill"></i> Tersimpan';
-                    }else{
-                        icon.className='bi bi-heart';
-                        btn.classList.remove('favorited');
-                        btn.innerHTML='<i class="bi bi-heart"></i> Simpan';
-                    }
-                    showNotif(d.message);
-                }else showNotif(d.message||'Gagal','error');
-                btn.disabled=false;
-            });
-        <?php else: ?>
-            alert('Login sebagai user untuk menyimpan');
-        <?php endif; ?>
-    }
-
-   // Contact Owner
-function contactOwner(){
+// ========================================
+// 📱 CONTACT OWNER VIA WHATSAPP
+// ========================================
+function contactOwner() {
     <?php 
-    // === NOMOR BERSIH UNTUK WHATSAPP ===
     $wa_phone = '';
     if (!empty($property['owner_phone'])) {
         $clean = preg_replace('/\D/', '', $property['owner_phone']);
@@ -882,10 +928,12 @@ function contactOwner(){
     <?php endif; ?>
 }
 
+// ========================================
+// 📅 BOOKING NOW
+// ========================================
 function bookingNow() {
     <?php if ($isLoggedIn && !$isOwner): ?>
         <?php if ($property['available_rooms'] > 0): ?>
-            // Arahkan ke booking_form.php yang ADA DI FOLDER SAMA
             window.location.href = `booking_form.php?kos_id=<?php echo $kos_id; ?>`;
         <?php else: ?>
             showNotif('Maaf, kamar sudah penuh!', 'error');
@@ -901,69 +949,135 @@ function bookingNow() {
     <?php endif; ?>
 }
 
-    // Share
-    function shareProperty(){
-        const url = location.href;
-        if(navigator.share){
-            navigator.share({title:'<?php echo addslashes($property['name']); ?>',text:'Lihat kos ini di KostHub!',url});
-        }else{
-            navigator.clipboard.writeText(url);
-            showNotif('Link disalin!');
-        }
-    }
-
-    // Filter Review
-    function filterReviews(star){
-        document.querySelectorAll('.btn-outline-secondary').forEach(b=>b.classList.remove('active'));
-        event.target.classList.add('active');
-        document.querySelectorAll('.review-item').forEach(r=>{
-            r.style.display = (star===0 || parseInt(r.dataset.rating)===star) ? 'block' : 'none';
+// ========================================
+// 🔗 SHARE PROPERTY
+// ========================================
+function shareProperty() {
+    const url = location.href;
+    if (navigator.share) {
+        navigator.share({
+            title: '<?php echo addslashes($property['name']); ?>',
+            text: 'Lihat kos ini di KostHub!',
+            url: url
+        }).catch(err => console.log('Share cancelled'));
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            showNotif('Link berhasil disalin!');
         });
     }
+}
 
-    // Notifikasi
-    function showNotif(msg,type='success'){
-        const n = document.getElementById('notification');
-        n.textContent=msg;
-        n.className='notification'+(type==='error'?' error':'');
-        n.classList.add('show');
-        setTimeout(()=>n.classList.remove('show'),3000);
-    }
+// ========================================
+// ⭐ FILTER REVIEWS BY RATING
+// ========================================
+function filterReviews(star) {
+    // Update active button
+    document.querySelectorAll('.btn-outline-secondary').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Filter review items
+    document.querySelectorAll('.review-item').forEach(review => {
+        const rating = parseInt(review.dataset.rating);
+        review.style.display = (star === 0 || rating === star) ? 'block' : 'none';
+    });
+}
 
-    // Submit Review
-    document.getElementById('reviewForm')?.addEventListener('submit',async e=>{
+// ========================================
+// 🔔 NOTIFICATION SYSTEM
+// ========================================
+function showNotif(msg, type = 'success') {
+    const notification = document.getElementById('notification');
+    notification.textContent = msg;
+    notification.className = 'notification' + (type === 'error' ? ' error' : '');
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// ========================================
+// 📝 SUBMIT REVIEW FORM
+// ========================================
+const reviewForm = document.getElementById('reviewForm');
+if (reviewForm) {
+    reviewForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const f = new FormData(e.target);
-        const data = Object.fromEntries(f);
-        try{
-            const res = await fetch('/Web-App/backend/user/customer/classes/add_review.php', {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify(data)
+        
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const response = await fetch('/backend/user/customer/classes/add_review.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
             });
-            const json = await res.json();
-            showNotif(json.message, json.success?'success':'error');
-            if(json.success) setTimeout(()=>location.reload(),1200);
-        }catch(err){ showNotif('Error server','error'); }
+            
+            const result = await response.json();
+            showNotif(result.message, result.success ? 'success' : 'error');
+            
+            if (result.success) {
+                setTimeout(() => location.reload(), 1200);
+            }
+        } catch (err) {
+            showNotif('Error server: ' + err.message, 'error');
+        }
     });
+}
 
-    // Delete own review (user)
-    document.querySelectorAll('.btn-delete-review').forEach(b=>{
-        b.addEventListener('click',function(){
-            const id = this.dataset.reviewId;
-            if(!confirm('Hapus review ini?')) return;
-            fetch('/Web-App/backend/user/customer/classes/delete_my_review.php', {
-                method:'POST',
-                headers:{'Content-Type':'application/x-www-form-urlencoded'},
-                body:'review_id='+id
-            })
-            .then(r=>r.json())
-            .then(d=>{
-                showNotif(d.message, d.success?'success':'error');
-                if(d.success) this.closest('.review-item').remove();
-            });
+// ========================================
+// 🗑️ DELETE OWN REVIEW (USER)
+// ========================================
+document.querySelectorAll('.btn-delete-review').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const reviewId = this.dataset.reviewId;
+        
+        if (!confirm('Hapus review ini?')) return;
+        
+        fetch('/backend/user/customer/classes/delete_my_review.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'review_id=' + reviewId
+        })
+        .then(r => r.json())
+        .then(d => {
+            showNotif(d.message, d.success ? 'success' : 'error');
+            if (d.success) {
+                this.closest('.review-item').remove();
+            }
+        })
+        .catch(err => {
+            showNotif('Error: ' + err.message, 'error');
         });
     });
+});
+
+// ========================================
+// ⭐ RATING STAR TEXT UPDATE
+// ========================================
+const ratingInputs = document.querySelectorAll('input[name="rating"]');
+const ratingText = document.getElementById('rating-text');
+
+if (ratingInputs.length > 0 && ratingText) {
+    ratingInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const value = this.value;
+            const texts = {
+                '1': '⭐ Sangat Buruk',
+                '2': '⭐⭐ Buruk',
+                '3': '⭐⭐⭐ Cukup',
+                '4': '⭐⭐⭐⭐ Baik',
+                '5': '⭐⭐⭐⭐⭐ Sangat Baik'
+            };
+            ratingText.textContent = texts[value] || 'Pilih rating';
+            ratingText.style.color = '#28a745';
+            ratingText.style.fontWeight = 'bold';
+        });
+    });
+}
 </script>
 </body>
 </html>
