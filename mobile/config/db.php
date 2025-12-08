@@ -1,8 +1,8 @@
 <?php
 $host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "db_koshub"; 
+$user = "koshubmy_koshub";
+$pass = "KoshubJaya123";
+$dbname = "koshubmy_koshub"; 
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 
@@ -12,4 +12,4 @@ if ($conn->connect_error) {
         "message" => "Koneksi database gagal: " . $conn->connect_error
     ]));
 }
-?>
+?>====
