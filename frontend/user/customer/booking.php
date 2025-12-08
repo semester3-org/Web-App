@@ -1,12 +1,12 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
-  header("Location: /Web-App/frontend/auth/login.php");
+  header("Location: /frontend/auth/login.php");
   exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/midtrans.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/midtrans.php");
 
 $user_id = $_SESSION['user_id'];
 
@@ -96,7 +96,7 @@ $stmt->close();
 <body>
 
 <?php 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/midtrans.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/midtrans.php");
 include("navbar.php"); 
 ?>
 
@@ -294,7 +294,7 @@ include("navbar.php");
     const formData = new FormData();
     formData.append('booking_id', bookingId);
 
-    fetch('/Web-App/backend/user/customer/api/create_payment.php', {method:'POST', body:formData})
+    fetch('/backend/user/customer/api/create_payment.php', {method:'POST', body:formData})
       .then(r => r.text()).then(t => { console.log(t); return JSON.parse(t); })
       .then(data => {
         if (data.success) {
@@ -315,7 +315,7 @@ include("navbar.php");
   function checkPaymentStatus(bookingId) {
     Swal.fire({title:'Mengecek...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
     const fd = new FormData(); fd.append('booking_id',bookingId);
-    fetch('/Web-App/backend/user/customer/api/check_payment_status.php', {method:'POST',body:fd})
+    fetch('/backend/user/customer/api/check_payment_status.php', {method:'POST',body:fd})
       .then(r=>r.json())
       .then(d => {
         if (d.success && d.payment_status==='paid') {
@@ -337,7 +337,7 @@ include("navbar.php");
   function continuePayment(bookingId) {
     Swal.fire({title:'Memuat...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
     const fd = new FormData(); fd.append('booking_id',bookingId);
-    fetch('/Web-App/backend/user/customer/api/get_payment_token.php', {method:'POST',body:fd})
+    fetch('/backend/user/customer/api/get_payment_token.php', {method:'POST',body:fd})
       .then(r=>r.json())
       .then(d=>{
         Swal.close();
@@ -350,7 +350,7 @@ include("navbar.php");
     Swal.fire({title:'Batalkan pembayaran?',icon:'warning',showCancelButton:true,confirmButtonColor:'#dc3545'})
       .then(r=>{ if(r.isConfirmed){
         const fd = new FormData(); fd.append('booking_id',bookingId);
-        fetch('/Web-App/backend/user/customer/api/cancel_payment.php', {method:'POST',body:fd})
+        fetch('/backend/user/customer/api/cancel_payment.php', {method:'POST',body:fd})
           .then(r=>r.json()).then(d=>{ if(d.success) location.reload(); });
       }});
   }
@@ -377,7 +377,7 @@ include("navbar.php");
     spinner.style.display = 'inline-block';
 
     try {
-      const res = await fetch('/Web-App/backend/user/customer/classes/cancel_booking.php', {
+      const res = await fetch('/backend/user/customer/classes/cancel_booking.php', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({booking_id: currentBookingId})

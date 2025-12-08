@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
     exit;
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -112,7 +112,7 @@ try {
     $booking_id = $stmt->insert_id;
 
     // KIRIM NOTIFIKASI KE OWNER: Booking baru masuk
-    require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+    require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/user/owner/classes/Notification.php");
     $notif = new Notification($conn);
     $notif->createNewBookingNotification(
         $kos_id,

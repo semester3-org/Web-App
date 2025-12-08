@@ -92,7 +92,7 @@ try {
     }
     
     // Path relatif untuk database dan frontend
-    $relativePath = '/Web-App/uploads/profiles/' . $fileName;
+    $relativePath = '/uploads/profiles/' . $fileName;
     
     // Simpan ke database
     $stmt = $conn->prepare("UPDATE users SET profile_picture = ?, updated_at = NOW() WHERE id = ?");

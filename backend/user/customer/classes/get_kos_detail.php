@@ -1,5 +1,5 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -58,11 +58,11 @@ $fac_stmt->close();
     <?php if (!empty($images)): ?>
       <div class="image-slider position-relative">
         <?php foreach ($images as $i => $img): ?>
-          <img src="<?php echo htmlspecialchars('/Web-App/' . $img); ?>" 
+              <img src="<?php echo htmlspecialchars('/' . ltrim($img, '/')); ?>"
                class="img-fluid mb-2 rounded slider-image <?php echo $i === 0 ? 'active' : ''; ?>"
                style="width:100%;object-fit:cover;max-height:400px;display:<?php echo $i === 0 ? 'block' : 'none'; ?>;"
                alt="<?php echo htmlspecialchars($property['name']); ?>"
-               onerror="this.onerror=null; this.src='/Web-App/frontend/assets/default-property.jpg'; this.alt='Gambar tidak tersedia';">
+               onerror="this.onerror=null; this.src='/frontend/assets/default-property.jpg'; this.alt='Gambar tidak tersedia';">
         <?php endforeach; ?>
         <?php if (count($images) > 1): ?>
           <button class="slider-btn prev-btn btn btn-light btn-sm position-absolute top-50 start-0 translate-middle-y ms-2" style="z-index:10;">

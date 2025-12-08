@@ -1,32 +1,62 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+
+// PATH FIX: Sesuaikan dengan struktur hosting
 require_once __DIR__ . '/../../../../backend/config/db.php';
 require_once __DIR__ . '/../../../../backend/user/owner/classes/Notification.php';
 
 $userId = $_SESSION['user_id'] ?? null;
 
-$profilePic = '/Web-App/frontend/assets/default-avatar.png';
-$fullName = 'Owner';
+// Default values
+$profilePic = '/frontend/assets/default-avatar.png';
+$fullName   = 'Owner';
 
 if ($userId) {
-    $stmt = $conn->prepare("SELECT full_name, profile_picture FROM users WHERE id = ?");
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($user = $result->fetch_assoc()) {
-        $fullName = htmlspecialchars($user['full_name'] ?? 'Owner');
-        $profilePic = $user['profile_picture'] ? $user['profile_picture'] : $profilePic;
+    try {
+        $stmt = $conn->prepare("SELECT full_name, profile_picture FROM users WHERE id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($user = $result->fetch_assoc()) {
+            $fullName = htmlspecialchars($user['full_name'] ?? 'Owner');
+
+            // PERBAIKAN UTAMA — SUPPORT FOTO GOOGLE + LOKAL
+            if (!empty($user['profile_picture'])) {
+                $pic = trim($user['profile_picture']);
+
+                // Kalau sudah URL lengkap (Google, Facebook, dll)
+                if (preg_match('#^https?://#i', $pic)) {
+                    $profilePic = $pic; // langsung pakai
+                } 
+                // Kalau path lokal (uploads/profile/xxx.jpg)
+                else {
+                    // Bersihkan backslash atau folder lama
+                    $pic = str_replace(['\\', '/Web-App'], ['', ''], $pic);
+                    // Pastikan mulai dengan slash
+                    $profilePic = '/' . ltrim($pic, '/');
+                }
+            }
+        }
+        $stmt->close();
+    } catch (Exception $e) {
+        error_log("Error loading user profile: " . $e->getMessage());
     }
-    $stmt->close();
 }
 
-// Ambil notifikasi langsung → pasti muncul
+// Ambil notifikasi (tetap sama)
 $notification = new Notification($conn);
-$unread_count = $notification->getUnreadCount($userId);
+$unread_count = 0;
 $recent_notifications = [];
-$result = $notification->getOwnerNotifications($userId, 6);
-while ($row = $result->fetch_assoc()) {
-    $recent_notifications[] = $row;
+
+try {
+    $unread_count = $notification->getUnreadCount($userId);
+    $result = $notification->getOwnerNotifications($userId, 6);
+    while ($row = $result->fetch_assoc()) {
+        $recent_notifications[] = $row;
+    }
+} catch (Exception $e) {
+    error_log("Error loading notifications: " . $e->getMessage());
 }
 
 function format_time_ago($datetime) {
@@ -53,272 +83,313 @@ function format_time_ago($datetime) {
             --green-light: #f0fdf4;
             --green-lighter: #ecfdf5;
         }
-        .navbar { height: 70px; border-bottom: 1px solid #e5e7eb; z-index: 1050; }
-        .navbar-brand { font-weight: 700; color: var(--green) !important; font-size: 1.5rem; }
-        .nav-link { color: #374151 !important; font-weight: 500; padding: 0.5rem 1rem !important; border-radius: 8px; transition: all 0.2s; }
-        .nav-link:hover, .nav-link.active { background: var(--green-light) !important; color: var(--green) !important; font-weight: 600 !important; }
+        
+        .navbar { 
+            height: 70px; 
+            border-bottom: 1px solid #e5e7eb; 
+            z-index: 1050; 
+        }
+        
+        .navbar-brand { 
+            font-weight: 700; 
+            color: var(--green) !important; 
+            font-size: 1.5rem; 
+        }
+        
+        .nav-link { 
+            color: #374151 !important; 
+            font-weight: 500; 
+            padding: 0.5rem 1rem !important; 
+            border-radius: 8px; 
+            transition: all 0.2s; 
+        }
+        
+        .nav-link:hover, 
+        .nav-link.active { 
+            background: var(--green-light) !important; 
+            color: var(--green) !important; 
+            font-weight: 600 !important; 
+        }
 
-        .notification-bell:hover { transform: scale(1.1); }
+        .notification-bell:hover { 
+            transform: scale(1.1); 
+            transition: transform 0.2s;
+        }
+        
         .notification-badge {
-            font-size: 0.65rem !important; min-width: 18px; height: 18px;
-            animation: pulse 2s infinite; background: #dc2626 !important;
+            font-size: 0.65rem !important; 
+            min-width: 18px; 
+            height: 18px;
+            animation: pulse 2s infinite; 
+            background: #dc2626 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        
+        @keyframes pulse { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.2); } 
+        }
 
-        /* DROPDOWN NOTIFIKASI — INI YANG DI-FIX TOTAL */
-        #notifDropdown + .dropdown-menu {
-            width: 380px !important;
-            max-height: 80vh;
+        /* DROPDOWN NOTIFIKASI */
+        .notif-dropdown {
+            width: 380px;
+            max-height: 450px;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 0 !important;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .notif-dropdown .dropdown-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eaeaea;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .notif-scroll {
+            max-height: 320px; 
             overflow-y: auto;
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-            padding: 0;
+            background: #fff;
         }
-        #notifDropdown + .dropdown-menu .dropdown-header {
-            background: var(--green-light);
-            border-bottom: 1px solid #bbf7d0;
-            border-radius: 16px 16px 0 0;
-            padding: 1rem 1.25rem;
+
+        .notif-scroll::-webkit-scrollbar {
+            width: 6px;
         }
-        #notifDropdown + .dropdown-menu .dropdown-item {
-            padding: 0.9rem 1.25rem;
-            border-bottom: 1px solid #f3f4f6;
-            white-space: normal !important;     /* PENTING: biar wrap */
+        
+        .notif-scroll::-webkit-scrollbar-thumb {
+            background: #d3d3d3;
+            border-radius: 50px;
+        }
+
+        .notif-dropdown li a.dropdown-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f2f2f2;
+            transition: background 0.2s ease;
+            display: block;
+            white-space: normal !important;
             word-wrap: break-word;
-            overflow-wrap: break-word;
         }
-        #notifDropdown + .dropdown-menu .dropdown-item:last-child { border-bottom: none; }
-        #notifDropdown + .dropdown-menu .dropdown-item:hover { background: var(--green-lighter) !important; }
-        #notifDropdown + .dropdown-menu .unread { background: linear-gradient(90deg, #ecfdf5 0%, #fff 100%); font-weight: 500; }
+
+        .notif-dropdown li a.dropdown-item:hover {
+            background: #f7f7f7;
+        }
 
         .notification-icon {
-            width: 44px; height: 44px; border-radius: 12px; display: flex;
-            align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
-        .icon-success { background: #d1f4e0; color: #059669; }
-        .icon-danger  { background: #fee2e2; color: #dc2626; }
-        .icon-warning { background: #fef3c7; color: #d97706; }
-        .icon-info    { background: #dbeafe; color: #2563eb; }
 
-        .text-kosthub { color: var(--green) !important; }
-        .profile-img { width: 42px; height: 42px; object-fit: cover; border: 3px solid var(--green); border-radius: 50%; }
-        .btn-kosthub-bottom:hover { background: var(--green) !important; color: white !important; }
+        .icon-success { background: #d2f3d2; color: #188f18; }
+        .icon-danger { background: #ffd6d6; color: #d11a1a; }
+        .icon-warning { background: #fff2cc; color: #da9a00; }
+        .icon-info { background: #d8ecff; color: #1277d1; }
 
-        /* ================================
-   WRAPPER UTAMA DROPDOWN
-================================*/
-.notif-dropdown {
-    width: 380px;
-    max-height: 450px;
-    border-radius: 12px;
-    overflow: hidden;
-    padding: 0 !important;
-    border: 1px solid #eaeaea;
-}
+        .unread {
+            background: #f0fff0 !important;
+            font-weight: 500;
+        }
 
-/* ================================
-   HEADER
-================================*/
-.notif-dropdown .dropdown-header {
-    padding: 14px 16px;
-    border-bottom: 1px solid #eaeaea;
-    background: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-}
+        .notif-footer {
+            background: #fff;
+            border-top: 1px solid #eaeaea;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
 
-/* ================================
-   AREA SCROLL
-================================*/
-.notif-scroll {
-    max-height: 1320px; 
-    overflow-y: auto;
-    background: #fff;
-    padding-bottom: 10px;
-}
+        .notif-footer a {
+            padding: 14px 16px;
+            display: block;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
 
-/* Scrollbar lebih halus */
-.notif-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-.notif-scroll::-webkit-scrollbar-thumb {
-    background: #d3d3d3;
-    border-radius: 50px;
-}
+        .text-kosthub { 
+            color: var(--green) !important; 
+        }
+        
+        /* FIX PROFILE IMAGE */
+        .profile-img { 
+            width: 42px; 
+            height: 42px; 
+            object-fit: cover; 
+            border: 3px solid var(--green); 
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .profile-img:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Handle image error */
+        .profile-img-error {
+            width: 42px;
+            height: 42px;
+            background: var(--green-light);
+            border: 3px solid var(--green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .btn-kosthub-bottom:hover { 
+            background: var(--green) !important; 
+            color: white !important; 
+        }
 
-/* ================================
-   LIST ITEM NOTIFIKASI
-================================*/
-.notif-dropdown li a.dropdown-item {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f2f2f2;
-    transition: background 0.2s ease;
-    display: block;
-    white-space: normal !important;
-}
-
-.notif-dropdown li a.dropdown-item:hover {
-    background: #f7f7f7;
-}
-
-/* Icon bulat */
-.notification-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.icon-success { background: #d2f3d2; color: #188f18; }
-.icon-danger { background: #ffd6d6; color: #d11a1a; }
-.icon-warning { background: #fff2cc; color: #da9a00; }
-.icon-info    { background: #d8ecff; color: #1277d1; }
-
-/* Bold untuk unread */
-.unread {
-    background: #f0fff0 !important;
-}
-
-/* ================================
-   FOOTER FIXED DI BAWAH
-================================*/
-.notif-footer {
-    background: #fff;
-    border-top: 1px solid #eaeaea;
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
-}
-
-.notif-footer a {
-    padding: 14px 16px;
-    display: block;
-    font-weight: 600;
-}
-
+        /* Dropdown menu profile */
+        .profile-dropdown {
+            min-width: 200px;
+            border-radius: 12px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 
 <nav class="navbar navbar-expand-lg bg-white fixed-top shadow-sm">
     <div class="container-fluid px-4">
         <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
-            <img src="../../../assets/logo_kos.png" alt="Logo" height="36" class="me-2">
+            <img src="/frontend/assets/logo_kos.png" alt="Logo" height="36" class="me-2" 
+                 onerror="this.style.display='none'">
             KostHub
         </a>
 
         <div class="navbar-nav me-auto d-flex gap-2">
-            <a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='dashboard.php' ? 'active' : '' ?>" href="dashboard.php">Dashboard</a>
-            <a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='your_property.php' ? 'active' : '' ?>" href="your_property.php">Your Property</a>
-            <a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='booking_list.php' ? 'active' : '' ?>" href="booking_list.php">Booking List</a>
+            <a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='dashboard.php' ? 'active' : '' ?>" 
+               href="dashboard.php">Dashboard</a>
+            <a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='your_property.php' ? 'active' : '' ?>" 
+               href="your_property.php">Your Property</a>
+            <a class="nav-link <?= basename($_SERVER['PHP_SELF'])=='booking_list.php' ? 'active' : '' ?>" 
+               href="booking_list.php">Booking List</a>
         </div>
 
         <div class="d-flex align-items-center gap-3">
             <!-- Notification Bell -->
             <div class="dropdown">
-                <a href="#" class="text-dark notification-bell position-relative" id="notifDropdown" data-bs-toggle="dropdown">
+                <a href="#" class="text-dark notification-bell position-relative" 
+                   id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell fs-4"></i>
                     <?php if ($unread_count > 0): ?>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill notification-badge" id="notifBadge">
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill notification-badge" 
+                              id="notifBadge">
                             <?= $unread_count > 99 ? '99+' : $unread_count ?>
                         </span>
                     <?php endif; ?>
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end p-0 notif-dropdown">
-
-    <!-- HEADER -->
-    <li class="dropdown-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold">Notifikasi</h6>
-        <div>
-            <?php if ($unread_count > 0): ?>
-                <span class="badge bg-success text-white"><?= $unread_count ?> Baru</span>
-            <?php endif; ?>
-            <a href="../pages/notification.php" class="small text-kosthub fw-semibold text-decoration-none ms-2">Lihat semua</a>
-        </div>
-    </li>
-
-    <!-- SCROLL WRAPPER MULAI -->
-    <div class="notif-scroll">
-
-        <?php if (empty($recent_notifications)): ?>
-            <li class="text-center py-5 text-muted">
-                <i class="bi bi-bell-slash fs-1"></i>
-                <p class="small mt-2">Belum ada notifikasi</p>
-            </li>
-
-        <?php else: foreach ($recent_notifications as $n): 
-            $iconClass = match($n['type'] ?? '') {
-                'property_approved' => 'icon-success bi-check-circle-fill',
-                'property_rejected' => 'icon-danger bi-x-circle-fill',
-                'new_review'        => 'icon-warning bi-star-fill',
-                'new_wishlist'      => 'icon-danger bi-heart-fill',
-                'new_booking'       => 'icon-info bi-calendar-check',
-                default             => 'icon-success bi-bell-fill'
-            };
-        ?>
-            <li>
-                <a class="dropdown-item <?= $n['is_read']==0?'unread':'' ?>" href="../pages/notification.php">
-                    <div class="d-flex gap-3">
-                        <div class="notification-icon <?= explode(' ', $iconClass)[0] ?>">
-                            <i class="bi <?= explode(' ', $iconClass)[1] ?>"></i>
-                        </div>
-                        <div class="flex-grow-1" style="min-width:0;">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <strong class="small text-dark"><?= htmlspecialchars($n['title']) ?></strong>
-                                <?php if($n['is_read']==0): ?>
-                                    <span class="badge bg-success text-white" style="font-size:0.65rem">Baru</span>
-                                <?php endif; ?>
-                            </div>
-                            <p class="small text-muted mb-1">
-                                <?= htmlspecialchars($n['message']) ?>
-                            </p>
-
-                            <?php if(!empty($n['kos_name'])): ?>
-                                <small class="text-kosthub fw-semibold d-block mb-1">
-                                    <i class="bi bi-building me-1"></i><?= htmlspecialchars($n['kos_name']) ?>
-                                </small>
+                    <!-- HEADER -->
+                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Notifikasi</h6>
+                        <div>
+                            <?php if ($unread_count > 0): ?>
+                                <span class="badge bg-success text-white"><?= $unread_count ?> Baru</span>
                             <?php endif; ?>
-
-                            <small class="text-muted d-block">
-                                <i class="bi bi-clock-history me-1"></i><?= format_time_ago($n['created_at']) ?>
-                            </small>
+                            <a href="../pages/notification.php" 
+                               class="small text-kosthub fw-semibold text-decoration-none ms-2">Lihat semua</a>
                         </div>
+                    </li>
+
+                    <!-- SCROLL WRAPPER -->
+                    <div class="notif-scroll">
+                        <?php if (empty($recent_notifications)): ?>
+                            <li class="text-center py-5 text-muted">
+                                <i class="bi bi-bell-slash fs-1"></i>
+                                <p class="small mt-2">Belum ada notifikasi</p>
+                            </li>
+                        <?php else: foreach ($recent_notifications as $n): 
+                            $iconClass = match($n['type'] ?? '') {
+                                'property_approved' => 'icon-success bi-check-circle-fill',
+                                'property_rejected' => 'icon-danger bi-x-circle-fill',
+                                'new_review'        => 'icon-warning bi-star-fill',
+                                'new_wishlist'      => 'icon-danger bi-heart-fill',
+                                'new_booking'       => 'icon-info bi-calendar-check',
+                                default             => 'icon-success bi-bell-fill'
+                            };
+                        ?>
+                            <li>
+                                <a class="dropdown-item <?= $n['is_read']==0?'unread':'' ?>" 
+                                   href="../pages/notification.php">
+                                    <div class="d-flex gap-3">
+                                        <div class="notification-icon <?= explode(' ', $iconClass)[0] ?>">
+                                            <i class="bi <?= explode(' ', $iconClass)[1] ?>"></i>
+                                        </div>
+                                        <div class="flex-grow-1" style="min-width:0;">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <strong class="small text-dark"><?= htmlspecialchars($n['title']) ?></strong>
+                                                <?php if($n['is_read']==0): ?>
+                                                    <span class="badge bg-success text-white" style="font-size:0.65rem">Baru</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <p class="small text-muted mb-1">
+                                                <?= htmlspecialchars($n['message']) ?>
+                                            </p>
+
+                                            <?php if(!empty($n['kos_name'])): ?>
+                                                <small class="text-kosthub fw-semibold d-block mb-1">
+                                                    <i class="bi bi-building me-1"></i><?= htmlspecialchars($n['kos_name']) ?>
+                                                </small>
+                                            <?php endif; ?>
+
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-clock-history me-1"></i><?= format_time_ago($n['created_at']) ?>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        <?php endforeach; endif; ?>
+
+                        <li><hr class="dropdown-divider my-0"></li>
                     </div>
-                </a>
-            </li>
-        <?php endforeach; endif; ?>
 
-        <li><hr class="dropdown-divider my-0"></li>
-
-    </div> <!-- SCROLL WRAPPER AKHIR -->
-
-    <!-- FOOTER ABSOLUTE -->
-    <li class="notif-footer">
-        <a class="dropdown-item text-center fw-bold py-3 text-kosthub btn-kosthub-bottom"
-           href="../pages/notification.php">
-            Lihat Semua Notifikasi
-        </a>
-    </li>
-
-</ul>
-
+                    <!-- FOOTER -->
+                    <li class="notif-footer">
+                        <a class="dropdown-item text-center fw-bold py-3 text-kosthub btn-kosthub-bottom"
+                           href="../pages/notification.php">
+                            Lihat Semua Notifikasi
+                        </a>
+                    </li>
+                </ul>
             </div>
 
             <!-- Profile -->
             <div class="dropdown">
-                <a href="#" data-bs-toggle="dropdown">
-                    <img src="<?= htmlspecialchars($profilePic) ?>" class="profile-img rounded-circle" alt="Profile">
+                <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="text-decoration-none">
+                    <img src="<?= htmlspecialchars($profilePic) ?>" 
+     class="profile-img" 
+     alt="<?= htmlspecialchars($fullName) ?>"
+     onerror="this.onerror=null; this.src='/frontend/assets/default-avatar.png';">
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end shadow">
-                    <li class="dropdown-item-text text-center fw-bold"><?= $fullName ?></li>
+                <ul class="dropdown-menu dropdown-menu-end shadow profile-dropdown">
+                    <li class="dropdown-item-text text-center fw-bold border-bottom pb-2">
+                        <?= $fullName ?>
+                    </li>
+                    <li><a class="dropdown-item" href="profile.php">
+                        <i class="bi bi-person me-2"></i>Profile
+                    </a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="profile.php">Profile</a></li>
-                    <li><a class="dropdown-item text-danger" href="../../../../logout.php">Log Out</a></li>
+                    <li><a class="dropdown-item text-danger" href="/logout.php">
+                        <i class="bi bi-box-arrow-right me-2"></i>Log Out
+                    </a></li>
                 </ul>
             </div>
         </div>
@@ -327,21 +398,42 @@ function format_time_ago($datetime) {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const API = '/Web-App/backend/user/owner/api/notification_api.php';
+    const API = '/backend/user/owner/api/notification_api.php';
+    
     function updateBadge() {
-        fetch(API + '?action=get_unread_count', {cache: 'no-store'})
-            .then(r => r.json())
-            .then(d => {
-                const badge = document.getElementById('notifBadge');
-                if (d.success && d.count > 0) {
-                    if (badge) {
-                        badge.textContent = d.count > 99 ? '99+' : d.count;
-                        badge.style.display = 'flex';
-                    } else location.reload();
-                } else if (badge) badge.style.display = 'none';
-            });
+        fetch(API + '?action=get_unread_count', {
+            cache: 'no-store',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
+        .then(d => {
+            const badge = document.getElementById('notifBadge');
+            if (d.success && d.count > 0) {
+                if (badge) {
+                    badge.textContent = d.count > 99 ? '99+' : d.count;
+                    badge.style.display = 'flex';
+                } else {
+                    // Badge belum ada, reload untuk update
+                    location.reload();
+                }
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(err => {
+            console.error('Error updating notification badge:', err);
+        });
     }
+    
+    // Update pertama kali
     updateBadge();
+    
+    // Update setiap 10 detik
     setInterval(updateBadge, 10000);
 });
-</script> 
+</script>

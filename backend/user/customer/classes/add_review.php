@@ -1,7 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/config/db.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/config/db.php");
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
     echo json_encode(['success' => false, 'message' => 'Anda harus login terlebih dahulu']);
@@ -57,7 +57,7 @@ if ($stmt->execute()) {
     $stmt->close();
     
     // ✅ FIX: Gunakan method SUMMARY yang baru
-    require_once($_SERVER['DOCUMENT_ROOT'] . "/Web-App/backend/user/owner/classes/Notification.php");
+    require_once($_SERVER['DOCUMENT_ROOT'] . "/backend/user/owner/classes/Notification.php");
     $notif = new Notification($conn);
     $notif->updateOrCreateReviewSummaryNotification($kos_id, $owner_id);
 

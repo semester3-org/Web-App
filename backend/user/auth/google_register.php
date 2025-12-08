@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 // === Konfigurasi OAuth Google ===
 $clientID     = '577682748223-5mp95vu1rr79v8dmode5hb4u43n4pj35.apps.googleusercontent.com';
 $clientSecret = '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';
-$redirectUri  = 'http://localhost/Web-App/backend/user/auth/google_register_callback.php';
+$redirectUri  = 'https://koshub.my.id/backend/user/auth/google_register_callback.php';
 
 // Inisialisasi client Google
 $client = new Google_Client();
