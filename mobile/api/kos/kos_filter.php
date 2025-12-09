@@ -102,7 +102,7 @@ if (!empty($facilityIds)) {
     $result = $stmt->get_result();
 
     $kosData  = [];
-    $base_url = "http://10.134.206.61/Web-App/"; // samain sama kos_list
+    $base_url = "http://10.207.134.61/Web-App/"; // samain sama kos_list
 
     while ($row = $result->fetch_assoc()) {
         $imgQuery = $conn->prepare("

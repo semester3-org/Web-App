@@ -9,7 +9,7 @@ try {
         throw new Exception("user_id wajib diisi");
     }
 
-    $base_url = "http://10.134.206.61/Web-App/";
+    $base_url = "http://10.207.134.61/Web-App/";
 
     $sql = "
         SELECT 
